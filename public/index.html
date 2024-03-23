@@ -12,10 +12,47 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body>
-    개발도우미
-    <button onclick="location.href = './page/detail.html'"></button>
+    <div x-data="data" style="margin-top: 10px">
+      <header class="container">
+        <nav>
+          <ul>
+            <li><h4>TODO 앱</h4></li>
+          </ul>
+          <ul>
+            <li><a href="#">로그인</a></li>
+            <li><a href="#">로그아웃</a></li>
+            <li><a href="#">회원가입</a></li>
+            <template x-if="theme === 'dark'">
+              <li><i class="bx bx-sun" style="cursor: pointer" @click="toggleTheme('light')"></i></li>
+            </template>
+            <template x-if="theme === 'light'">
+              <li><i class="bx bxs-sun" style="cursor: pointer" @click="toggleTheme('dark')"></i></li>
+            </template>
+          </ul>
+        </nav>
+      </header>
+      <main class="container">
+        <article></article>
+      </main>
+    </div>
     <script>
-      const a = 'a';
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('data', () => ({
+          pb: null,
+          theme: localStorage.getItem('theme') ?? 'light',
+
+          async init() {
+            this.pb = new PocketBase(localStorage.getItem('pb_host') ?? 'http://146.56.177.250');
+            this.toggleTheme(this.theme);
+          },
+
+          async toggleTheme(theme) {
+            this.theme = theme;
+            localStorage.setItem('theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+          },
+        }));
+      });
     </script>
   </body>
 </html>
