@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Development-Support</title>
+    <link rel="icon" href="/favicon.ico" />
+    <title>개발 도우미(MVP)</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
@@ -16,12 +17,12 @@
       <header class="container">
         <nav>
           <ul>
-            <li><h4>TODO 앱</h4></li>
+            <li><h4>HELP</h4></li>
           </ul>
           <ul>
-            <li><a href="#">로그인</a></li>
-            <li><a href="#">로그아웃</a></li>
-            <li><a href="#">회원가입</a></li>
+            <template x-if="login">
+              <li><a href="#" @click="signout">로그아웃</a></li>
+            </template>
             <template x-if="theme === 'dark'">
               <li><i class="bx bx-sun" style="cursor: pointer" @click="toggleTheme('light')"></i></li>
             </template>
@@ -32,14 +33,56 @@
         </nav>
       </header>
       <main class="container">
-        <article></article>
+        <!-- Signin -->
+        <article x-show="!login">
+          <h4>로그인</h4>
+          <form id="signin">
+            <input name="id" placeholder="아이디" />
+            <input name="pw" placeholder="패스워드" type="password" />
+            <input type="button" value="로그인" @click="signin" />
+          </form>
+        </article>
+        <!-- Signin -->
+
+        <!-- Signup -->
+        <article x-show="!login">
+          <h4>회원가입</h4>
+          <form id="signup">
+            <input name="id" placeholder="아이디" />
+            <input name="pw" placeholder="패스워드" type="password" />
+            <input type="button" value="회원가입" @click="signup" />
+          </form>
+        </article>
+        <!-- Signup -->
       </main>
+
+      <!-- Modal -->
+      <dialog open x-show="msg" x-transition>
+        <article>
+          <header>
+            <button aria-label="Close" rel="prev" @click="msg = null"></button>
+            <p>
+              <strong>알림</strong>
+            </p>
+          </header>
+          <p x-text="msg"></p>
+          <footer>
+            <button @click="msg = null">Cancel</button>
+          </footer>
+        </article>
+      </dialog>
+      <!-- Modal -->
     </div>
     <script>
       document.addEventListener('alpine:init', () => {
         Alpine.data('data', () => ({
+          /* 공통 */
           pb: null,
           theme: localStorage.getItem('theme') ?? 'light',
+          msg: null,
+          /* 공통 */
+
+          login: false,
 
           async init() {
             this.pb = new PocketBase(localStorage.getItem('pb_host') ?? 'http://146.56.177.250');
@@ -50,6 +93,33 @@
             this.theme = theme;
             localStorage.setItem('theme', theme);
             document.documentElement.setAttribute('data-theme', theme);
+          },
+
+          async signin() {
+            try {
+              await this.pb.collection('users').authWithPassword(document.forms.signin.id.value, document.forms.signin.pw.value);
+              this.login = true;
+            } catch (err) {
+              this.msg = err.message;
+            }
+          },
+
+          async signup() {
+            try {
+              await this.pb.collection('users').create({
+                email: document.forms.signup.id.value,
+                password: document.forms.signup.pw.value,
+                passwordConfirm: document.forms.signup.pw.value,
+              });
+              this.msg = '가입완료';
+            } catch (err) {
+              this.msg = err.message;
+            }
+          },
+
+          async signout() {
+            this.pb.authStore.clear();
+            this.login = false;
           },
         }));
       });
