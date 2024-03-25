@@ -1,0 +1,10 @@
+{
+  "name": "development-support-mvp",
+  "description": "개발도우미 MVP",
+  "scripts": {
+    "format": "prettier --write ./public/*.{html,css,js}"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}
