@@ -50,6 +50,7 @@
           <h4>회원가입</h4>
           <form id="signup">
             <input name="id" placeholder="아이디" />
+            <input name="nickname" placeholder="닉네임" />
             <input name="pw" placeholder="패스워드" type="password" />
             <input type="button" value="회원가입" @click="signup" />
           </form>
@@ -109,6 +110,7 @@
             try {
               await this.pb.collection('users').create({
                 email: document.forms.signup.id.value,
+                name: document.forms.signup.nickname.value,
                 password: document.forms.signup.pw.value,
                 passwordConfirm: document.forms.signup.pw.value,
               });
