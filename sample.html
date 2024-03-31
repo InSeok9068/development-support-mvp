@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>개발 도우미(MVP)</title>
+
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  </head>
+  <body>
+    <div x-data="data" style="margin-top: 10px">
+      <main class="container"></main>
+
+      <!-- Modal -->
+      <dialog open x-show="msg" x-transition>
+        <article>
+          <header>
+            <button aria-label="Close" rel="prev" @click="msg = null"></button>
+            <p>
+              <strong>알림</strong>
+            </p>
+          </header>
+          <p x-text="msg"></p>
+          <footer>
+            <button @click="msg = null">Cancel</button>
+          </footer>
+        </article>
+      </dialog>
+      <!-- Modal -->
+    </div>
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('data', () => ({
+          /* 공통 */
+          pb: null,
+          theme: localStorage.getItem('theme') ?? 'light',
+          msg: null,
+          /* 공통 */
+
+          /* 화면 */
+
+          /* 화면 */
+
+          async init() {
+            this.pb = new PocketBase(localStorage.getItem('pb_host') ?? 'https://development-support.o-r.kr');
+            this.toggleTheme(this.theme);
+          },
+
+          async toggleTheme(theme) {
+            this.theme = theme;
+            localStorage.setItem('theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+          },
+        }));
+      });
+    </script>
+  </body>
+</html>
