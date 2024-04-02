@@ -11,8 +11,8 @@
         </template>
       </div>
       <fieldset role="group">
-        <input v-model="workArgs.title" name="title" @keydown.enter="createWork() && selectWorkList()" />
-        <input type="button" value="등록" @click="createWork() && selectWorkList()" />
+        <input v-model="workArgs.title" name="title" @keydown.enter="onClickCreateWork" />
+        <input type="button" value="등록" @click="onClickCreateWork" />
       </fieldset>
       <ul v-for="work in works">
         <li>
@@ -63,4 +63,9 @@ onMounted(() => {
   selectDeveloperList();
   subscribeWorks();
 });
+
+const onClickCreateWork = async () => {
+  await createWork();
+  await selectWorkList();
+};
 </script>
