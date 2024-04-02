@@ -10,7 +10,7 @@ export const useWork = () => {
     title: '',
     time: 0,
     done: false,
-    developer: 'd4he5x5uqtz0gm4',
+    developer: 'uei7mob38w7y3hx',
   });
 
   const work = ref({});
