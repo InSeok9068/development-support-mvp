@@ -1,5 +1,5 @@
 {
-  "name": "inseok-web",
+  "name": "development-support-mvp",
   "type": "module",
   "scripts": {
     "dev": "vite",
