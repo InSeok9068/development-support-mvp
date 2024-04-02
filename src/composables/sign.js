@@ -38,6 +38,7 @@ export const useSign = () => {
         password: signupFormArgs.value.password,
         passwordConfirm: signupFormArgs.value.password,
       });
+      message.value = '회원가입이 완료되었습니다';
     } catch (err) {
       message.value = err.message;
     }
