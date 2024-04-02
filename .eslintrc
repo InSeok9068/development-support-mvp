@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "env": {
+    "es6": true,
+    "brower": true,
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+  },
+  "extends": ["eslint:recommended", "plugin:vue/vue3-recommended", "prettier"],
+  "rules": {},
+}
