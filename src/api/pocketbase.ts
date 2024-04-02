@@ -31,6 +31,6 @@ interface TypePocketBase extends PocketBase {
   collection(idOrName: 'developers'): RecordService<Developers>;
 }
 
-const pb = new PocketBase('http://localhost:8090') as TypePocketBase;
+const pb = new PocketBase(import.meta.env.VITE_POCKETBASE_URL) as TypePocketBase;
 
 export default pb;
