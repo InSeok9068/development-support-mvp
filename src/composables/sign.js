@@ -1,6 +1,6 @@
 import pb from '@/api/pocketbase';
 import { useModal } from '@/composables/modal';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.store';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';

@@ -1,4 +1,4 @@
-import { useSettingStore } from '@/stores/setting';
+import { useSettingStore } from '@/stores/setting.store';
 import { storeToRefs } from 'pinia';
 
 export const useSetting = () => {
