@@ -1,5 +1,5 @@
 <template>
-  <dialog id="modal" open v-show="!!message">
+  <dialog v-show="!!message" id="modal" open>
     <article>
       <header>
         <button aria-label="Close" rel="prev" data-target="modal" @click="message = ''"></button>

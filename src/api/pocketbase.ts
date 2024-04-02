@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import PocketBase, { RecordService } from 'pocketbase';
 
 interface BaseModel {

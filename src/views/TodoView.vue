@@ -11,7 +11,7 @@
         </template>
       </div>
       <fieldset role="group">
-        <input name="title" v-model="workArgs.title" @keydown.enter="createWork() && selectWorkList()" />
+        <input v-model="workArgs.title" name="title" @keydown.enter="createWork() && selectWorkList()" />
         <input type="button" value="등록" @click="createWork() && selectWorkList()" />
       </fieldset>
       <ul v-for="work in works">

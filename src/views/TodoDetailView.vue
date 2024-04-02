@@ -9,10 +9,10 @@
         </ul>
         <ul>
           <li>
-            <h4><i @click="updateWork" class="bi bi-floppy" style="cursor: pointer"></i></h4>
+            <h4><i class="bi bi-floppy" style="cursor: pointer" @click="updateWork"></i></h4>
           </li>
           <li>
-            <h4><i @click="deleteWork(work.id)" class="bi bi-trash" style="cursor: pointer"></i></h4>
+            <h4><i class="bi bi-trash" style="cursor: pointer" @click="deleteWork(work.id)"></i></h4>
           </li>
         </ul>
       </nav>
@@ -24,7 +24,7 @@
         </label>
         <label>
           완료여부
-          <input type="checkbox" role="switch" v-model="work.done" />
+          <input v-model="work.done" type="checkbox" role="switch" />
         </label>
       </div>
       <label>
@@ -34,14 +34,14 @@
       <label>
         <strong>레드마인 URL</strong>
         <div role="group">
-          <input type="url" v-model="work.redmine" />
+          <input v-model="work.redmine" type="url" />
           <button v-show="work.redmine" @click="onClickRedmine(work.redmine)">OPEN</button>
         </div>
       </label>
       <label>
         <strong>조플린 URL</strong>
         <div role="group">
-          <input type="url" v-model="work.joplin" />
+          <input v-model="work.joplin" type="url" />
           <button v-show="work.joplin" @click="onClickJoplin(work.joplin)">OPEN</button>
         </div>
       </label>
@@ -58,7 +58,7 @@
       <div role="group">
         <label>
           <strong>마감일시</strong>
-          <input type="date" v-model="work.dueDate" />
+          <input v-model="work.dueDate" type="date" />
         </label>
       </div>
       <div role="group">

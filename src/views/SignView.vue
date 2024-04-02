@@ -2,16 +2,16 @@
   <main class="container">
     <article>
       <h2>로그인</h2>
-      <input type="text" v-model="signinFormArgs.email" placeholder="이메일" />
-      <input type="password" v-model="signinFormArgs.password" placeholder="패스워드" />
+      <input v-model="signinFormArgs.email" type="text" placeholder="이메일" />
+      <input v-model="signinFormArgs.password" type="password" placeholder="패스워드" />
       <input type="button" value="로그인" @click="signin" />
     </article>
 
     <article>
       <h2>회원가입</h2>
-      <input type="text" v-model="signupFormArgs.nickname" placeholder="닉네임" />
-      <input type="text" v-model="signupFormArgs.email" placeholder="이메일" />
-      <input type="password" v-model="signupFormArgs.password" placeholder="패스워드" />
+      <input v-model="signupFormArgs.nickname" type="text" placeholder="닉네임" />
+      <input v-model="signupFormArgs.email" type="text" placeholder="이메일" />
+      <input v-model="signupFormArgs.password" type="password" placeholder="패스워드" />
       <input type="button" value="회원가입" @click="signup" />
     </article>
   </main>
