@@ -24,6 +24,7 @@ export const useSign = () => {
   const signin = async () => {
     try {
       await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
+      isAuth.value = true;
       router.push('/');
     } catch (err) {
       message.value = err.message;
