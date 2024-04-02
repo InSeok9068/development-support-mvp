@@ -33,6 +33,7 @@ interface TypePocketBase extends PocketBase {
   collection(idOrName: 'developers'): RecordService<Developers>;
 }
 
+// @ts-ignore
 const pb = new PocketBase(import.meta.env.VITE_POCKETBASE_URL) as TypePocketBase;
 
 export default pb;
