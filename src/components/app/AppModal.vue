@@ -13,7 +13,7 @@
   </dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useModal } from '@/composables/modal';
 
 const { message } = useModal();

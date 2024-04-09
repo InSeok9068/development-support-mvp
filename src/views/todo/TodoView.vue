@@ -3,9 +3,9 @@
     <article>
       <h5 style="color: red">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
       <div role="group">
-        <button class="outline contrast" @click="selectWorkList()">ALL</button>
+        <button :class="{ outline: selectDeveloper }" @click="onClickSelectDeveoper(undefined)">ALL</button>
         <template v-for="developer in developers">
-          <button class="outline contrast" @click="selectWorkList(developer)">
+          <button :class="{ outline: selectDeveloper?.id !== developer.id }" @click="onClickSelectDeveoper(developer)">
             <span>{{ developer.name }}</span>
           </button>
         </template>
@@ -49,23 +49,42 @@
   </main>
 </template>
 
-<script setup>
-import { useDeveloper } from '@/composables/developer';
-import { useWork } from '@/composables/work';
+<script setup lang="ts">
+import type { DevelopersResponse } from '@/api/pocketbase-types';
+import { useDeveloper } from '@/composables/todo/developer';
+import { useWork } from '@/composables/todo/work';
 import router from '@/router';
 import dayjs from 'dayjs';
 import { onMounted } from 'vue';
-const { developers, selectDeveloperList } = useDeveloper();
-const { workArgs, works, selectWorkList, createWork, deleteWork, subscribeWorks, doneWork } = useWork();
+
+const { developers, selectDeveloper, selectDeveloperFullList } = useDeveloper();
+const { workArgs, works, selectWorkFullList, createWork, deleteWork, subscribeWorks, doneWork } = useWork();
 
 onMounted(() => {
-  selectWorkList();
-  selectDeveloperList();
+  selectWorkFullListFilterDeveloper(selectDeveloper.value);
+  selectDeveloperFullList();
   subscribeWorks();
 });
 
 const onClickCreateWork = async () => {
   await createWork();
-  await selectWorkList();
+  await selectWorkFullList();
+};
+
+const onClickSelectDeveoper = (developer: DevelopersResponse | undefined) => {
+  selectDeveloper.value = developer;
+  selectWorkFullListFilterDeveloper(developer);
+};
+
+const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | undefined) => {
+  if (developer) {
+    developer = developer as DevelopersResponse;
+    selectWorkFullList({
+      filter: `done = false && developer = '${developer.id}'`,
+    });
+  } else {
+    selectWorkFullList();
+  }
 };
 </script>
+@/composables/todo/developer@/composables/todo/work

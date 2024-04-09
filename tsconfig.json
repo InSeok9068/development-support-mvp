@@ -1,11 +1,9 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/**/*", "src/**/*.vue"],
+  "include": ["src/**/*", "src/**/*.vue", "env.d.ts"],
   "compilerOptions": {
     "target": "ES6",
     "module": "ES2022",
-    "allowJs": true,
-    "composite": true,
     "paths": {
       "@/*": ["./src/*"]
     }

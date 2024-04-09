@@ -18,7 +18,8 @@
 </template>
 
 <script setup lang="ts">
-import { useSign } from '@/composables/sign';
+import { useSign } from '@/composables/user/sign';
 
 const { signinFormArgs, signupFormArgs, signin, signup } = useSign();
 </script>
+@/composables/user/sign

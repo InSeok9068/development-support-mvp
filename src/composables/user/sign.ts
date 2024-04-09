@@ -22,27 +22,19 @@ export const useSign = () => {
   });
 
   const signin = async () => {
-    try {
-      await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
-      isAuth.value = true;
-      router.push('/');
-    } catch (err) {
-      message.value = err.message;
-    }
+    await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
+    isAuth.value = true;
+    router.push('/');
   };
 
   const signup = async () => {
-    try {
-      await pb.collection('users').create({
-        name: signupFormArgs.value.nickname,
-        email: signupFormArgs.value.email,
-        password: signupFormArgs.value.password,
-        passwordConfirm: signupFormArgs.value.password,
-      });
-      message.value = '회원가입이 완료되었습니다';
-    } catch (err) {
-      message.value = err.message;
-    }
+    await pb.collection('users').create({
+      name: signupFormArgs.value.nickname,
+      email: signupFormArgs.value.email,
+      password: signupFormArgs.value.password,
+      passwordConfirm: signupFormArgs.value.password,
+    });
+    message.value = '회원가입이 완료되었습니다';
   };
 
   const signout = () => {

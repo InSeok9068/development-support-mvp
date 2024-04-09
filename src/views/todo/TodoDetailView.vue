@@ -12,19 +12,19 @@
             <h4><i class="bi bi-floppy" style="cursor: pointer" @click="updateWork"></i></h4>
           </li>
           <li>
-            <h4><i class="bi bi-trash" style="cursor: pointer" @click="deleteWork(work.id)"></i></h4>
+            <h4><i class="bi bi-trash" style="cursor: pointer" @click="deleteWork(work)"></i></h4>
           </li>
         </ul>
       </nav>
       <input v-model="work.title" style="font-size: xx-large" />
       <div role="group">
-        <label>
+        <!-- <label>
           마크다운 VIEW
           <input type="checkbox" role="switch" @change="switchView" />
-        </label>
+        </label> -->
         <label>
           완료여부
-          <input v-model="work.done" type="checkbox" role="switch" />
+          <input v-model="work.done" type="checkbox" role="switch" @change="onChangeDone" />
         </label>
       </div>
       <label>
@@ -58,44 +58,67 @@
       <div role="group">
         <label>
           <strong>마감일시</strong>
-          <input v-model="work.dueDate" type="date" />
+          <input
+            :value="dayjs(work.dueDate).format('YYYY-MM-DD')"
+            type="date"
+            @input="(e) => (work.dueDate = (e.target as any).value)"
+          />
         </label>
       </div>
       <div role="group">
         <label>
+          <strong>완료일시</strong>
+          <input readonly :value="work.doneDate && dayjs(work.doneDate).format('YYYY-MM-DD HH:mm:ss')" />
+        </label>
+        <label>
           <strong>등록일시</strong>
-          <input type="datetime" readonly :value="dayjs(work.created).format('YYYY-MM-DD HH:mm:ss')" />
+          <input readonly :value="dayjs(work.created).format('YYYY-MM-DD HH:mm:ss')" />
         </label>
         <label>
           <strong>수정일시</strong>
-          <input type="datetime" readonly :value="dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss')" />
+          <input readonly :value="dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss')" />
         </label>
       </div>
     </article>
   </main>
 </template>
 
-<script setup>
-import { useDeveloper } from '@/composables/developer';
-import { useWork } from '@/composables/work';
+<script setup lang="ts">
+import { useDeveloper } from '@/composables/todo/developer';
+import { useWork } from '@/composables/todo/work';
+import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+
 const { work, selectWork, updateWork, deleteWork } = useWork();
-const { developers, selectDeveloperList } = useDeveloper();
-
+const { developers, selectDeveloperFullList } = useDeveloper();
 const route = useRoute();
+const keys = useMagicKeys();
 
-onMounted(() => {
-  selectWork(route.params.id);
-  selectDeveloperList();
+watch(keys.shift_enter, (v) => {
+  v && updateWork();
 });
 
-const onClickRedmine = (url) => {
-  window.open('about:blank').location.href = url;
+onMounted(() => {
+  selectWork(route.params.id as string);
+  selectDeveloperFullList();
+});
+
+const onChangeDone = () => {
+  if (work.value.done) {
+    work.value.doneDate = new Date().toISOString();
+  } else {
+    work.value.doneDate = '';
+  }
 };
 
-const onClickJoplin = (url) => {
-  window.open('about:blank').location.href = url;
+const onClickRedmine = (url: string) => {
+  window.open('about:blank')!.location.href = url;
+};
+
+const onClickJoplin = (url: string) => {
+  location.href = url;
 };
 </script>
+@/composables/todo/developer@/composables/todo/work

@@ -12,6 +12,9 @@ export default defineConfig({
       dts: true,
     }),
   ],
+  build: {
+    outDir: 'C://developer-program/nginx-1.25.4/html/',
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
