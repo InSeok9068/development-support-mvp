@@ -22,4 +22,3 @@ import { useSign } from '@/composables/user/sign';
 
 const { signinFormArgs, signupFormArgs, signin, signup } = useSign();
 </script>
-@/composables/user/sign

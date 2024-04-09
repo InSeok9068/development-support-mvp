@@ -38,4 +38,3 @@ onMounted(async () => {
   await setDefaultDeveloper();
 });
 </script>
-@/composables/todo/developer @/composables/user/sign

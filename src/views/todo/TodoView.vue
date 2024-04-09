@@ -87,4 +87,3 @@ const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | undef
   }
 };
 </script>
-@/composables/todo/developer@/composables/todo/work

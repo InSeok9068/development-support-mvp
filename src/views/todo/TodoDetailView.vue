@@ -121,4 +121,3 @@ const onClickJoplin = (url: string) => {
   location.href = url;
 };
 </script>
-@/composables/todo/developer@/composables/todo/work
