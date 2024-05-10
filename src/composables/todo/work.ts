@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import type { WorksResponse } from '@/api/pocketbase-types';
+import type { WorksRecord, WorksResponse } from '@/api/pocketbase-types';
 import { useModal } from '@/composables/modal';
 import { useDeveloper } from '@/composables/todo/developer';
 import { ref } from 'vue';
@@ -8,12 +8,12 @@ export const useWork = () => {
   const { message } = useModal();
   const { defaultDeveloper } = useDeveloper();
 
-  const workArgs = ref({
+  const workArgs = ref<WorksRecord>({
     userId: pb.authStore.model?.id,
     title: '',
     time: 0,
     done: false,
-    developer: defaultDeveloper.value?.id,
+    developer: defaultDeveloper.value?.id ?? '',
   });
 
   const work = ref<WorksResponse>({} as WorksResponse);
@@ -54,7 +54,7 @@ export const useWork = () => {
   };
 
   const updateWork = async () => {
-    await pb.collection('works').update(work.value!.id, work.value);
+    await pb.collection('works').update(work.value.id, work.value);
     message.value = '수정완료';
   };
 

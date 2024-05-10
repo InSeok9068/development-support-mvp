@@ -17,19 +17,32 @@
         </ul>
       </nav>
       <input v-model="work.title" style="font-size: xx-large" />
-      <div role="group">
-        <!-- <label>
-          마크다운 VIEW
-          <input type="checkbox" role="switch" @change="switchView" />
-        </label> -->
+      <div class="grid" role="group">
         <label>
           완료여부
           <input v-model="work.done" type="checkbox" role="switch" @change="onChangeDone" />
         </label>
+        <label>
+          마크다운 VIEW
+          <input type="checkbox" role="switch" @change="onChangeSwitchView" />
+        </label>
       </div>
+      <!-- <label>
+        <div role="group">
+          <template v-for="state in ['검토', '검토(완)', '진행', '진행(완)', '완료']">
+            <label
+              >{{ state }}
+              <input type="radio" name="state" />
+            </label>
+          </template>
+        </div>
+      </label> -->
       <label>
         <strong>내용</strong>
-        <textarea v-model="work.content" rows="10"></textarea>
+        <textarea v-show="!markdownViewOn" v-model="work.content" rows="10"></textarea>
+        <article v-show="markdownViewOn">
+          <div id="view"></div>
+        </article>
       </label>
       <label>
         <strong>레드마인 URL</strong>
@@ -88,13 +101,16 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { onMounted, watch } from 'vue';
+import { marked } from 'marked';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const { work, selectWork, updateWork, deleteWork } = useWork();
 const { developers, selectDeveloperFullList } = useDeveloper();
 const route = useRoute();
 const keys = useMagicKeys();
+
+const markdownViewOn = ref(false);
 
 watch(keys.shift_enter, (v) => {
   v && updateWork();
@@ -119,5 +135,12 @@ const onClickRedmine = (url: string) => {
 
 const onClickJoplin = (url: string) => {
   location.href = url;
+};
+
+const onChangeSwitchView = async () => {
+  markdownViewOn.value = !markdownViewOn.value;
+  if (markdownViewOn.value) {
+    document.getElementById('view')!.innerHTML = await marked.parse(work.value.content);
+  }
 };
 </script>

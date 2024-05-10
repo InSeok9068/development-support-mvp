@@ -15,6 +15,10 @@ const routes = [
     path: '/list',
     component: () => import('@/views/todo/TodoListView.vue'),
   },
+  {
+    path: '/setting',
+    component: () => import('@/views/setting/SettingView.vue'),
+  },
 ];
 
 export default routes;

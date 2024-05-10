@@ -10,27 +10,42 @@
         <li><router-link to="/list">LIST</router-link></li>
       </ul>
       <ul>
-        <li v-show="setting.theme === 'dark'">
-          <i class="bi bi-brightness-high" style="cursor: pointer" @click="toggleTheme"></i>
-        </li>
-        <li v-show="setting.theme === 'white'">
-          <i class="bi bi-brightness-high-fill" style="cursor: pointer" @click="toggleTheme"></i>
-        </li>
         <li>
           <details class="dropdown">
-            <summary>설정</summary>
+            <summary><i class="bi bi-gear-fill"></i></summary>
             <ul>
               <li v-show="!isAuth">
-                <a href="#" @click="onClickSignin">로그인</a>
-              </li>
-              <li v-show="isAuth">
-                <a href="#" @click="signout">로그아웃</a>
+                <a href="#" @click.stop.prevent="onClickSignin">로그인</a>
               </li>
               <li>
-                <a href="#" @click="onClickClear">CLEAR</a>
+                <a href="#" @click.stop.prevent="onClickSetting">설정</a>
+              </li>
+              <li>
+                <a href="#" @click.stop.prevent="onClickClear">클리어</a>
+              </li>
+              <li v-show="isAuth">
+                <a href="#" @click.stop.prevent="signout">로그아웃</a>
               </li>
             </ul>
           </details>
+        </li>
+        <li>
+          <i
+            :class="{
+              'bi bi-bell': setting.notificationPermission === 'granted',
+              'bi bi-bell-slash': setting.notificationPermission !== 'granted',
+            }"
+          ></i>
+        </li>
+        <li>
+          <i
+            :class="{
+              'bi bi-brightness-high': setting.theme === 'dark',
+              'bi bi-brightness-high-fill': setting.theme === 'white',
+            }"
+            style="cursor: pointer"
+            @click="toggleTheme"
+          ></i>
         </li>
       </ul>
     </nav>
@@ -40,7 +55,6 @@
 <script setup lang="ts">
 import { useSetting } from '@/composables/setting';
 import { useSign } from '@/composables/user/sign';
-import {} from 'pinia';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -48,6 +62,8 @@ const { signout, isAuth } = useSign();
 const { setting, toggleTheme } = useSetting();
 
 const onClickSignin = () => router.push('/sign');
+
+const onClickSetting = () => router.push('/setting');
 
 const onClickClear = () => localStorage.clear();
 </script>

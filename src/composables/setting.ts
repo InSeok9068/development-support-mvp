@@ -9,8 +9,13 @@ export const useSetting = () => {
     document.documentElement.setAttribute('data-theme', setting.value.theme);
   };
 
+  const initTheme = () => {
+    document.documentElement.setAttribute('data-theme', setting.value.theme);
+  };
+
   return {
     setting,
     toggleTheme,
+    initTheme,
   };
 };

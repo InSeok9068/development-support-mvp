@@ -28,3 +28,6 @@ dist-ssr
 
 # Global Component
 components.d.ts
+
+# Pocketbase Hooks
+pb_hooks
