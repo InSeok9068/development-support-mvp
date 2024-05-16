@@ -1,26 +1,24 @@
 import pb from '@/api/pocketbase';
 import type { WorksRecord, WorksResponse } from '@/api/pocketbase-types';
 import { useModal } from '@/composables/modal';
-import { useDeveloper } from '@/composables/todo/developer';
 import { ref } from 'vue';
 
 export const useWork = () => {
   const { message } = useModal();
-  const { defaultDeveloper } = useDeveloper();
 
   const workArgs = ref<WorksRecord>({
-    userId: pb.authStore.model?.id,
+    user: pb.authStore.model?.id,
     title: '',
     time: 0,
     done: false,
-    developer: defaultDeveloper.value?.id ?? '',
+    developer: '',
   });
 
   const work = ref<WorksResponse>({} as WorksResponse);
 
   const works = ref<WorksResponse[]>([]);
 
-  const selectWorkFullList = async ({ filter = 'done = false', sort = '-created', option = {} } = {}) => {
+  const selectWorkFullList = async ({ filter = 'done = false', sort = 'sort,-created', option = {} } = {}) => {
     works.value = await pb.collection('works').getFullList({
       filter,
       sort,
@@ -58,6 +56,10 @@ export const useWork = () => {
     message.value = '수정완료';
   };
 
+  const updateWorkBySort = async (work: WorksResponse) => {
+    await pb.collection('works').update(work.id, work);
+  };
+
   const deleteWork = async (work: WorksResponse) => {
     await pb.collection('works').delete(work.id);
   };
@@ -69,6 +71,10 @@ export const useWork = () => {
           works.value.push(e.record);
           break;
         case 'update':
+          if (e.record.done) {
+            works.value = works.value.filter((i) => i.id !== e.record.id);
+          }
+          break;
         case 'delete':
           works.value = works.value.filter((i) => i.id !== e.record.id);
           break;
@@ -93,6 +99,7 @@ export const useWork = () => {
     selectWork,
     createWork,
     updateWork,
+    updateWorkBySort,
     deleteWork,
     subscribeWorks,
     doneWork,

@@ -6,9 +6,13 @@
         <h5 :class="{ blink: works.length > 10 }">현재 {{ works.length }}개</h5>
       </div>
       <div role="group">
-        <button :class="{ outline: selectDeveloper }" @click="onClickSelectDeveoper(undefined)">ALL</button>
+        <button :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveoper('ALL')">ALL</button>
+        <button :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveoper('')">미배정</button>
         <template v-for="developer in developers">
-          <button :class="{ outline: selectDeveloper?.id !== developer.id }" @click="onClickSelectDeveoper(developer)">
+          <button
+            :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
+            @click="onClickSelectDeveoper(developer)"
+          >
             <!-- <i v-if="developer.isLeader" class="bi bi-star"></i> -->
             {{ developer.name }}
           </button>
@@ -18,8 +22,13 @@
         <input v-model="workArgs.title" name="title" @keydown.stop.prevent.enter="onClickCreateWork" />
         <input type="button" value="등록" @click="onClickCreateWork" />
       </fieldset>
-      <ul v-for="work in works">
-        <li>
+      <ul v-for="(work, index) in works">
+        <li
+          draggable="true"
+          @drop.prevent="onDropWork($event, index)"
+          @dragstart="onDragStartWork($event, index)"
+          @dragover.prevent
+        >
           <h6>
             <input type="checkbox" @click.stop.prevent="doneWork(work)" />
             <a x-text="work.title" style="cursor: pointer" @click="router.push(`/detail/${work.id}`)">
@@ -63,7 +72,8 @@ import dayjs from 'dayjs';
 import { onMounted } from 'vue';
 
 const { developers, selectDeveloper, selectDeveloperFullList } = useDeveloper();
-const { workArgs, works, selectWorkFullList, createWork, deleteWork, subscribeWorks, doneWork } = useWork();
+const { workArgs, works, selectWorkFullList, createWork, deleteWork, subscribeWorks, doneWork, updateWorkBySort } =
+  useWork();
 const { setting } = useSetting();
 
 onMounted(() => {
@@ -77,13 +87,19 @@ const onClickCreateWork = async () => {
   await selectWorkFullList();
 };
 
-const onClickSelectDeveoper = (developer: DevelopersResponse | undefined) => {
+const onClickSelectDeveoper = (developer: DevelopersResponse | string) => {
   selectDeveloper.value = developer;
   selectWorkFullListFilterDeveloper(developer);
 };
 
-const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | undefined) => {
-  if (developer) {
+const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | string | undefined) => {
+  if (developer === 'ALL') {
+    selectWorkFullList();
+  } else if (developer === '') {
+    selectWorkFullList({
+      filter: `done = false && developer = ''`,
+    });
+  } else if (developer) {
     developer = developer as DevelopersResponse;
     selectWorkFullList({
       filter: `done = false && developer = '${developer.id}'`,
@@ -91,5 +107,21 @@ const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | undef
   } else {
     selectWorkFullList();
   }
+};
+
+const onDragStartWork = (event: DragEvent, curIndex: number) => {
+  event.dataTransfer?.setData('transIndex', String(curIndex));
+};
+
+const onDropWork = (event: DragEvent, curIndex: number) => {
+  const transIndex = Number(event.dataTransfer?.getData('transIndex'));
+
+  const [el] = works.value.splice(transIndex, 1);
+  works.value.splice(curIndex, 0, el);
+
+  works.value.forEach((work, index) => {
+    work.sort = index;
+    updateWorkBySort(work);
+  });
 };
 </script>

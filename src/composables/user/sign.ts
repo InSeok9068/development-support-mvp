@@ -1,6 +1,5 @@
 import pb from '@/api/pocketbase';
 import { useModal } from '@/composables/modal';
-import { useDeveloper } from '@/composables/todo/developer';
 import { useAuthStore } from '@/stores/auth.store';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
@@ -10,7 +9,6 @@ export const useSign = () => {
   const router = useRouter();
   const { message } = useModal();
   const { isAuth } = storeToRefs(useAuthStore());
-  const { setDefaultDeveloper } = useDeveloper();
 
   const signinFormArgs = ref({
     email: '',
@@ -25,7 +23,6 @@ export const useSign = () => {
 
   const signin = async () => {
     await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
-    await setDefaultDeveloper();
     isAuth.value = true;
     router.push('/');
   };

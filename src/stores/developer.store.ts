@@ -5,10 +5,9 @@ import { ref } from 'vue';
 export const useDeveloperStore = defineStore(
   'developer',
   () => {
-    const defaultDeveloper = ref<DevelopersResponse>();
-    const selectDeveloper = ref<DevelopersResponse>();
+    const selectDeveloper = ref<DevelopersResponse | string>();
 
-    return { defaultDeveloper, selectDeveloper };
+    return { selectDeveloper };
   },
   { persist: true },
 );

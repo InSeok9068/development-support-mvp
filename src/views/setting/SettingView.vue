@@ -19,11 +19,7 @@
             정렬
             <input v-model="developerArgs.sort" type="number" />
           </label>
-          <label>
-            디폴트 개발자
-            <input v-model="developerArgs.isDefault" type="checkbox" role="switch" />
-          </label>
-          <input type="button" value="저장" @click="onClickSave" />
+          <input type="button" value="저장" @click="onClickSave_1" />
         </article>
       </details>
       <details>
@@ -32,6 +28,7 @@
           <label>
             마감일자 임박
             <input type="number" />
+            <input type="button" value="저장" @click="onClickSave_2" />
           </label>
         </article>
       </details>
@@ -56,11 +53,13 @@ const onClickDeveloper = (developer: DevelopersResponse) => {
   developerArgs.value = cloneDeep(developer);
 };
 
-const onClickSave = () => {
+const onClickSave_1 = () => {
   if (developerArgs.value.id) {
     updateDeveloper();
   } else {
     createDeveloper();
   }
 };
+
+const onClickSave_2 = () => {};
 </script>

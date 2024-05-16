@@ -7,14 +7,13 @@ import { ref } from 'vue';
 
 export const useDeveloper = () => {
   const { message } = useModal();
-  const { defaultDeveloper, selectDeveloper } = storeToRefs(useDeveloperStore());
+  const { selectDeveloper } = storeToRefs(useDeveloperStore());
 
   const developerArgs = ref({
     id: '',
-    userId: pb.authStore.model?.id,
+    user: pb.authStore.model?.id,
     name: '',
     sort: 1,
-    isDefault: false,
     isLeader: false,
     del: false,
   });
@@ -28,17 +27,6 @@ export const useDeveloper = () => {
       filter: `del = false`,
       sort: 'sort',
     });
-  };
-
-  const setDefaultDeveloper = async () => {
-    if (!defaultDeveloper.value) {
-      defaultDeveloper.value = (
-        await pb.collection('developers').getList(1, 1, {
-          requestKey: null,
-          filter: `isDefault = true`,
-        })
-      ).items[0];
-    }
   };
 
   const createDeveloper = async () => {
@@ -56,8 +44,6 @@ export const useDeveloper = () => {
     developers,
     developerArgs,
     selectDeveloper,
-    defaultDeveloper,
-    setDefaultDeveloper,
     selectDeveloperFullList,
     createDeveloper,
     updateDeveloper,

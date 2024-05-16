@@ -68,16 +68,18 @@
     "schema": [
       {
         "system": false,
-        "id": "8uhjvkkb",
-        "name": "userId",
-        "type": "text",
+        "id": "36ivx2s2",
+        "name": "user",
+        "type": "relation",
         "required": true,
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
         }
       },
       {
@@ -110,16 +112,6 @@
       },
       {
         "system": false,
-        "id": "geh0dtaz",
-        "name": "isDefault",
-        "type": "bool",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {}
-      },
-      {
-        "system": false,
         "id": "yu9kxkcn",
         "name": "isLeader",
         "type": "bool",
@@ -140,11 +132,11 @@
       }
     ],
     "indexes": [],
-    "listRule": "userId = @request.auth.id",
-    "viewRule": "userId = @request.auth.id",
-    "createRule": "@request.data.userId = @request.auth.id",
-    "updateRule": "userId = @request.auth.id",
-    "deleteRule": "userId = @request.auth.id",
+    "listRule": "user = @request.auth.id",
+    "viewRule": "user = @request.auth.id",
+    "createRule": "@request.data.user = @request.auth.id",
+    "updateRule": "user = @request.auth.id",
+    "deleteRule": "user = @request.auth.id",
     "options": {}
   },
   {
@@ -155,16 +147,18 @@
     "schema": [
       {
         "system": false,
-        "id": "63ipwfpw",
-        "name": "userId",
-        "type": "text",
-        "required": false,
+        "id": "scktrzhg",
+        "name": "user",
+        "type": "relation",
+        "required": true,
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
         }
       },
       {
@@ -172,7 +166,7 @@
         "id": "azazx4t4",
         "name": "title",
         "type": "text",
-        "required": false,
+        "required": true,
         "presentable": false,
         "unique": false,
         "options": {
@@ -197,11 +191,83 @@
       }
     ],
     "indexes": [],
-    "listRule": "userId = @request.auth.id",
-    "viewRule": "userId = @request.auth.id",
-    "createRule": "@request.data.userId = @request.auth.id",
-    "updateRule": "userId = @request.auth.id",
-    "deleteRule": "userId = @request.auth.id",
+    "listRule": "user = @request.auth.id",
+    "viewRule": "user = @request.auth.id",
+    "createRule": "@request.data.user = @request.auth.id",
+    "updateRule": "user = @request.auth.id",
+    "deleteRule": "user = @request.auth.id",
+    "options": {}
+  },
+  {
+    "id": "l6cmslg7fyct0zw",
+    "name": "scheduledNotifications",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "system": false,
+        "id": "ka2slqrt",
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
+        }
+      },
+      {
+        "system": false,
+        "id": "czycypjn",
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "gy4y9q8s",
+        "name": "message",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "7tm5k04j",
+        "name": "scheduledTime",
+        "type": "date",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": "user = @request.auth.id",
+    "viewRule": "user = @request.auth.id",
+    "createRule": "@request.data.user = @request.auth.id",
+    "updateRule": "user = @request.auth.id",
+    "deleteRule": "user = @request.auth.id",
     "options": {}
   },
   {
@@ -212,16 +278,18 @@
     "schema": [
       {
         "system": false,
-        "id": "le1lpw8k",
-        "name": "userId",
-        "type": "text",
+        "id": "mbjfs8na",
+        "name": "user",
+        "type": "relation",
         "required": true,
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
         }
       },
       {
@@ -240,11 +308,11 @@
       }
     ],
     "indexes": [],
-    "listRule": "userId = @request.auth.id",
-    "viewRule": "userId = @request.auth.id",
-    "createRule": "@request.data.userId = @request.auth.id",
-    "updateRule": "userId = @request.auth.id",
-    "deleteRule": "userId = @request.auth.id",
+    "listRule": "user = @request.auth.id",
+    "viewRule": "user = @request.auth.id",
+    "createRule": "@request.data.user = @request.auth.id",
+    "updateRule": "user = @request.auth.id",
+    "deleteRule": "user = @request.auth.id",
     "options": {}
   },
   {
@@ -255,16 +323,18 @@
     "schema": [
       {
         "system": false,
-        "id": "fvclsafg",
-        "name": "userId",
-        "type": "text",
+        "id": "o1ju9oqm",
+        "name": "user",
+        "type": "relation",
         "required": true,
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
         }
       },
       {
@@ -390,10 +460,24 @@
       },
       {
         "system": false,
+        "id": "jdkwib5n",
+        "name": "sort",
+        "type": "number",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": true
+        }
+      },
+      {
+        "system": false,
         "id": "obwibycz",
         "name": "developer",
         "type": "relation",
-        "required": true,
+        "required": false,
         "presentable": false,
         "unique": false,
         "options": {
@@ -406,11 +490,11 @@
       }
     ],
     "indexes": [],
-    "listRule": "userId = @request.auth.id",
-    "viewRule": "userId = @request.auth.id",
-    "createRule": "@request.data.userId = @request.auth.id",
-    "updateRule": "userId = @request.auth.id",
-    "deleteRule": "userId = @request.auth.id",
+    "listRule": "user = @request.auth.id",
+    "viewRule": "user = @request.auth.id",
+    "createRule": "@request.data.user = @request.auth.id",
+    "updateRule": "user = @request.auth.id",
+    "deleteRule": "user = @request.auth.id",
     "options": {}
   }
 ]

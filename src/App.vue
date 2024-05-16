@@ -12,7 +12,6 @@ import { useModal } from '@/composables/modal';
 import { useNotification } from '@/composables/notification';
 import { usePocketbase } from '@/composables/pocketbase';
 import { useSetting } from '@/composables/setting';
-import { useDeveloper } from '@/composables/todo/developer';
 import { useSign } from '@/composables/user/sign';
 import TheLaytoutFooter from '@/layouts/TheLayoutFooter.vue';
 import TheLayoutNavi from '@/layouts/TheLayoutNavi.vue';
@@ -25,7 +24,6 @@ const router = useRouter();
 const { isAuth } = useSign();
 const { initPocketbase } = usePocketbase();
 const { message } = useModal();
-const { setDefaultDeveloper } = useDeveloper();
 const { notificationSubscribe } = useNotification();
 const { initTheme, setting } = useSetting();
 
@@ -56,7 +54,5 @@ onMounted(() => {
 
   Notification.requestPermission(); // 알림 권한 요청
   notificationSubscribe(setting.value.notificationPermission === 'granted'); // 알림 구독 활성화
-
-  setDefaultDeveloper(); // 디폴트 개발자 셋팅
 });
 </script>
