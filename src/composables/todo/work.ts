@@ -10,6 +10,7 @@ export const useWork = () => {
     user: pb.authStore.model?.id,
     title: '',
     time: 0,
+    state: 'wait',
     done: false,
     developer: '',
   });
@@ -52,8 +53,23 @@ export const useWork = () => {
   };
 
   const updateWork = async () => {
-    await pb.collection('works').update(work.value.id, work.value);
+    const formDate = new FormData();
+    for (const [key, value] of Object.entries(work.value)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formDate.append(key, value as any);
+    }
+
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    for (const file of fileInput.files!) {
+      formDate.append('file', file);
+    }
+
+    await pb.collection('works').update(work.value.id, formDate);
     message.value = '수정완료';
+
+    // 파일 랜더링을 위해 재조회 및 기존 파일 클리어
+    await selectWork(work.value.id);
+    fileInput.value = '';
   };
 
   const updateWorkBySort = async (work: WorksResponse) => {
@@ -62,6 +78,22 @@ export const useWork = () => {
 
   const deleteWork = async (work: WorksResponse) => {
     await pb.collection('works').delete(work.id);
+  };
+
+  const deleteWorkImage = async (work: WorksResponse) => {
+    await pb.collection('works').update(work.id, {
+      file: null,
+    });
+    work.file = '';
+  };
+
+  const doneWork = async (work: WorksResponse) => {
+    pb.collection('works').update(work.id, {
+      ...work,
+      done: true,
+      state: 'done',
+      doneDate: new Date(),
+    });
   };
 
   const subscribeWorks = async () => {
@@ -82,14 +114,6 @@ export const useWork = () => {
     });
   };
 
-  const doneWork = async (work: WorksResponse) => {
-    pb.collection('works').update(work.id, {
-      ...work,
-      done: true,
-      doneDate: new Date(),
-    });
-  };
-
   return {
     work,
     works,
@@ -101,7 +125,8 @@ export const useWork = () => {
     updateWork,
     updateWorkBySort,
     deleteWork,
-    subscribeWorks,
+    deleteWorkImage,
     doneWork,
+    subscribeWorks,
   };
 };

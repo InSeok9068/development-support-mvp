@@ -15,22 +15,28 @@
           <input v-model="search.doneDate" type="date" />
         </label>
       </div>
+
       <div class="grid">
         <label>
           완료여부
           <input v-model="search.done" type="checkbox" role="switch" />
         </label>
       </div>
+
       <details>
         <summary role="button" class="outline">옵션 더보기</summary>
         <div class="grid">
           <label>
-            마감일자
-            <input v-model="search.dueDate" type="date" />
+            수정일자 (FROM)
+            <input v-model="search.updatedFrom" type="date" />
           </label>
           <label>
-            수정일자
-            <input v-model="search.updated" type="date" />
+            수정일자 (TO)
+            <input v-model="search.updatedTo" type="date" />
+          </label>
+          <label>
+            마감일자
+            <input v-model="search.dueDate" type="date" />
           </label>
           <label>
             개발자
@@ -44,10 +50,12 @@
           </label>
         </div>
       </details>
+
       <form role="search">
         <input v-model="search.text" type="search" @keydown.stop.prevent.enter="onClickSearch" />
         <input type="button" value="검색" @click="onClickSearch" />
       </form>
+
       <table>
         <thead>
           <tr>
@@ -58,20 +66,21 @@
         </thead>
         <tbody>
           <tr v-for="work in works" :key="work.id">
-            <td style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 600px">
+            <td class="title-overflow-hidden">
               {{ work.title }}
             </td>
             <td>
               {{ developers.find((developer) => developer.id === work.developer)?.name }}
             </td>
             <td>
-              <i class="bi bi-box-arrow-right" style="cursor: pointer" @click="router.push(`/detail/${work.id}`)"></i>
+              <i class="bi bi-box-arrow-right cursor-pointer" @click="router.push(`/detail/${work.id}`)"></i>
             </td>
           </tr>
         </tbody>
       </table>
+
       <div v-show="showAddButton">
-        <strong>현재 리스트 15개...&nbsp;&nbsp;</strong>
+        <strong>현재 리스트 최대 15개...&nbsp;&nbsp;</strong>
         <a href="#" @click.stop.prevent="onClickAddButton">더보기</a>
       </div>
     </article>
@@ -92,10 +101,11 @@ const { developers, selectDeveloperFullList } = useDeveloper();
 const search = ref({
   createdFrom: dayjs(new Date()).subtract(14, 'd').format('YYYY-MM-DD'),
   createdTo: dayjs(new Date()).format('YYYY-MM-DD'),
+  updatedFrom: '',
+  updatedTo: '',
   done: true,
   doneDate: '',
   dueDate: '',
-  updated: '',
   text: '',
   developer: '',
 });
@@ -115,14 +125,15 @@ onMounted(() => {
 const onClickSearch = () => {
   selectWorkList({
     filter: `
-    title ~ '${search.value.text}'
-    && created >= '${search.value.createdFrom}'
-    && created <= '${search.value.createdTo} 23:59:59'
-    && done = ${search.value.done}
-    ${search.value.doneDate && `&& doneDate ~ '${search.value.doneDate}'`}
-    ${search.value.dueDate && `&& dueDate ~ '${search.value.dueDate}'`}
-    ${search.value.updated && `&& updated ~ '${search.value.updated}'`}
-    ${search.value.developer && `&& developer ~ '${search.value.developer}'`}
+      title ~ '${search.value.text}'
+      && created >= '${search.value.createdFrom}'
+      && created <= '${search.value.createdTo} 23:59:59'
+      && done = ${search.value.done}
+      ${search.value.doneDate && `&& doneDate ~ '${search.value.doneDate}'`}
+      ${search.value.dueDate && `&& dueDate ~ '${search.value.dueDate}'`}
+      ${search.value.updatedFrom && `&& updated >= '${search.value.updatedFrom}'`}
+      ${search.value.updatedTo && `&& updated <= '${search.value.updatedTo} 23:59:59'`}
+      ${search.value.developer && `&& developer ~ '${search.value.developer}'`}
     `,
     page: pagination.value.page,
     perPage: pagination.value.perPage,
@@ -138,3 +149,11 @@ const onClickAddButton = () => {
   onClickSearch();
 };
 </script>
+
+<style scoped>
+.title-overflow-hidden {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+</style>

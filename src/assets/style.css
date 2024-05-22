@@ -7,3 +7,7 @@
 .blink {
   animation: blink 1s step-end infinite;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}

@@ -6,6 +6,7 @@ import type PocketBase from 'pocketbase';
 import type { RecordService } from 'pocketbase';
 
 export enum Collections {
+  Codes = 'codes',
   Developers = 'developers',
   Notifications = 'notifications',
   ScheduledNotifications = 'scheduledNotifications',
@@ -38,6 +39,15 @@ export type AuthSystemFields<T = never> = {
 
 // Record types for each collection
 
+export type CodesRecord = {
+  class?: string;
+  desc?: string;
+  isDel?: boolean;
+  sort?: number;
+  type?: string;
+  value?: string;
+};
+
 export type DevelopersRecord = {
   del?: boolean;
   isLeader?: boolean;
@@ -54,7 +64,7 @@ export type NotificationsRecord = {
 
 export type ScheduledNotificationsRecord = {
   message?: string;
-  scheduledTime: IsoDateString;
+  time?: IsoDateString;
   title: string;
   user: RecordIdString;
 };
@@ -75,16 +85,18 @@ export type WorksRecord = {
   done?: boolean;
   doneDate?: IsoDateString;
   dueDate?: IsoDateString;
-  file?: string[];
+  file?: string;
   joplin?: string;
   redmine?: string;
   sort?: number;
+  state?: string;
   time?: number;
   title: string;
   user: RecordIdString;
 };
 
 // Response types include system fields and match responses from the PocketBase API
+export type CodesResponse<Texpand = unknown> = Required<CodesRecord> & BaseSystemFields<Texpand>;
 export type DevelopersResponse<Texpand = unknown> = Required<DevelopersRecord> & BaseSystemFields<Texpand>;
 export type NotificationsResponse<Texpand = unknown> = Required<NotificationsRecord> & BaseSystemFields<Texpand>;
 export type ScheduledNotificationsResponse<Texpand = unknown> = Required<ScheduledNotificationsRecord> &
@@ -96,6 +108,7 @@ export type WorksResponse<Texpand = unknown> = Required<WorksRecord> & BaseSyste
 // Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
+  codes: CodesRecord;
   developers: DevelopersRecord;
   notifications: NotificationsRecord;
   scheduledNotifications: ScheduledNotificationsRecord;
@@ -105,6 +118,7 @@ export type CollectionRecords = {
 };
 
 export type CollectionResponses = {
+  codes: CodesResponse;
   developers: DevelopersResponse;
   notifications: NotificationsResponse;
   scheduledNotifications: ScheduledNotificationsResponse;
@@ -117,6 +131,7 @@ export type CollectionResponses = {
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
 export type TypedPocketBase = PocketBase & {
+  collection(idOrName: 'codes'): RecordService<CodesResponse>;
   collection(idOrName: 'developers'): RecordService<DevelopersResponse>;
   collection(idOrName: 'notifications'): RecordService<NotificationsResponse>;
   collection(idOrName: 'scheduledNotifications'): RecordService<ScheduledNotificationsResponse>;

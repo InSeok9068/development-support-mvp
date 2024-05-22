@@ -2,6 +2,7 @@ import pb from '@/api/pocketbase';
 import type { DevelopersResponse } from '@/api/pocketbase-types';
 import { useModal } from '@/composables/modal';
 import { useDeveloperStore } from '@/stores/developer.store';
+import type { UiDeveloperArgs } from '@/ui/todo.ui';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
@@ -9,7 +10,7 @@ export const useDeveloper = () => {
   const { message } = useModal();
   const { selectDeveloper } = storeToRefs(useDeveloperStore());
 
-  const developerArgs = ref({
+  const developerArgs = ref<UiDeveloperArgs>({
     id: '',
     user: pb.authStore.model?.id,
     name: '',

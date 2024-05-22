@@ -6,8 +6,15 @@
           <h3><a class="contrast" href="/">업무관리</a></h3>
         </li>
         <li></li>
-        <li><router-link to="/">TODO</router-link></li>
-        <li><router-link to="/list">LIST</router-link></li>
+        <li>
+          <router-link to="/"><strong>Todo</strong></router-link>
+        </li>
+        <li>
+          <router-link to="/list"><strong>List</strong></router-link>
+        </li>
+        <li>
+          <router-link to="/calendar"><strong>Calendar</strong></router-link>
+        </li>
       </ul>
       <ul>
         <li>
@@ -39,11 +46,11 @@
         </li>
         <li>
           <i
+            class="cursor-pointer"
             :class="{
               'bi bi-brightness-high': setting.theme === 'dark',
               'bi bi-brightness-high-fill': setting.theme === 'white',
             }"
-            style="cursor: pointer"
             @click="toggleTheme"
           ></i>
         </li>

@@ -16,6 +16,10 @@ const routes = [
     component: () => import('@/views/todo/TodoListView.vue'),
   },
   {
+    path: '/calendar',
+    component: () => import('@/views/calendar/CalendarView.vue'),
+  },
+  {
     path: '/setting',
     component: () => import('@/views/setting/SettingView.vue'),
   },

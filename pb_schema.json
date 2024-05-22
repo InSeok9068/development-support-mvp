@@ -61,6 +61,101 @@
     }
   },
   {
+    "id": "uuhvn67fx80wusl",
+    "name": "codes",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "system": false,
+        "id": "vgsphlbq",
+        "name": "type",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "yyfbewra",
+        "name": "value",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "cb4le0bt",
+        "name": "desc",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "u9coeq91",
+        "name": "sort",
+        "type": "number",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": true
+        }
+      },
+      {
+        "system": false,
+        "id": "cvnmhhu6",
+        "name": "class",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "bqmvyweu",
+        "name": "isDel",
+        "type": "bool",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {}
+      }
+    ],
+    "indexes": [],
+    "listRule": "",
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "options": {}
+  },
+  {
     "id": "m83gqo0pt1mq4fj",
     "name": "developers",
     "type": "base",
@@ -140,14 +235,14 @@
     "options": {}
   },
   {
-    "id": "6gktofl77d744dh",
+    "id": "tho876bbpw3h8jc",
     "name": "notifications",
     "type": "base",
     "system": false,
     "schema": [
       {
         "system": false,
-        "id": "scktrzhg",
+        "id": "fz77pjv4",
         "name": "user",
         "type": "relation",
         "required": true,
@@ -163,7 +258,7 @@
       },
       {
         "system": false,
-        "id": "azazx4t4",
+        "id": "xz775cqr",
         "name": "title",
         "type": "text",
         "required": true,
@@ -177,7 +272,7 @@
       },
       {
         "system": false,
-        "id": "xhmkupke",
+        "id": "h1sd9rnt",
         "name": "message",
         "type": "text",
         "required": false,
@@ -199,14 +294,14 @@
     "options": {}
   },
   {
-    "id": "l6cmslg7fyct0zw",
+    "id": "braiclj06bawp0y",
     "name": "scheduledNotifications",
     "type": "base",
     "system": false,
     "schema": [
       {
         "system": false,
-        "id": "ka2slqrt",
+        "id": "webgdgxz",
         "name": "user",
         "type": "relation",
         "required": true,
@@ -222,7 +317,7 @@
       },
       {
         "system": false,
-        "id": "czycypjn",
+        "id": "ivihta9q",
         "name": "title",
         "type": "text",
         "required": true,
@@ -236,7 +331,7 @@
       },
       {
         "system": false,
-        "id": "gy4y9q8s",
+        "id": "gjhcrifm",
         "name": "message",
         "type": "text",
         "required": false,
@@ -250,10 +345,10 @@
       },
       {
         "system": false,
-        "id": "7tm5k04j",
-        "name": "scheduledTime",
+        "id": "84uegulu",
+        "name": "time",
         "type": "date",
-        "required": true,
+        "required": false,
         "presentable": false,
         "unique": false,
         "options": {
@@ -453,7 +548,7 @@
         "options": {
           "mimeTypes": [],
           "thumbs": [],
-          "maxSelect": 99,
+          "maxSelect": 1,
           "maxSize": 5242880,
           "protected": false
         }
@@ -470,6 +565,20 @@
           "min": null,
           "max": null,
           "noDecimal": true
+        }
+      },
+      {
+        "system": false,
+        "id": "mpopaffs",
+        "name": "state",
+        "type": "text",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
         }
       },
       {
