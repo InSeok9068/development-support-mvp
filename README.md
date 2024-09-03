@@ -1,26 +1,24 @@
 # Development-Support-MVP
 
-개발도우미 MVP
+## 배포
 
-## 환경구성
-
-Hosting : Firebase Hosting
-
-Language : TypeScript
-
-BaaS Service : PocketBase
-
-Frontend Framework : VueJS
-
-CSS Framework : PicoCSS
-
-### 배포
+### Firebase Hosting
 
 ```shell
 firebase deploy
 ```
 
-### 서버 도메인
+### 오라클 클라우드 서버 도메인
 
 도메인 : development-support.o-r.kr
 IP : 146.56.177.250
+
+## 프로젝트 컨벤션
+
+```js
+순서
+/* ======================= 변수 ======================= */
+/* ======================= 감시자 ======================= */
+/* ======================= 생명주기 훅 ======================= */
+/* ======================= 메서드 ======================= */
+```

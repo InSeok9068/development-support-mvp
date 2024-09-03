@@ -4,22 +4,22 @@
       <div class="grid">
         <label>
           등록일자 (FROM)
-          <input v-model="search.createdFrom" type="date" />
+          <input v-model="listFilter.createdFrom" type="date" />
         </label>
         <label>
           등록일자 (TO)
-          <input v-model="search.createdTo" type="date" />
+          <input v-model="listFilter.createdTo" type="date" />
         </label>
         <label>
           완료일자
-          <input v-model="search.doneDate" type="date" />
+          <input v-model="listFilter.doneDate" type="date" />
         </label>
       </div>
 
       <div class="grid">
         <label>
           완료여부
-          <input v-model="search.done" type="checkbox" role="switch" />
+          <input v-model="listFilter.done" type="checkbox" role="switch" />
         </label>
       </div>
 
@@ -28,19 +28,25 @@
         <div class="grid">
           <label>
             수정일자 (FROM)
-            <input v-model="search.updatedFrom" type="date" />
+            <input v-model="listFilter.updatedFrom" type="date" />
           </label>
           <label>
             수정일자 (TO)
-            <input v-model="search.updatedTo" type="date" />
+            <input v-model="listFilter.updatedTo" type="date" />
           </label>
           <label>
             마감일자
-            <input v-model="search.dueDate" type="date" />
+            <input v-model="listFilter.dueDate" type="date" />
           </label>
           <label>
             개발자
-            <select v-model="search.developer">
+            <select v-model="listFilter.developer">
+              <option value="ALL">
+                <span></span>
+              </option>
+              <option value="">
+                <span>미배정</span>
+              </option>
               <template v-for="developer in developers">
                 <option :value="developer.id">
                   <span>{{ developer.name }}</span>
@@ -49,10 +55,16 @@
             </select>
           </label>
         </div>
+        <div class="grid">
+          <label>
+            주간보고서
+            <input v-model="weeklyReport" type="checkbox" role="switch" @change="onChangeSetWeeklyReportDate" />
+          </label>
+        </div>
       </details>
 
       <form role="search">
-        <input v-model="search.text" type="search" @keydown.stop.prevent.enter="onClickSearch" />
+        <input v-model="listFilter.text" type="search" @keydown.stop.prevent.enter="onClickSearch" />
         <input type="button" value="검색" @click="onClickSearch" />
       </form>
 
@@ -66,11 +78,11 @@
         </thead>
         <tbody>
           <tr v-for="work in works" :key="work.id">
-            <td class="title-overflow-hidden">
+            <td class="max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
               {{ work.title }}
             </td>
             <td>
-              {{ developers.find((developer) => developer.id === work.developer)?.name }}
+              {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
             </td>
             <td>
               <i class="bi bi-box-arrow-right cursor-pointer" @click="router.push(`/detail/${work.id}`)"></i>
@@ -88,52 +100,49 @@
 </template>
 
 <script setup lang="ts">
-import { useDeveloper } from '@/composables/todo/developer';
+import pb from '@/api/pocketbase';
+import type { DevelopersResponse } from '@/api/pocketbase-types';
+import { useSearch } from '@/composables/todo/search';
 import { useWork } from '@/composables/todo/work';
 import dayjs from 'dayjs';
+import weekday from 'dayjs/plugin/weekday';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+dayjs.extend(weekday);
 
+/* ======================= 변수 ======================= */
 const router = useRouter();
 const { works, selectWorkList } = useWork();
-const { developers, selectDeveloperFullList } = useDeveloper();
-
-const search = ref({
-  createdFrom: dayjs(new Date()).subtract(14, 'd').format('YYYY-MM-DD'),
-  createdTo: dayjs(new Date()).format('YYYY-MM-DD'),
-  updatedFrom: '',
-  updatedTo: '',
-  done: true,
-  doneDate: '',
-  dueDate: '',
-  text: '',
-  developer: '',
-});
-
+const { listFilter } = useSearch();
+const developers = ref<DevelopersResponse[]>([]);
 const showAddButton = ref(true);
-
+const weeklyReport = ref(false);
 const pagination = ref({
   page: 1,
   perPage: 15,
 });
+/* ======================= 변수 ======================= */
 
+/* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   selectDeveloperFullList();
   onClickSearch();
 });
+/* ======================= 생명주기 훅 ======================= */
 
+/* ======================= 메서드 ======================= */
 const onClickSearch = () => {
   selectWorkList({
     filter: `
-      title ~ '${search.value.text}'
-      && created >= '${search.value.createdFrom}'
-      && created <= '${search.value.createdTo} 23:59:59'
-      && done = ${search.value.done}
-      ${search.value.doneDate && `&& doneDate ~ '${search.value.doneDate}'`}
-      ${search.value.dueDate && `&& dueDate ~ '${search.value.dueDate}'`}
-      ${search.value.updatedFrom && `&& updated >= '${search.value.updatedFrom}'`}
-      ${search.value.updatedTo && `&& updated <= '${search.value.updatedTo} 23:59:59'`}
-      ${search.value.developer && `&& developer ~ '${search.value.developer}'`}
+      title ~ '${listFilter.value.text}'
+      && created >= '${listFilter.value.createdFrom}'
+      && created <= '${listFilter.value.createdTo} 23:59:59'
+      && done = ${listFilter.value.done}
+      ${listFilter.value.doneDate && `&& doneDate ~ '${listFilter.value.doneDate}'`}
+      ${listFilter.value.dueDate && `&& dueDate ~ '${listFilter.value.dueDate}'`}
+      ${listFilter.value.updatedFrom && `&& updated >= '${listFilter.value.updatedFrom}'`}
+      ${listFilter.value.updatedTo && `&& updated <= '${listFilter.value.updatedTo} 23:59:59'`}
+      ${listFilter.value.developer !== 'ALL' ? `&& developer = '${listFilter.value.developer}'` : ''}
     `,
     page: pagination.value.page,
     perPage: pagination.value.perPage,
@@ -148,12 +157,22 @@ const onClickAddButton = () => {
   showAddButton.value = false;
   onClickSearch();
 };
-</script>
 
-<style scoped>
-.title-overflow-hidden {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-</style>
+const onChangeSetWeeklyReportDate = () => {
+  if (weeklyReport.value) {
+    listFilter.value.updatedFrom = dayjs(new Date()).startOf('week').add(1, 'day').format('YYYY-MM-DD');
+    listFilter.value.updatedTo = dayjs(new Date()).startOf('week').add(5, 'day').format('YYYY-MM-DD');
+  } else {
+    listFilter.value.updatedFrom = '';
+    listFilter.value.updatedTo = '';
+  }
+};
+
+const selectDeveloperFullList = async () => {
+  developers.value = await pb.collection('developers').getFullList({
+    filter: `del = false`,
+    sort: 'sort',
+  });
+};
+/* ======================= 메서드 ======================= */
+</script>

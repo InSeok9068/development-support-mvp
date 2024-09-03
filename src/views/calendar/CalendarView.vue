@@ -1,6 +1,8 @@
 <template>
   <main class="container">
-    <FullCalendar :options="calendarOption" />
+    <article>
+      <FullCalendar :options="calendarOption" />
+    </article>
   </main>
 </template>
 
@@ -15,9 +17,18 @@ import dayjs from 'dayjs';
 import { onBeforeMount, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+/* ======================= 변수 ======================= */
 const { works, selectWorkFullList } = useWork();
 const router = useRouter();
+/* ======================= 변수 ======================= */
 
+/* ======================= 생명주기 훅 ======================= */
+onBeforeMount(() => {
+  selectWorkFullList();
+});
+/* ======================= 생명주기 훅 ======================= */
+
+/* ======================= 메서드 ======================= */
 const onClickDate = (args: DateClickArg) => {
   console.log(args);
 };
@@ -46,8 +57,5 @@ setTimeout(
     }))),
   100,
 );
-
-onBeforeMount(() => {
-  selectWorkFullList();
-});
+/* ======================= 메서드 ======================= */
 </script>

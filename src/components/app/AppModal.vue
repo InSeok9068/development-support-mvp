@@ -1,13 +1,13 @@
 <template>
-  <dialog v-show="!!message" id="modal" open>
+  <dialog v-show="modal.show" id="modal" open>
     <article>
       <header>
-        <button aria-label="Close" rel="prev" data-target="modal" @click="message = ''"></button>
-        <h3>알림</h3>
+        <button aria-label="Close" rel="prev" data-target="modal" @click="clearModal"></button>
+        <h3>{{ modal.title }}</h3>
       </header>
-      <p>{{ message }}</p>
+      <p>{{ modal.message }}</p>
       <footer>
-        <button role="button" class="secondary" data-target="modal" @click="message = ''">Cancel</button>
+        <button role="button" class="secondary" data-target="modal" @click="clearModal">Cancel</button>
       </footer>
     </article>
   </dialog>
@@ -16,5 +16,5 @@
 <script setup lang="ts">
 import { useModal } from '@/composables/modal';
 
-const { message } = useModal();
+const { modal, clearModal } = useModal();
 </script>

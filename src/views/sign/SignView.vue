@@ -19,6 +19,43 @@
 
 <script setup lang="ts">
 import { useSign } from '@/composables/user/sign';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useModal } from '@/composables/modal';
+import pb from '@/api/pocketbase';
 
-const { signinFormArgs, signupFormArgs, signin, signup } = useSign();
+/* ======================= 변수 ======================= */
+const { isAuth } = useSign();
+const router = useRouter();
+const { showMessageModal } = useModal();
+const signinFormArgs = ref({
+  email: '',
+  password: '',
+});
+
+const signupFormArgs = ref({
+  email: '',
+  nickname: '',
+  password: '',
+});
+/* ======================= 변수 ======================= */
+
+/* ======================= 메서드 ======================= */
+const signin = async () => {
+  await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
+  isAuth.value = true;
+  await router.push('/');
+};
+
+const signup = async () => {
+  await pb.collection('users').create({
+    name: signupFormArgs.value.nickname,
+    email: signupFormArgs.value.email,
+    password: signupFormArgs.value.password,
+    passwordConfirm: signupFormArgs.value.password,
+  });
+
+  showMessageModal('회원가입이 완료되었습니다.');
+};
+/* ======================= 메서드 ======================= */
 </script>

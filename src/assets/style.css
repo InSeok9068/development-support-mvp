@@ -1,13 +1,5 @@
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
+@import 'open-props/style';
 
-.blink {
-  animation: blink 1s step-end infinite;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

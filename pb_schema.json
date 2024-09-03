@@ -18,28 +18,6 @@
           "max": null,
           "pattern": ""
         }
-      },
-      {
-        "system": false,
-        "id": "users_avatar",
-        "name": "avatar",
-        "type": "file",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "mimeTypes": [
-            "image/jpeg",
-            "image/png",
-            "image/svg+xml",
-            "image/gif",
-            "image/webp"
-          ],
-          "thumbs": null,
-          "maxSelect": 1,
-          "maxSize": 5242880,
-          "protected": false
-        }
       }
     ],
     "indexes": [],
@@ -139,7 +117,7 @@
       {
         "system": false,
         "id": "bqmvyweu",
-        "name": "isDel",
+        "name": "del",
         "type": "bool",
         "required": false,
         "presentable": false,
@@ -208,7 +186,7 @@
       {
         "system": false,
         "id": "yu9kxkcn",
-        "name": "isLeader",
+        "name": "leader",
         "type": "bool",
         "required": false,
         "presentable": false,
@@ -283,6 +261,16 @@
           "max": null,
           "pattern": ""
         }
+      },
+      {
+        "system": false,
+        "id": "1mvrnswo",
+        "name": "read",
+        "type": "bool",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {}
       }
     ],
     "indexes": [],
@@ -389,16 +377,14 @@
       },
       {
         "system": false,
-        "id": "lcdqlhtd",
-        "name": "daysBefore",
-        "type": "number",
+        "id": "ir3uxwbj",
+        "name": "data",
+        "type": "json",
         "required": false,
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
-          "noDecimal": false
+          "maxSize": 2000000
         }
       }
     ],
@@ -456,6 +442,20 @@
         "unique": false,
         "options": {
           "convertUrls": false
+        }
+      },
+      {
+        "system": false,
+        "id": "bl7hdkt9",
+        "name": "contentBoxHeight",
+        "type": "number",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 200,
+          "max": null,
+          "noDecimal": false
         }
       },
       {
@@ -518,9 +518,7 @@
         "unique": false,
         "options": {
           "exceptDomains": [],
-          "onlyDomains": [
-            "pms.kpcard.co.kr"
-          ]
+          "onlyDomains": ["pms.kpcard.co.kr"]
         }
       },
       {
@@ -549,7 +547,7 @@
           "mimeTypes": [],
           "thumbs": [],
           "maxSelect": 1,
-          "maxSize": 5242880,
+          "maxSize": 52428800,
           "protected": false
         }
       },
@@ -594,6 +592,22 @@
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
+          "displayFields": null
+        }
+      },
+      {
+        "system": false,
+        "id": "pjilxe1k",
+        "name": "scheduledNotifications",
+        "type": "relation",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "braiclj06bawp0y",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": null,
           "displayFields": null
         }
       }

@@ -1,17 +1,14 @@
-import { usePermission } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export const useSettingStore = defineStore(
-  'setting',
-  () => {
-    const setting = ref({
-      theme: 'white',
-      notificationPermission: usePermission('notifications'),
-      daysBefore: 1,
-    });
+export interface SettingJson {
+  daysBefore: number;
+}
 
-    return { setting };
-  },
-  { persist: true },
-);
+export const useSettingStore = defineStore('setting', () => {
+  const setting = ref<SettingJson>({
+    daysBefore: 0,
+  });
+
+  return { setting };
+});

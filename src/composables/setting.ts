@@ -1,21 +1,36 @@
-import { useSettingStore } from '@/stores/setting.store';
+import pb from '@/api/pocketbase';
+import { useModal } from '@/composables/modal';
+import { type SettingJson, useSettingStore } from '@/stores/setting.store';
 import { storeToRefs } from 'pinia';
 
 export const useSetting = () => {
+  /* ======================= 변수 ======================= */
   const { setting } = storeToRefs(useSettingStore());
+  const { showMessageModal } = useModal();
+  /* ======================= 변수 ======================= */
 
-  const toggleTheme = () => {
-    setting.value.theme = setting.value.theme === 'white' ? 'dark' : 'white';
-    document.documentElement.setAttribute('data-theme', setting.value.theme);
+  /* ======================= 메서드 ======================= */
+  const initSetting = async () => {
+    await selectSetting();
   };
 
-  const initTheme = () => {
-    document.documentElement.setAttribute('data-theme', setting.value.theme);
+  const selectSetting = async () => {
+    setting.value = (await pb.collection('settings').getFirstListItem('')).data as SettingJson;
   };
+
+  const updateSetting = async () => {
+    const settingDto = await pb.collection('settings').getFirstListItem('');
+    settingDto.data = setting.value;
+    await pb.collection('settings').update(settingDto.id, settingDto);
+    showMessageModal('수정완료');
+  };
+  /* ======================= 메서드 ======================= */
 
   return {
     setting,
-    toggleTheme,
-    initTheme,
+
+    initSetting,
+    selectSetting,
+    updateSetting,
   };
 };

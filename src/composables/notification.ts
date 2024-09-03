@@ -1,41 +1,23 @@
 import pb from '@/api/pocketbase';
-import dayjs from 'dayjs';
+import { useGlobal } from '@/composables/global';
 
 export const useNotification = () => {
-  const subscribeNotification = (on: boolean = true) => {
-    if (on) {
-      pb.collection('notifications').subscribe('*', (e) => {
-        switch (e.action) {
-          case 'create':
-            new Notification(e.record.title, {
-              body: e.record.message,
-            });
-        }
-      });
-    } else {
-      pb.collection('notifications').unsubscribe('*');
-    }
-  };
+  /* ======================= 변수 ======================= */
+  const { global } = useGlobal();
+  /* ======================= 변수 ======================= */
 
-  const subscribeScheduledNotifications = (on: boolean = true) => {
-    if (on) {
-      // 1분 마다 확인
-      setInterval(async () => {
-        const scheduledNotifications = await pb.collection('scheduledNotifications').getFullList({
-          filter: `time ~ '${dayjs().format('YYYY-MM-DD HH:MM')}'`,
-          sort: 'created',
-        });
-
-        scheduledNotifications.forEach((record) => {
-          pb.collection('scheduledNotifications').delete(record.id);
-          pb.collection('notifications').create(record);
-        });
-      }, 1000 * 60);
-    }
+  /* ======================= 메서드 ======================= */
+  const checkUnReadNotifications = async () => {
+    global.value.notificationDot =
+      (
+        await pb.collection('notifications').getFullList({
+          filter: 'read = false',
+        })
+      ).length > 0;
   };
+  /* ======================= 메서드 ======================= */
 
   return {
-    subscribeNotification,
-    subscribeScheduledNotifications,
+    checkUnReadNotifications,
   };
 };

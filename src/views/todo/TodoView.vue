@@ -2,19 +2,18 @@
   <main class="container">
     <article>
       <div class="grid">
-        <h5 class="red">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
-        <h5 :class="{ blink: works.length > 10 }">현재 {{ works.length }}개</h5>
+        <h5 class="text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
+        <h5 :class="{ 'animate-pulse': works.length > 10 }">현재 {{ works.length }}개</h5>
       </div>
 
-      <div role="group">
-        <button :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveoper('ALL')">ALL</button>
-        <button :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveoper('')">미배정</button>
+      <div class="mb-3 grid">
+        <button :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">ALL</button>
+        <button :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">미배정</button>
         <template v-for="developer in developers">
           <button
             :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
-            @click="onClickSelectDeveoper(developer)"
+            @click="onClickSelectDeveloper(developer)"
           >
-            <!-- <i v-if="developer.isLeader" class="bi bi-star"></i> -->
             {{ developer.name }}
           </button>
         </template>
@@ -33,18 +32,18 @@
           @dragover.prevent
         >
           <h6>
-            <input type="checkbox" @click.stop.prevent="doneWork(work)" />
+            <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
             <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
               {{ work.title }}
             </a>
-            <i class="bi bi-trash cursor-pointer ml-10" @click="deleteWork(work)"></i>
+            <i class="bi bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
           </h6>
 
           <div class="grid">
             <label>
               개발자 :
               <span>
-                {{ developers.find((developer) => developer.id === work.developer)?.name }}
+                {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
               </span>
             </label>
             <label>
@@ -60,7 +59,13 @@
                 {{ dayjs(work.created).format('YYYY-MM-DD') }}
               </span>
             </label>
-            <label :class="{ blink: dayjs(work.dueDate).isBefore(dayjs().add(setting.daysBefore, 'd')) }">
+            <label
+              :class="{
+                'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                  dayjs().add(setting.daysBefore, 'd'),
+                ),
+              }"
+            >
               마감일자 :
               <span>
                 {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
@@ -74,33 +79,48 @@
 </template>
 
 <script setup lang="ts">
-import type { DevelopersResponse } from '@/api/pocketbase-types';
+import pb from '@/api/pocketbase';
+import type { DevelopersResponse, WorksRecord, WorksResponse } from '@/api/pocketbase-types';
 import { useCode } from '@/composables/code';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import router from '@/router';
 import dayjs from 'dayjs';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
-const { developers, selectDeveloper, selectDeveloperFullList } = useDeveloper();
-const { workArgs, works, selectWorkFullList, createWork, deleteWork, subscribeWorks, doneWork, updateWorkBySort } =
-  useWork();
+/* ======================= 변수 ======================= */
+const { selectDeveloper, developers, selectDeveloperFullList } = useDeveloper();
+const { works, selectWorkFullList, deleteWork } = useWork();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
+const workArgs = ref<WorksRecord>({
+  user: pb.authStore.model?.id,
+  title: '',
+  time: 0,
+  state: 'wait',
+  done: false,
+  developer: '',
+  contentBoxHeight: 400,
+});
+/* ======================= 변수 ======================= */
 
+/* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   selectWorkFullListFilterDeveloper(selectDeveloper.value);
   selectDeveloperFullList();
   subscribeWorks();
 });
+/* ======================= 생명주기 훅 ======================= */
 
+/* ======================= 메서드 ======================= */
 const onClickCreateWork = async () => {
-  await createWork();
+  await pb.collection('works').create(workArgs.value);
   await selectWorkFullList();
+  workArgs.value.title = '';
 };
 
-const onClickSelectDeveoper = (developer: DevelopersResponse | string) => {
+const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
   selectDeveloper.value = developer;
   selectWorkFullListFilterDeveloper(developer);
 };
@@ -134,17 +154,39 @@ const onDropWork = (event: DragEvent, curIndex: number) => {
 
   works.value.forEach((work, index) => {
     work.sort = index;
-    updateWorkBySort(work);
+    pb.collection('works').update(work.id, work);
   });
 };
+
+const onClickDoneWork = async (work: WorksResponse) => {
+  await pb.collection('works').update(work.id, {
+    ...work,
+    done: true,
+    state: 'done',
+    doneDate: new Date(),
+  });
+};
+
+const onClickDeleteWork = async (work: WorksResponse) => {
+  await deleteWork(work);
+};
+
+const subscribeWorks = async () => {
+  await pb.collection('works').subscribe('*', (e) => {
+    switch (e.action) {
+      case 'create':
+        works.value.push(e.record);
+        break;
+      case 'update':
+        if (e.record.done) {
+          works.value = works.value.filter((i) => i.id !== e.record.id);
+        }
+        break;
+      case 'delete':
+        works.value = works.value.filter((i) => i.id !== e.record.id);
+        break;
+    }
+  });
+};
+/* ======================= 메서드 ======================= */
 </script>
-
-<style scoped>
-.red {
-  color: red;
-}
-
-.ml-10 {
-  margin-left: 10px;
-}
-</style>

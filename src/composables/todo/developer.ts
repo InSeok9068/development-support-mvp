@@ -1,52 +1,34 @@
-import pb from '@/api/pocketbase';
-import type { DevelopersResponse } from '@/api/pocketbase-types';
-import { useModal } from '@/composables/modal';
 import { useDeveloperStore } from '@/stores/developer.store';
-import type { UiDeveloperArgs } from '@/ui/todo.ui';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
+import type { DevelopersResponse } from '@/api/pocketbase-types';
+import pb from '@/api/pocketbase';
+import type { RecordFullListOptions } from 'pocketbase';
 
 export const useDeveloper = () => {
-  const { message } = useModal();
+  /* ======================= 변수 ======================= */
   const { selectDeveloper } = storeToRefs(useDeveloperStore());
-
-  const developerArgs = ref<UiDeveloperArgs>({
-    id: '',
-    user: pb.authStore.model?.id,
-    name: '',
-    sort: 1,
-    isLeader: false,
-    del: false,
-  });
-
   const developers = ref<DevelopersResponse[]>([]);
+  /* ======================= 변수 ======================= */
 
-  const developer = ref<DevelopersResponse>({} as DevelopersResponse);
-
-  const selectDeveloperFullList = async () => {
+  /* ======================= 메서드 ======================= */
+  const selectDeveloperFullList = async ({
+    filter = 'del = false',
+    sort = 'sort',
+    option = {} as RecordFullListOptions,
+  } = {}) => {
     developers.value = await pb.collection('developers').getFullList({
-      filter: `del = false`,
-      sort: 'sort',
+      filter,
+      sort,
+      ...option,
     });
   };
-
-  const createDeveloper = async () => {
-    await pb.collection('developers').create(developerArgs.value);
-    message.value = '등록 완료';
-  };
-
-  const updateDeveloper = async () => {
-    await pb.collection('developers').update(developerArgs.value.id, developerArgs.value);
-    message.value = '수정 완료';
-  };
+  /* ======================= 메서드 ======================= */
 
   return {
-    developer,
     developers,
-    developerArgs,
     selectDeveloper,
+
     selectDeveloperFullList,
-    createDeveloper,
-    updateDeveloper,
   };
 };
