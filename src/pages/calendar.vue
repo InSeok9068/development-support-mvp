@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { useWork } from '@/composables/todo/work';
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core/index.js';
+import type { CalendarOptions, EventClickArg, EventMountArg } from '@fullcalendar/core/index.js';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import type { DateClickArg } from '@fullcalendar/interaction/index.js';
@@ -16,6 +16,8 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
 import { onBeforeMount, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
 
 /* ======================= 변수 ======================= */
 const { works, selectWorkFullList } = useWork();
@@ -38,12 +40,17 @@ const onClickEvent = (args: EventClickArg) => {
   router.push(`/detail/${args.event.id}`);
 };
 
+const onDidMountEvent = (args: EventMountArg) => {
+  tippy(args.el, { content: args.event.title });
+};
+
 const calendarOption = ref<CalendarOptions>({
   plugins: [interactionPlugin, dayGridPlugin],
   initialView: 'dayGridMonth',
   selectable: true,
   dateClick: onClickDate,
   eventClick: onClickEvent,
+  eventDidMount: onDidMountEvent,
   events: [],
 });
 

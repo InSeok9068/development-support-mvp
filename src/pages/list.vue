@@ -68,60 +68,75 @@
         <input type="button" value="검색" @click="onClickSearch" />
       </form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>제목</th>
-            <th>개발자</th>
-            <th>상세보기</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="work in works" :key="work.id">
-            <td class="max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
-              {{ work.title }}
-            </td>
-            <td>
-              {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-            </td>
-            <td>
-              <i class="bi bi-box-arrow-right cursor-pointer" @click="router.push(`/detail/${work.id}`)"></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div v-show="showAddButton">
-        <strong>현재 리스트 최대 15개...&nbsp;&nbsp;</strong>
-        <a href="#" @click.stop.prevent="onClickAddButton">더보기</a>
-      </div>
+      <AgGridVue
+        :class="global.theme == 'white' ? 'ag-theme-material' : 'ag-theme-material-dark'"
+        :grid-options="gridOptions"
+        :column-defs="columns"
+        :row-data="rowData"
+        :pagination="true"
+        :pagination-page-size="15"
+        :pagination-page-size-selector="[15, 30, 100]"
+      />
     </article>
   </main>
 </template>
 
 <script setup lang="ts">
+import 'ag-grid-community/styles/ag-grid.min.css';
+import 'ag-grid-community/styles/ag-theme-material.css';
+// import 'ag-grid-community/styles/ag-theme-quartz.css';
+// import 'ag-grid-community/styles/ag-theme-alpine.css';
 import pb from '@/api/pocketbase';
-import type { DevelopersResponse } from '@/api/pocketbase-types';
+import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useSearch } from '@/composables/todo/search';
 import { useWork } from '@/composables/todo/work';
+import { AgGridVue } from 'ag-grid-vue3';
+import type { GridOptions, ColDef, RowClickedEvent } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import type { UiWorkList } from '@/ui/todo.ui';
+import { useGlobal } from '@/composables/global';
 dayjs.extend(weekday);
 
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { works, selectWorkList } = useWork();
 const { listFilter } = useSearch();
+const { global } = useGlobal();
 const developers = ref<DevelopersResponse[]>([]);
-const showAddButton = ref(true);
 const weeklyReport = ref(false);
-const pagination = ref({
-  page: 1,
-  perPage: 15,
-});
+const gridOptions: GridOptions = {
+  domLayout: 'autoHeight',
+  autoSizeStrategy: {
+    type: 'fitGridWidth',
+  },
+  onRowClicked(event: RowClickedEvent) {
+    router.push(`/detail/${event.data.id}`);
+  },
+};
+const columns = ref<ColDef<UiWorkList>[]>([
+  { field: 'title', headerName: '제목' },
+  { field: 'developer', headerName: '개발자', width: 50 },
+  { field: 'created', headerName: '등록일자', width: 80 },
+  { field: 'updated', headerName: '수정일자', width: 80 },
+]);
+const rowData = ref<UiWorkList[]>([]);
 /* ======================= 변수 ======================= */
+
+/* ======================= 감시자 ======================= */
+watch(works, (newValue) => {
+  rowData.value = newValue.map((work: WorksResponse) => ({
+    id: work.id,
+    title: work.title,
+    developer: developers.value.find((developer: DevelopersResponse) => developer.id === work.developer)?.name ?? '',
+    created: dayjs(work.created).format('YYYY-MM-DD HH:mm:ss'),
+    updated: dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss'),
+  }));
+});
+
+/* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
@@ -144,18 +159,8 @@ const onClickSearch = () => {
       ${listFilter.value.updatedTo && `&& updated <= '${listFilter.value.updatedTo} 23:59:59'`}
       ${listFilter.value.developer !== 'ALL' ? `&& developer = '${listFilter.value.developer}'` : ''}
     `,
-    page: pagination.value.page,
-    perPage: pagination.value.perPage,
+    perPage: 100000,
   });
-};
-
-const onClickAddButton = () => {
-  pagination.value = {
-    ...pagination.value,
-    perPage: 5000,
-  };
-  showAddButton.value = false;
-  onClickSearch();
 };
 
 const onChangeSetWeeklyReportDate = () => {
@@ -176,3 +181,10 @@ const selectDeveloperFullList = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
+
+<style>
+.ag-paging-button {
+  background-color: var(--ag-background-color);
+  border-color: var(--ag-border-color);
+}
+</style>

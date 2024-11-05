@@ -3,33 +3,65 @@
     <nav>
       <ul>
         <li>
-          <h3><a class="contrast" href="/">업무관리</a></h3>
+          <h3 class="whitespace-nowrap"><a class="contrast" href="/">업무관리</a></h3>
         </li>
-        <li></li>
-        <li>
-          <router-link to="/" data-tooltip="Alt + 1" data-placement="bottom">
+        <li class="hidden sm:block"></li>
+        <li class="sm:hidden">
+          <details class="dropdown">
+            <summary><i class="bi bi-list-ul"></i></summary>
+            <ul>
+              <li>
+                <RouterLink to="/" data-tooltip="Alt + 1" data-placement="bottom">
+                  <strong>Todo</strong>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/list" data-tooltip="Alt + 2" data-placement="bottom">
+                  <strong>List</strong>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/calendar" data-tooltip="Alt + 3" data-placement="bottom">
+                  <strong>Calendar</strong>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/dashboard" data-tooltip="Alt + 4" data-placement="bottom">
+                  <strong>Dashboard</strong>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/project-gantt" data-tooltip="Alt + 5" data-placement="bottom">
+                  <strong>Project Gantt</strong>
+                </RouterLink>
+              </li>
+            </ul>
+          </details>
+        </li>
+        <li class="hidden sm:block">
+          <RouterLink to="/" data-tooltip="Alt + 1" data-placement="bottom">
             <strong>Todo</strong>
-          </router-link>
+          </RouterLink>
         </li>
-        <li>
-          <router-link to="/list" data-tooltip="Alt + 2" data-placement="bottom">
+        <li class="hidden sm:block">
+          <RouterLink to="/list" data-tooltip="Alt + 2" data-placement="bottom">
             <strong>List</strong>
-          </router-link>
+          </RouterLink>
         </li>
-        <li>
-          <router-link to="/calendar" data-tooltip="Alt + 3" data-placement="bottom">
+        <li class="hidden sm:block">
+          <RouterLink to="/calendar" data-tooltip="Alt + 3" data-placement="bottom">
             <strong>Calendar</strong>
-          </router-link>
+          </RouterLink>
         </li>
-        <li>
-          <router-link to="/dashboard" data-tooltip="Alt + 4" data-placement="bottom">
+        <li class="hidden sm:block">
+          <RouterLink to="/dashboard" data-tooltip="Alt + 4" data-placement="bottom">
             <strong>Dashboard</strong>
-          </router-link>
+          </RouterLink>
         </li>
-        <li>
-          <router-link to="/project-gantt" data-tooltip="Alt + 5" data-placement="bottom">
+        <li class="hidden sm:block">
+          <RouterLink to="/project-gantt" data-tooltip="Alt + 5" data-placement="bottom">
             <strong>Project Gantt</strong>
-          </router-link>
+          </RouterLink>
         </li>
       </ul>
       <ul>

@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require('@rushstack/eslint-patch/modern-module-resolution');
+
 module.exports = {
   root: true,
   env: {
@@ -14,4 +17,12 @@ module.exports = {
   rules: {
     'vue/require-v-for-key': 'off',
   },
+  overrides: [
+    {
+      files: ['src/pages/**/*.vue'],
+      rules: {
+        'vue/multi-word-component-names': 'off', // unplugin-vue-router
+      },
+    },
+  ],
 };

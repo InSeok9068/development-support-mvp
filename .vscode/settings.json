@@ -1,0 +1,11 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  /* Open Props 자동완성 */
+  "cssvar.files": ["./node_modules/open-props/open-props.min.css"],
+  "cssvar.ignore": [],
+  "cssvar.extensions": ["css", "vue", "ts", "postcss"]
+  /* Open Props 자동완성 */
+}

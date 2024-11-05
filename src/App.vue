@@ -8,23 +8,21 @@
 
 <script setup lang="ts">
 import pb from '@/api/pocketbase';
-import AppModal from '@/components/app/AppModal.vue';
-import AppToast from '@/components/app/AppToast.vue';
 import { useCode } from '@/composables/code';
 import { useGlobal } from '@/composables/global';
 import { useModal } from '@/composables/modal';
 import { useNotification } from '@/composables/notification';
 import { usePocketbase } from '@/composables/pocketbase';
 import { useSetting } from '@/composables/setting';
+import { useToast } from '@/composables/toast';
 import { useSign } from '@/composables/user/sign';
 import TheLaytoutFooter from '@/layouts/TheLayoutFooter.vue';
 import TheLayoutNavi from '@/layouts/TheLayoutNavi.vue';
 import TheLaytout from '@/layouts/TheLaytout.vue';
 import { useMagicKeys } from '@vueuse/core';
+import dayjs from 'dayjs';
 import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import dayjs from 'dayjs';
-import { useToast } from '@/composables/toast';
 
 /* ======================= 변수 ======================= */
 const router = useRouter();
@@ -60,7 +58,6 @@ watch(keys.enter, (v) => {
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   // 초기화 작업
-  initZoom(); // 페이지 0.9 배율 지정
   initPocketbase(); // 포켓베이스 초기화
   initTheme(); // 테마 설정
   initCodes(); // 시스템 코드 설정
@@ -83,11 +80,6 @@ onMounted(() => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const initZoom = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (document.body.style as any).zoom = '0.9';
-};
-
 const subscribeNotification = async (on: boolean = true) => {
   if (on) {
     await pb.collection('notifications').subscribe('*', (e) => {

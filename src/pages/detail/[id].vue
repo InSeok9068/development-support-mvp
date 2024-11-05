@@ -17,20 +17,16 @@
         </ul>
       </nav>
 
-      <input v-model="work.title" class="text-2xl" />
+      <input v-model="work.title" class="text-lg sm:text-2xl" />
 
       <div class="grid" role="group">
         <label>
           완료여부
           <input v-model="work.done" type="checkbox" role="switch" @change="onChangeDone" />
         </label>
-        <label>
-          마크다운 VIEW
-          <input v-model="switchView" type="checkbox" role="switch" @change="onChangeSwitchView" />
-        </label>
       </div>
 
-      <div class="grid">
+      <div class="grid" role="group">
         <template v-for="state in getCodesByType('workState')">
           <label>
             <i :class="state.class"></i>
@@ -48,15 +44,9 @@
 
       <label>
         <strong>내용</strong>
-        <textarea
-          v-show="!markdownViewOn"
-          id="textareaView"
-          v-model="work.content"
-          :style="{ height: `${work.contentBoxHeight}px` }"
-        ></textarea>
-        <article v-show="markdownViewOn">
-          <div id="markdownView"></div>
-        </article>
+        <div role="group">
+          <DetailEditor v-model="work.content" />
+        </div>
       </label>
 
       <label>
@@ -154,27 +144,25 @@ import type {
   ScheduledNotificationsResponse,
   WorksResponse,
 } from '@/api/pocketbase-types';
+import DetailEditor from '@/components/detail/DetailEditor.vue';
 import { useCode } from '@/composables/code';
 import { useModal } from '@/composables/modal';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { marked } from 'marked';
 import { onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { deleteWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();
 const { developers, selectDeveloperFullList } = useDeveloper();
-const route = useRoute();
+const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
 const router = useRouter();
 const keys = useMagicKeys();
-const markdownViewOn = ref(false);
 const scheduledNotificationTime = ref<string>('');
-const switchView = ref(false);
 const work = ref<
   WorksResponse<{
     scheduledNotifications?: ScheduledNotificationsResponse[];
@@ -187,19 +175,12 @@ const work = ref<
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
-watch(keys.shift_enter, (v) => v && updateWork());
-
-watch(keys.alt_v, (v) => {
-  if (v) {
-    switchView.value = !switchView.value;
-    onChangeSwitchView();
-  }
-});
+watch(keys.alt_s, (v) => v && updateWork());
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  selectWork(route.params.id as string);
+  selectWork(route.params.id);
   selectDeveloperFullList();
 });
 /* ======================= 생명주기 훅 ======================= */
@@ -221,13 +202,6 @@ const onClickRedmine = (url: string) => {
 
 const onClickJoplin = (url: string) => {
   location.href = url;
-};
-
-const onChangeSwitchView = async () => {
-  markdownViewOn.value = switchView.value;
-  if (markdownViewOn.value) {
-    document.getElementById('markdownView')!.innerHTML = await marked.parse(work.value.content);
-  }
 };
 
 const onClickUpdate = () => {
@@ -277,10 +251,8 @@ const updateWork = async () => {
     formDate.append(key, value as any);
   }
 
-  const contentBoxHeight = document.getElementById('textareaView')?.style.height.replace('px', '');
-  work.value.contentBoxHeight = Number(contentBoxHeight);
-  formDate.delete('contentBoxHeight');
-  formDate.append('contentBoxHeight', String(contentBoxHeight));
+  // 스케줄 업데이트는 따로 처리
+  formDate.delete('scheduledNotifications');
 
   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
   for (const file of fileInput.files!) {

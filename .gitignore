@@ -14,6 +14,7 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+!.vscode/settings.json
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -28,6 +29,10 @@ dist-ssr
 
 # Global Component
 components.d.ts
+# Auto Router
+typed-router.d.ts
 
 # Pocketbase Hooks
-pb_hooks
+# pb_hooks
+pb_data.zip
+

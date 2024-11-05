@@ -2,15 +2,20 @@
   <main class="container">
     <article>
       <div class="grid">
-        <h5 class="text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
+        <h5 class="font-bold text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
         <h5 :class="{ 'animate-pulse': works.length > 10 }">현재 {{ works.length }}개</h5>
       </div>
 
-      <div class="mb-3 grid">
-        <button :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">ALL</button>
-        <button :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">미배정</button>
+      <div class="mb-3 flex gap-2">
+        <button class="w-full" :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">
+          ALL
+        </button>
+        <button class="w-full" :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">
+          미배정
+        </button>
         <template v-for="developer in developers">
           <button
+            class="w-full"
             :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
             @click="onClickSelectDeveloper(developer)"
           >
@@ -19,19 +24,31 @@
         </template>
       </div>
 
-      <fieldset role="group">
-        <input v-model="workArgs.title" name="title" @keydown.stop.prevent.enter="onClickCreateWork" />
-        <input type="button" value="등록" @click="onClickCreateWork" />
-      </fieldset>
+      <form id="workArgsForm">
+        <fieldset role="group">
+          <input
+            v-model="workArgs.title"
+            name="title"
+            :aria-invalid="validators.invalid('title')"
+            @keyup="validators.valid('title', workArgs.title)"
+            @keydown.stop.prevent.enter="onClickCreateWork"
+          />
+          <input type="button" value="등록" @click="onClickCreateWork" />
+        </fieldset>
+        <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
+      </form>
 
-      <ul v-for="(work, index) in works">
+      <TransitionGroup tag="ul" name="list">
         <li
+          v-for="(work, index) in works"
+          :key="work.id"
+          class="mb-3 sm:mb-5"
           draggable="true"
           @drop.prevent="onDropWork($event, index)"
           @dragstart="onDragStartWork($event, index)"
           @dragover.prevent
         >
-          <h6>
+          <h6 class="max-w-100 overflow-hidden text-ellipsis whitespace-nowrap">
             <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
             <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
               {{ work.title }}
@@ -53,7 +70,7 @@
                 {{ getCodeDesc('workState', work.state) }}
               </span>
             </label>
-            <label>
+            <label class="hidden sm:block">
               등록일자 :
               <span>
                 {{ dayjs(work.created).format('YYYY-MM-DD') }}
@@ -73,7 +90,7 @@
             </label>
           </div>
         </li>
-      </ul>
+      </TransitionGroup>
     </article>
   </main>
 </template>
@@ -85,15 +102,19 @@ import { useCode } from '@/composables/code';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
-import router from '@/router';
+import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
+import { isEmpty } from 'validator';
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { selectDeveloper, developers, selectDeveloperFullList } = useDeveloper();
 const { works, selectWorkFullList, deleteWork } = useWork();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
+const { validators } = useValidator();
+const router = useRouter();
 const workArgs = ref<WorksRecord>({
   user: pb.authStore.model?.id,
   title: '',
@@ -101,8 +122,15 @@ const workArgs = ref<WorksRecord>({
   state: 'wait',
   done: false,
   developer: '',
-  contentBoxHeight: 400,
+  content: `<p></p><p></p><p></p><p></p><p></p>`,
 });
+validators.value.schema = [
+  {
+    key: 'title',
+    valid: (value) => !isEmpty(value as string),
+    message: '최소 1자리 이상 입력해주세요.',
+  },
+];
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -115,9 +143,11 @@ onMounted(() => {
 
 /* ======================= 메서드 ======================= */
 const onClickCreateWork = async () => {
-  await pb.collection('works').create(workArgs.value);
-  await selectWorkFullList();
-  workArgs.value.title = '';
+  if (validators.value.validAll('workArgsForm')) {
+    await pb.collection('works').create(workArgs.value);
+    await selectWorkFullList();
+    workArgs.value.title = '';
+  }
 };
 
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
@@ -190,3 +220,17 @@ const subscribeWorks = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
+
+<style scoped>
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.25s var(--ease-1);
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+</style>
