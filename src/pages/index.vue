@@ -2,21 +2,21 @@
   <main class="container">
     <article>
       <div class="grid">
-        <h5 class="font-bold text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
-        <h5 :class="{ 'animate-pulse': works.length > 10 }">현재 {{ works.length }}개</h5>
+        <h5 class="error text-bold">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
+        <h5 :class="{ pulse: works.length > 10 }">현재 {{ works.length }}개</h5>
       </div>
 
-      <div class="mb-3 flex gap-2">
-        <button class="w-full" :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">
+      <div class="row">
+        <button class="col" :class="{ outlined: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">
           ALL
         </button>
-        <button class="w-full" :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">
+        <button class="col" :class="{ outlined: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">
           미배정
         </button>
         <template v-for="developer in developers">
           <button
-            class="w-full"
-            :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
+            class="col"
+            :class="{ outlined: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
             @click="onClickSelectDeveloper(developer)"
           >
             {{ developer.name }}
@@ -25,7 +25,7 @@
       </div>
 
       <form id="workArgsForm">
-        <fieldset role="group">
+        <fieldset>
           <input
             v-model="workArgs.title"
             name="title"
@@ -35,25 +35,25 @@
           />
           <input type="button" value="등록" @click="onClickCreateWork" />
         </fieldset>
-        <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
+        <small v-show="validators.showMessage('title')" class="bold">{{ validators.getMessage('title') }}</small>
       </form>
 
       <TransitionGroup tag="ul" name="list">
         <li
           v-for="(work, index) in works"
           :key="work.id"
-          class="mb-3 sm:mb-5"
+          class="mb"
           draggable="true"
           @drop.prevent="onDropWork($event, index)"
           @dragstart="onDragStartWork($event, index)"
           @dragover.prevent
         >
-          <h6 class="max-w-100 overflow-hidden text-ellipsis whitespace-nowrap">
+          <h6 class="truncate">
             <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
-            <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
+            <a class="pointer" @click="router.push(`/detail/${work.id}`)">
               {{ work.title }}
             </a>
-            <i class="bi bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
+            <i class="bi bi-trash pointer" @click="onClickDeleteWork(work)"></i>
           </h6>
 
           <div class="grid">
@@ -70,7 +70,7 @@
                 {{ getCodeDesc('workState', work.state) }}
               </span>
             </label>
-            <label class="hidden sm:block">
+            <label class="hide-sm">
               등록일자 :
               <span>
                 {{ dayjs(work.created).format('YYYY-MM-DD') }}
@@ -78,9 +78,7 @@
             </label>
             <label
               :class="{
-                'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                  dayjs().add(setting.daysBefore, 'd'),
-                ),
+                'pulse bold text-error': dayjs(work.dueDate).isBefore(dayjs().add(setting.daysBefore, 'd')),
               }"
             >
               마감일자 :
