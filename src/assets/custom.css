@@ -8,14 +8,12 @@
   --pico-border-radius: var(--radius-2);
   /* Original: 0.25rem */
 
-  /* 개인 설정 START */
   /* 모바일 사이즈 */
   --pico-font-size: var(--font-size-fluid-0);
   /* INPUT 그룹 포커스 OFF */
   --pico-group-box-shadow-focus-with-input: none;
   /* 모바일 Grid Row 간격 제거 */
   --pico-grid-row-gap: none;
-  /* 개인 설정 END */
 }
 
 h1,

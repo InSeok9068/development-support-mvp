@@ -29,8 +29,8 @@
       <div class="grid" role="group">
         <template v-for="state in getCodesByType('workState')">
           <label>
-            <i :class="state.class"></i>
-            {{ state.desc }}
+            <i class="mr-1" :class="state.class"></i>
+            <span class="mr-1 hidden sm:inline">{{ state.desc }}</span>
             <input
               v-model="work.state"
               type="radio"
@@ -44,17 +44,57 @@
 
       <label>
         <strong>내용</strong>
+        <i class="bi bi-copy float-right cursor-pointer" @click.stop.prevent="onClickMarkdownCopy">마크다운 복사</i>
         <div role="group">
           <DetailEditor v-model="work.content" />
         </div>
       </label>
 
-      <label>
-        <strong>레드마인 URL</strong>
+      <label class="!w-auto">
+        <strong>레드마인 URL</strong> >
+        <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank"> (+)일감 생성 </a>
         <div role="group">
           <input v-model="work.redmine" type="url" />
           <button v-show="work.redmine" @click="onClickRedmine(work.redmine)">OPEN</button>
         </div>
+        <details v-show="work.redmine">
+          <summary role="button" class="outline" @click="selectRedmineData">레드마인 더보기</summary>
+          <article>
+            <fieldset>
+              <legend>일감 관리자 추가</legend>
+              <input id="cx" v-model="redmineData.watchers" type="checkbox" name="assigned" value="cx" />
+              <label htmlFor="cx">CX팀</label>
+              <input id="dev" v-model="redmineData.watchers" type="checkbox" name="assigned" value="server" />
+              <label htmlFor="dev">개발팀(서버)</label>
+              <input id="dev" v-model="redmineData.watchers" type="checkbox" name="assigned" value="client" />
+              <label htmlFor="dev">개발팀(클라이언트)</label>
+              <input id="biz" v-model="redmineData.watchers" type="checkbox" name="assigned" value="biz" />
+              <label htmlFor="biz">사업팀</label>
+              <input id="manager" v-model="redmineData.watchers" type="checkbox" name="assigned" value="manager" />
+              <label htmlFor="manager">관리자</label>
+            </fieldset>
+            <label>
+              시작일자
+              <input v-model="redmineData.startDate" type="date" />
+            </label>
+            <label>
+              종료일자
+              <input v-model="redmineData.dueDate" type="date" />
+            </label>
+            <label>
+              진척도 <span class="font-bold" v-text="redmineData.doneRatio"></span>%
+              <input v-model="redmineData.doneRatio" type="range" min="0" max="100" step="10" />
+            </label>
+            <label>
+              댓글 작성
+              <textarea v-model="redmineData.notes" />
+            </label>
+            <div role="group">
+              <button class="secondary" @click="selectRedmineData">불러오기</button>
+              <button class="contrast" @click="updateRedmineData">업데이트</button>
+            </div>
+          </article>
+        </details>
       </label>
 
       <label>
@@ -67,6 +107,9 @@
 
       <label>
         <strong>개발자</strong>
+        <i class="bi bi-person-fill-dash float-right cursor-pointer" @click.stop.prevent="onClickRemoveDeveloper"
+          >삭제</i
+        >
         <select v-model="work.developer">
           <template v-for="developer in developers">
             <option :value="developer.id" :selected="work.developer == developer.id">
@@ -113,7 +156,7 @@
       <strong>첨부파일</strong>
       <input id="fileInput" type="file" class="block !w-unset" />
       <div v-show="work.file" class="mb-5">
-        <a :href="pb.files.getUrl(work, work.file)" target="_blank">
+        <a :href="pb.files.getURL(work, work.file)" target="_blank">
           {{ work.file }}
         </a>
         <i class="bi bi-trash ml-5 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
@@ -152,7 +195,8 @@ import { useWork } from '@/composables/todo/work';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router';
+import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
+import TurndownService from 'turndown';
 
 /* ======================= 변수 ======================= */
 const { deleteWork } = useWork();
@@ -172,6 +216,14 @@ const work = ref<
     scheduledNotifications?: ScheduledNotificationsResponse[];
   }>,
 );
+const redmineData = ref({
+  id: '',
+  startDate: '',
+  dueDate: '',
+  doneRatio: 0,
+  notes: '',
+  watchers: [],
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -223,7 +275,7 @@ const onClickDeleteWorkFile = async (work: WorksResponse) => {
 
 const onClickCreateScheduledNotification = async () => {
   const result = await pb.collection('scheduledNotifications').create({
-    user: pb.authStore.model?.id,
+    user: pb.authStore.record?.id,
     title: work.value.title,
     time: dayjs(scheduledNotificationTime.value).add(9, 'h').toISOString(),
   } as ScheduledNotificationsRecord);
@@ -236,6 +288,16 @@ const onClickDeleteScheduledNotification = async (scheduledNotificationId: strin
   await pb.collection('scheduledNotifications').delete(scheduledNotificationId);
   await updateWorkByDeleteScheduledNotification(scheduledNotificationId);
   await selectWork(work.value.id);
+};
+
+const onClickMarkdownCopy = () => {
+  const turndownService = new TurndownService();
+  navigator.clipboard.writeText(turndownService.turndown(work.value.content));
+  alert('복사완료');
+};
+
+const onClickRemoveDeveloper = () => {
+  work.value.developer = '';
 };
 
 const selectWork = async (id: string) => {
@@ -277,6 +339,32 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
   await pb.collection('works').update(work.value.id, {
     'scheduledNotifications-': scheduledNotificationId,
   });
+};
+
+const selectRedmineData = async () => {
+  const re = /\/issues\/(\d+)(?=[/?#]|$)/;
+  const res = await pb.send(`/api/redmine-data/${work.value.redmine.match(re)?.[1] ?? ''}`, {});
+
+  redmineData.value.startDate = res['issue']['start_date'];
+  redmineData.value.dueDate = res['issue']['due_date'];
+  redmineData.value.doneRatio = res['issue']['done_ratio'];
+};
+
+const updateRedmineData = async () => {
+  const re = /\/issues\/(\d+)(?=[/?#]|$)/;
+  redmineData.value.id = work.value.redmine.match(re)?.[1] ?? '';
+  redmineData.value.doneRatio = Number(redmineData.value.doneRatio);
+
+  await pb.send('/api/redmine-data', {
+    method: 'POST',
+    body: redmineData.value,
+  });
+
+  await selectRedmineData();
+  redmineData.value.notes = '';
+  redmineData.value.watchers = [];
+
+  showMessageModal('레드마인 동기화 완료');
 };
 /* ======================= 메서드 ======================= */
 </script>

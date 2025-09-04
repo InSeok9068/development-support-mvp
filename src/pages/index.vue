@@ -116,7 +116,8 @@ const { setting } = useSetting();
 const { validators } = useValidator();
 const router = useRouter();
 const workArgs = ref<WorksRecord>({
-  user: pb.authStore.model?.id,
+  id: '',
+  user: pb.authStore.record?.id ?? '',
   title: '',
   time: 0,
   state: 'wait',

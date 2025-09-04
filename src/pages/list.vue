@@ -69,7 +69,7 @@
       </form>
 
       <AgGridVue
-        :class="global.theme == 'white' ? 'ag-theme-material' : 'ag-theme-material-dark'"
+        :theme="theme"
         :grid-options="gridOptions"
         :column-defs="columns"
         :row-data="rowData"
@@ -82,23 +82,30 @@
 </template>
 
 <script setup lang="ts">
-import 'ag-grid-community/styles/ag-grid.min.css';
-import 'ag-grid-community/styles/ag-theme-material.css';
-// import 'ag-grid-community/styles/ag-theme-quartz.css';
-// import 'ag-grid-community/styles/ag-theme-alpine.css';
 import pb from '@/api/pocketbase';
 import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useSearch } from '@/composables/todo/search';
 import { useWork } from '@/composables/todo/work';
 import { AgGridVue } from 'ag-grid-vue3';
-import type { GridOptions, ColDef, RowClickedEvent } from 'ag-grid-community';
+import {
+  AllCommunityModule,
+  themeAlpine,
+  ModuleRegistry,
+  colorSchemeDark,
+  type Theme,
+  type ColDef,
+  type GridOptions,
+  type RowClickedEvent,
+} from 'ag-grid-community';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { UiWorkList } from '@/ui/todo.ui';
 import { useGlobal } from '@/composables/global';
+
 dayjs.extend(weekday);
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 /* ======================= 변수 ======================= */
 const router = useRouter();
@@ -107,7 +114,12 @@ const { listFilter } = useSearch();
 const { global } = useGlobal();
 const developers = ref<DevelopersResponse[]>([]);
 const weeklyReport = ref(false);
+const whiteTheme = themeAlpine;
+const darkTheme = themeAlpine.withPart(colorSchemeDark);
+const theme = ref<Theme>(global.value.theme === 'white' ? whiteTheme : darkTheme);
+
 const gridOptions: GridOptions = {
+  theme: theme.value,
   domLayout: 'autoHeight',
   autoSizeStrategy: {
     type: 'fitGridWidth',
@@ -134,6 +146,10 @@ watch(works, (newValue) => {
     created: dayjs(work.created).format('YYYY-MM-DD HH:mm:ss'),
     updated: dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss'),
   }));
+});
+
+watch(global.value, (newValue) => {
+  theme.value = newValue.theme === 'white' ? whiteTheme : darkTheme;
 });
 
 /* ======================= 감시자 ======================= */
@@ -183,8 +199,12 @@ const selectDeveloperFullList = async () => {
 </script>
 
 <style>
-.ag-paging-button {
-  background-color: var(--ag-background-color);
-  border-color: var(--ag-border-color);
+:root {
+  --ag-font-size: var(--pico-font-size);
+  --ag-data-font-size: var(--pico-font-size);
+}
+
+.ag-paging-panel {
+  padding: 25px;
 }
 </style>

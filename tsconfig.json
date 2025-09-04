@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/**/*", "src/**/*.vue", "env.d.ts", "components.d.ts", "typed-router.d.ts"],
+  "include": ["src/**/*", "src/**/*.vue", "env.d.ts", "components.d.ts", "typed-router.d.ts", "vite.config.ts"],
   "compilerOptions": {
     "target": "ES6",
     "module": "ES2022",

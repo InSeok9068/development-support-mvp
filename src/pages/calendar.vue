@@ -60,7 +60,7 @@ setTimeout(
     (calendarOption.value.events = works.value.map((work) => ({
       id: work.id,
       title: work.title,
-      date: dayjs(work.created).format('YYYY-MM-DD'),
+      date: dayjs(work.dueDate).format('YYYY-MM-DD'),
     }))),
   100,
 );

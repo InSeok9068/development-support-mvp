@@ -23,7 +23,7 @@ const { showMessageModal } = useModal();
 const { developers, selectDeveloperFullList } = useDeveloper();
 const developerArgs = ref<UiDeveloperArgs>({
   id: '',
-  user: pb.authStore.model?.id,
+  user: pb.authStore.record?.id ?? '',
   name: '',
   sort: 1,
   leader: false,

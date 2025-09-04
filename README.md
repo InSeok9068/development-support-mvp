@@ -15,16 +15,8 @@
 - Vue router (+ unplugin-vue-router)
 - VueUse
 
-#### SSR (후보 사항)
-
-- Htmx
-- Alpine.js
-- Templ
-
 ### 2. 백엔드
 
-- Go
-- Echo
 - Pocketbase (BaaS)
 
 ---

@@ -1,5 +1,5 @@
 <template>
-  <EditorContent :editor="editor" @copy="copyHtmlToMarkdown" />
+  <EditorContent :editor="editor" />
 </template>
 
 <script setup lang="ts">
@@ -8,7 +8,6 @@ import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import Typography from '@tiptap/extension-typography';
 import { watch } from 'vue';
-import TurndownService from 'turndown';
 
 /* ======================= 변수 ======================= */
 const editorArgs = defineModel<string | undefined>({ required: true });
@@ -31,18 +30,11 @@ watch(
     }
     const isSame = editor.value.getHTML() === newValue;
     if (!isSame) {
-      editor.value.commands.setContent(newValue, true);
+      editor.value.commands.setContent(newValue);
     }
   },
 );
 /* ======================= 감시자 ======================= */
-
-/* ======================= 메서드 ======================= */
-const copyHtmlToMarkdown = () => {
-  const turndownService = new TurndownService();
-  navigator.clipboard.writeText(turndownService.turndown(editorArgs.value!));
-};
-/* ======================= 메서드 ======================= */
 </script>
 
 <style>
