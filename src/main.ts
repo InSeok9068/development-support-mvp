@@ -1,13 +1,9 @@
 // 1순위 인식
 import '@/assets/style.css';
 
-// 2순위 인식
-import '@picocss/pico';
-// import '@picocss/pico/css/pico.green.min.css';
-// import '@picocss/pico/css/pico.violet.min.css';
-// import '@picocss/pico/css/pico.zinc.min.css';
+// BeerCSS is loaded via CDN in index.html
 
-// 3순위 인식
+// Custom application styles
 import '@/assets/custom.css';
 
 import 'bootstrap-icons/font/bootstrap-icons.css';
