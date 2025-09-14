@@ -137,3 +137,13 @@ firebase deploy
 | typia              | 스키마 검증 (옵션3)    |
 | vee-validate       | 폼 입력 검증 컴포지션  |
 | formkit            | 폼 입력 검증 + UI      |
+
+---
+
+### 4. 다운로드
+
+[백엔드] Pocketbase : https://pocketbase.io/docs/
+[웹서버] https://nginx.org/en/download.html
+[윈도우 포켓베이스 훅 김사자] https://github.com/l3est/pocketbase-watcher
+[윈도우 서비스 실행도구] Servy : https://github.com/aelassas/servy
+[윈도우 서비스 실행도구(대체)] NSSM : https://nssm.cc/
