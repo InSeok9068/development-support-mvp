@@ -1,5 +1,5 @@
 {
-  "name": "inseok-web-v2",
+  "name": "development-support-mvp",
   "type": "module",
   "scripts": {
     "test": "vitest",
