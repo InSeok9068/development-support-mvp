@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build --emptyOutDir",
     "preview": "vite preview",
-    "typegen": "pocketbase-typegen -d C://developer-program/pocketbase_0.22.4_windows_amd64/pb_data/data.db -o ./src/api/pocketbase-types.ts",
+    "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
     "lint": "eslint \"src/**/*.{js,ts,vue}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts,vue,css,html}\" --fix",
     "lint:format": "prettier --write ."
