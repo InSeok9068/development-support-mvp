@@ -1,5 +1,11 @@
 @import 'open-props/style';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer pico, theme, base, components, utilities;
+@import '@picocss/pico/css/pico.css' layer(pico);
+/*@import '@picocss/pico/css/pico.css';*/
+/*@import '@picocss/pico/css/pico.green.min.css';*/
+/*@import '@picocss/pico/css/pico.violet.min.css';*/
+/*@import '@picocss/pico/css/pico.zinc.min.css';*/
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@config "../../tailwind.config.ts";

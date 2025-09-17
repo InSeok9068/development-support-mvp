@@ -1,3 +1,4 @@
+import Tailwindcss from '@tailwindcss/vite';
 import Vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
 import Components from 'unplugin-vue-components/vite';
@@ -15,6 +16,7 @@ export default defineConfig({
       dirs: ['src/components/app'],
       dts: true,
     }),
+    Tailwindcss(),
   ],
   resolve: {
     alias: {

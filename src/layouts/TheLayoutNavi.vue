@@ -17,21 +17,26 @@
               </li>
               <li>
                 <RouterLink to="/list" data-tooltip="Alt + 2" data-placement="bottom">
+                  <strong>Kanban</strong>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink to="/kanban" data-tooltip="Alt + 3" data-placement="bottom">
                   <strong>List</strong>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/calendar" data-tooltip="Alt + 3" data-placement="bottom">
+                <RouterLink to="/calendar" data-tooltip="Alt + 4" data-placement="bottom">
                   <strong>Calendar</strong>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/dashboard" data-tooltip="Alt + 4" data-placement="bottom">
+                <RouterLink to="/dashboard" data-tooltip="Alt + 5" data-placement="bottom">
                   <strong>Dashboard</strong>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/project-gantt" data-tooltip="Alt + 5" data-placement="bottom">
+                <RouterLink to="/project-gantt" data-tooltip="Alt + 6" data-placement="bottom">
                   <strong>Project Gantt</strong>
                 </RouterLink>
               </li>
@@ -44,22 +49,27 @@
           </RouterLink>
         </li>
         <li class="hidden sm:block">
-          <RouterLink to="/list" data-tooltip="Alt + 2" data-placement="bottom">
+          <RouterLink to="/kanban" data-tooltip="Alt + 2" data-placement="bottom">
+            <strong>Kanban</strong>
+          </RouterLink>
+        </li>
+        <li class="hidden sm:block">
+          <RouterLink to="/list" data-tooltip="Alt + 3" data-placement="bottom">
             <strong>List</strong>
           </RouterLink>
         </li>
         <li class="hidden sm:block">
-          <RouterLink to="/calendar" data-tooltip="Alt + 3" data-placement="bottom">
+          <RouterLink to="/calendar" data-tooltip="Alt + 4" data-placement="bottom">
             <strong>Calendar</strong>
           </RouterLink>
         </li>
         <li class="hidden sm:block">
-          <RouterLink to="/dashboard" data-tooltip="Alt + 4" data-placement="bottom">
+          <RouterLink to="/dashboard" data-tooltip="Alt + 5" data-placement="bottom">
             <strong>Dashboard</strong>
           </RouterLink>
         </li>
         <li class="hidden sm:block">
-          <RouterLink to="/project-gantt" data-tooltip="Alt + 5" data-placement="bottom">
+          <RouterLink to="/project-gantt" data-tooltip="Alt + 6" data-placement="bottom">
             <strong>Project Gantt</strong>
           </RouterLink>
         </li>
@@ -126,14 +136,11 @@ const { global, toggleTheme } = useGlobal();
 
 /* ======================= 생명주기 훅 ======================= */
 watch(keys.alt_1, (v) => v && router.push('/'));
-
-watch(keys.alt_2, (v) => v && router.push('/list'));
-
-watch(keys.alt_3, (v) => v && router.push('/calendar'));
-
-watch(keys.alt_4, (v) => v && router.push('/dashboard'));
-
-watch(keys.alt_5, (v) => v && router.push('/project-gantt'));
+watch(keys.alt_2, (v) => v && router.push('/kanban'));
+watch(keys.alt_3, (v) => v && router.push('/list'));
+watch(keys.alt_4, (v) => v && router.push('/calendar'));
+watch(keys.alt_5, (v) => v && router.push('/dashboard'));
+watch(keys.alt_6, (v) => v && router.push('/project-gantt'));
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */

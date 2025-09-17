@@ -26,11 +26,11 @@
         </label>
       </div>
 
-      <div class="grid" role="group">
+      <div class="grid gap-3" role="group">
         <template v-for="state in getCodesByType('workState')">
           <label>
-            <i class="mr-1" :class="state.class"></i>
-            <span class="mr-1 hidden sm:inline">{{ state.desc }}</span>
+            <i class="mr-1 hidden sm:inline" :class="state.class"></i>
+            <span class="mr-1">{{ state.desc }}</span>
             <input
               v-model="work.state"
               type="radio"
@@ -154,7 +154,7 @@
 
       <!-- TODO Multiple 파일 업로드 기능 검토 -->
       <strong>첨부파일</strong>
-      <input id="fileInput" type="file" class="block !w-unset" />
+      <input id="fileInput" type="file" class="block !w-[unset]" />
       <div v-show="work.file" class="mb-5">
         <a :href="pb.files.getURL(work, work.file)" target="_blank">
           {{ work.file }}

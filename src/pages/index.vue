@@ -1,9 +1,13 @@
 <template>
   <main class="container">
     <article>
-      <div class="grid">
+      <div class="grid grid-cols-[auto_auto_1fr_auto]">
         <h5 class="font-bold text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
         <h5 :class="{ 'animate-pulse': works.length > 10 }">현재 {{ works.length }}개</h5>
+        <div></div>
+        <h6>
+          <i class="bi-sort-up cursor-pointer" @click="onClickSort"> 마감일자 순 재정렬 </i>
+        </h6>
       </div>
 
       <div class="mb-3 flex gap-2">
@@ -37,7 +41,6 @@
         </fieldset>
         <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
       </form>
-
       <TransitionGroup tag="ul" name="list">
         <li
           v-for="(work, index) in works"
@@ -48,7 +51,7 @@
           @dragstart="onDragStartWork($event, index)"
           @dragover.prevent
         >
-          <h6 class="max-w-100 overflow-hidden text-ellipsis whitespace-nowrap">
+          <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
             <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
             <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
               {{ work.title }}
@@ -200,6 +203,22 @@ const onClickDoneWork = async (work: WorksResponse) => {
 
 const onClickDeleteWork = async (work: WorksResponse) => {
   await deleteWork(work);
+};
+
+const onClickSort = () => {
+  // works.value = works.value.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  works.value = works.value.sort((a, b) => {
+    const aDate = a.dueDate ? new Date(a.dueDate) : null;
+    const bDate = b.dueDate ? new Date(b.dueDate) : null;
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return aDate.getTime() - bDate.getTime();
+  });
+  works.value.forEach((work, index) => {
+    work.sort = index;
+    pb.collection('works').update(work.id, work);
+  });
 };
 
 const subscribeWorks = async () => {

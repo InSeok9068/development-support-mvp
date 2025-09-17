@@ -1,5 +1,5 @@
 <template>
-  <div class="absolute right-5 top-0">
+  <div class="absolute top-0 right-5">
     <article :class="{ 'fade-in': toast.show, 'fade-out': !toast.show }">
       <header>
         <h5>알림</h5>

@@ -1,13 +1,6 @@
 // 1순위 인식
 import '@/assets/style.css';
-
 // 2순위 인식
-import '@picocss/pico';
-// import '@picocss/pico/css/pico.green.min.css';
-// import '@picocss/pico/css/pico.violet.min.css';
-// import '@picocss/pico/css/pico.zinc.min.css';
-
-// 3순위 인식
 import '@/assets/custom.css';
 
 import 'bootstrap-icons/font/bootstrap-icons.css';

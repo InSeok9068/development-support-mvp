@@ -1,14 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{ts,vue}'],
-  corePlugins: {
-    preflight: false,
-  },
-  theme: {
-    extend: {
-      width: {
-        unset: 'unset',
-      },
-    },
-  },
+  blocklist: [
+    // Pico CSS 사용 클래스명 중복 방지
+    'dropdown',
+    'secondary',
+    'contrast',
+    'outline',
+    'striped',
+    'modal-is-open',
+    'modal-is-opening',
+    'modal-is-closing',
+  ],
 };

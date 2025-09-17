@@ -25,20 +25,15 @@ export type IsoDateString = string
 export type RecordIdString = string
 export type HTMLString = string
 
-type ExpandType<T> = unknown extends T
-	? T extends unknown
-		? { expand?: unknown }
-		: { expand: T }
-	: { expand: T }
-
 // System fields
-export type BaseSystemFields<T = unknown> = {
+export type BaseSystemFields<T = never> = {
 	id: RecordIdString
 	collectionId: string
 	collectionName: Collections
-} & ExpandType<T>
+	expand?: T
+}
 
-export type AuthSystemFields<T = unknown> = {
+export type AuthSystemFields<T = never> = {
 	email: string
 	emailVisibility: boolean
 	username: string
