@@ -187,12 +187,11 @@ const onDropWork = (event: DragEvent, curIndex: number) => {
     const next = [...current];
     const [el] = next.splice(transIndex, 1);
     next.splice(curIndex, 0, el);
-    return next;
+    return next.map((item, index) => ({ ...item, sort: index }));
   });
 
   works.value.forEach((work, index) => {
-    work.sort = index;
-    updateWork(work.id, work);
+    updateWork(work.id, { sort: index });
   });
 };
 
@@ -223,8 +222,7 @@ const onClickSort = () => {
   setWorksCache(() => sorted);
 
   works.value.forEach((work, index) => {
-    work.sort = index;
-    updateWork(work.id, work);
+    updateWork(work.id, { sort: index });
   });
 };
 
