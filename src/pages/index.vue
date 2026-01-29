@@ -112,8 +112,8 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const { selectDeveloper, developers, selectDeveloperFullList } = useDeveloper();
-const { works, selectWorkFullList, deleteWork } = useWork();
+const { selectDeveloper, developers, fetchDevelopers } = useDeveloper();
+const { works, fetchWorkFullList, createWork, updateWork, deleteWork, setWorksCache } = useWork();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
 const { validators } = useValidator();
@@ -139,8 +139,8 @@ validators.value.schema = [
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  selectWorkFullListFilterDeveloper(selectDeveloper.value);
-  selectDeveloperFullList();
+  fetchWorkFullListFilterDeveloper(selectDeveloper.value);
+  fetchDevelopers();
   subscribeWorks();
 });
 /* ======================= 생명주기 훅 ======================= */
@@ -148,31 +148,31 @@ onMounted(() => {
 /* ======================= 메서드 ======================= */
 const onClickCreateWork = async () => {
   if (validators.value.validAll('workArgsForm')) {
-    await pb.collection('works').create(workArgs.value);
-    await selectWorkFullList();
+    await createWork(workArgs.value);
+    await fetchWorkFullList();
     workArgs.value.title = '';
   }
 };
 
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
   selectDeveloper.value = developer;
-  selectWorkFullListFilterDeveloper(developer);
+  fetchWorkFullListFilterDeveloper(developer);
 };
 
-const selectWorkFullListFilterDeveloper = (developer: DevelopersResponse | string | undefined) => {
+const fetchWorkFullListFilterDeveloper = (developer: DevelopersResponse | string | undefined) => {
   if (developer === 'ALL') {
-    selectWorkFullList();
+    fetchWorkFullList();
   } else if (developer === '') {
-    selectWorkFullList({
+    fetchWorkFullList({
       filter: `done = false && developer = ''`,
     });
   } else if (developer) {
     developer = developer as DevelopersResponse;
-    selectWorkFullList({
+    fetchWorkFullList({
       filter: `done = false && developer = '${developer.id}'`,
     });
   } else {
-    selectWorkFullList();
+    fetchWorkFullList();
   }
 };
 
@@ -183,17 +183,20 @@ const onDragStartWork = (event: DragEvent, curIndex: number) => {
 const onDropWork = (event: DragEvent, curIndex: number) => {
   const transIndex = Number(event.dataTransfer?.getData('transIndex'));
 
-  const [el] = works.value.splice(transIndex, 1);
-  works.value.splice(curIndex, 0, el);
+  setWorksCache((current) => {
+    const next = [...current];
+    const [el] = next.splice(transIndex, 1);
+    next.splice(curIndex, 0, el);
+    return next.map((item, index) => ({ ...item, sort: index }));
+  });
 
   works.value.forEach((work, index) => {
-    work.sort = index;
-    pb.collection('works').update(work.id, work);
+    updateWork(work.id, { sort: index });
   });
 };
 
 const onClickDoneWork = async (work: WorksResponse) => {
-  await pb.collection('works').update(work.id, {
+  await updateWork(work.id, {
     ...work,
     done: true,
     state: 'done',
@@ -207,7 +210,7 @@ const onClickDeleteWork = async (work: WorksResponse) => {
 
 const onClickSort = () => {
   // works.value = works.value.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-  works.value = works.value.sort((a, b) => {
+  const sorted = [...works.value].sort((a, b) => {
     const aDate = a.dueDate ? new Date(a.dueDate) : null;
     const bDate = b.dueDate ? new Date(b.dueDate) : null;
     if (!aDate && !bDate) return 0;
@@ -215,9 +218,11 @@ const onClickSort = () => {
     if (!bDate) return -1;
     return aDate.getTime() - bDate.getTime();
   });
+
+  setWorksCache(() => sorted);
+
   works.value.forEach((work, index) => {
-    work.sort = index;
-    pb.collection('works').update(work.id, work);
+    updateWork(work.id, { sort: index });
   });
 };
 
@@ -225,15 +230,15 @@ const subscribeWorks = async () => {
   await pb.collection('works').subscribe('*', (e) => {
     switch (e.action) {
       case 'create':
-        works.value.push(e.record);
+        setWorksCache((current) => [...current, e.record]);
         break;
       case 'update':
         if (e.record.done) {
-          works.value = works.value.filter((i) => i.id !== e.record.id);
+          setWorksCache((current) => current.filter((item) => item.id !== e.record.id));
         }
         break;
       case 'delete':
-        works.value = works.value.filter((i) => i.id !== e.record.id);
+        setWorksCache((current) => current.filter((item) => item.id !== e.record.id));
         break;
     }
   });

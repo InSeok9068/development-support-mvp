@@ -25,29 +25,40 @@
 import type { NotificationsResponse } from '@/api/pocketbase-types';
 import dayjs from 'dayjs';
 import pb from '@/api/pocketbase';
-import { onMounted, ref } from 'vue';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { computed } from 'vue';
 import { useNotification } from '@/composables/notification';
 
 /* ======================= 변수 ======================= */
-const notifications = ref<NotificationsResponse[]>([]);
-const { checkUnReadNotifications } = useNotification();
-/* ======================= 변수 ======================= */
-
-/* ======================= 생명주기 훅 ======================= */
-onMounted(async () => {
-  notifications.value = (
-    await pb.collection('notifications').getList(1, 20, {
-      sort: '-created',
-    })
-  ).items;
+const queryClient = useQueryClient();
+const notificationsQuery = useQuery({
+  queryKey: ['notifications', { page: 1, perPage: 20, sort: '-created' }],
+  queryFn: async () =>
+    (
+      await pb.collection('notifications').getList(1, 20, {
+        sort: '-created',
+      })
+    ).items,
 });
-/* ======================= 생명주기 훅 ======================= */
+const notifications = computed(() => notificationsQuery.data.value ?? []);
+const { fetchUnreadCount } = useNotification();
+const markReadMutation = useMutation({
+  mutationFn: (notification: NotificationsResponse) =>
+    pb.collection('notifications').update(notification.id, {
+      ...notification,
+      read: true,
+    }),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    await queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+  },
+});
+/* ======================= 변수 ======================= */
 
 /* ======================= 메서드 ======================= */
 const onClickRead = async (notification: NotificationsResponse) => {
-  notification.read = true;
-  await pb.collection('notifications').update(notification.id, notification);
-  await checkUnReadNotifications();
+  await markReadMutation.mutateAsync(notification);
+  await fetchUnreadCount();
 };
 /* ======================= 메서드 ======================= */
 </script>

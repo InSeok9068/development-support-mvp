@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { useCode } from '@/composables/code.ts';
 import { useWork } from '@/composables/todo/work.ts';
-import { onMounted } from 'vue';
+import { onBeforeUnmount, onMounted } from 'vue';
 import pb from '@/api/pocketbase.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import type { DevelopersResponse } from '@/api/pocketbase-types.ts';
@@ -111,20 +111,30 @@ import dayjs from 'dayjs';
 import { useSetting } from '@/composables/setting.ts';
 
 /* ======================= 변수 ======================= */
-const { works, selectWorkFullList } = useWork();
-const { developers, selectDeveloperFullList } = useDeveloper();
+const { works, fetchWorkFullList, updateWork, setWorksCache } = useWork();
+const { developers, fetchDevelopers } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
 const workStateCodesStep1 = getCodesByType('workState').slice(0, 3);
 const workStateCodesStep2 = getCodesByType('workState').slice(3, 6);
 const router = useRouter();
+let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  await selectWorkFullList();
-  await selectDeveloperFullList();
+  await fetchWorkFullList();
+  await fetchDevelopers();
   await subscribeWorks();
+});
+
+onBeforeUnmount(async () => {
+  if (unsubscribeWorks) {
+    await unsubscribeWorks();
+    unsubscribeWorks = null;
+  } else {
+    await pb.collection('works').unsubscribe('*');
+  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -136,19 +146,19 @@ const onDragStartWork = (event: DragEvent, id: string) => {
 const onDropWork = async (event: DragEvent, state: string) => {
   const transId = event.dataTransfer?.getData('transId') as string;
 
-  await pb.collection('works').update(transId, {
+  await updateWork(transId, {
     state,
   });
 
-  await selectWorkFullList();
+  await fetchWorkFullList();
 };
 
 const subscribeWorks = async () => {
-  await pb.collection('works').subscribe('*', (e) => {
+  unsubscribeWorks = await pb.collection('works').subscribe('*', (e) => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {
-          works.value = works.value.filter((i) => i.id !== e.record.id);
+          setWorksCache((current) => current.filter((item) => item.id !== e.record.id));
         }
         break;
     }

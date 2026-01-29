@@ -29,7 +29,7 @@ const router = useRouter();
 const { isAuth } = useSign();
 const { initPocketbase } = usePocketbase();
 const { modal, clearModal } = useModal();
-const { checkUnReadNotifications } = useNotification();
+const { fetchUnreadCount } = useNotification();
 const { global, initTheme } = useGlobal();
 const { initCodes } = useCode();
 const { initSetting } = useSetting();
@@ -70,7 +70,7 @@ onMounted(() => {
   }
 
   // 메인 진입 시 필요 API 호출
-  checkUnReadNotifications(); // 미확인 알림 확인
+  fetchUnreadCount(); // 미확인 알림 확인
 
   // 알림 관련 작업
   Notification.requestPermission(); // 알림 권한 요청
