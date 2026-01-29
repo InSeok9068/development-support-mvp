@@ -52,10 +52,12 @@ export const useSetting = () => {
     mutationFn: async () => {
       const recordId =
         settingRecordId.value ??
-        (await queryClient.fetchQuery({
-          queryKey: ['settings'],
-          queryFn: loadSettingRecord,
-        })).id;
+        (
+          await queryClient.fetchQuery({
+            queryKey: ['settings'],
+            queryFn: loadSettingRecord,
+          })
+        ).id;
       return pb.collection('settings').update(recordId, { data: setting.value });
     },
     onSuccess: async () => {
