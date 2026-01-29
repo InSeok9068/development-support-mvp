@@ -14,6 +14,11 @@ type WorkQueryParams = {
   perPage: number;
 };
 
+type UpdateWorkOptions = {
+  invalidateWorks?: boolean;
+  invalidateWork?: boolean;
+};
+
 export const useWork = () => {
   /* ======================= 변수 ======================= */
   const queryClient = useQueryClient();
@@ -118,11 +123,23 @@ export const useWork = () => {
   });
 
   const updateWorkMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> | FormData | Partial<WorksResponse> }) =>
-      pb.collection('works').update(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Record<string, unknown> | FormData | Partial<WorksResponse>;
+      options?: UpdateWorkOptions;
+    }) => pb.collection('works').update(id, data),
     onSuccess: (_result, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['works'] });
-      queryClient.invalidateQueries({ queryKey: ['work', vars.id] });
+      const invalidateWorks = vars.options?.invalidateWorks !== false;
+      const invalidateWork = vars.options?.invalidateWork !== false;
+      if (invalidateWorks) {
+        queryClient.invalidateQueries({ queryKey: ['works'] });
+      }
+      if (invalidateWork) {
+        queryClient.invalidateQueries({ queryKey: ['work', vars.id] });
+      }
     },
   });
 
@@ -135,8 +152,11 @@ export const useWork = () => {
   });
 
   const createWork = (payload: Create<Collections.Works>) => createWorkMutation.mutateAsync(payload);
-  const updateWork = (id: string, data: Record<string, unknown> | FormData | Partial<WorksResponse>) =>
-    updateWorkMutation.mutateAsync({ id, data });
+  const updateWork = (
+    id: string,
+    data: Record<string, unknown> | FormData | Partial<WorksResponse>,
+    options?: UpdateWorkOptions,
+  ) => updateWorkMutation.mutateAsync({ id, data, options });
   const deleteWork = (work: WorksResponse) => deleteWorkMutation.mutateAsync(work.id);
 
   const setWorksCache = (updater: (current: WorksResponse[]) => WorksResponse[]) => {

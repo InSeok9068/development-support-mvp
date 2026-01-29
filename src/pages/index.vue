@@ -191,7 +191,7 @@ const onDropWork = (event: DragEvent, curIndex: number) => {
   });
 
   works.value.forEach((work, index) => {
-    updateWork(work.id, { sort: index });
+    updateWork(work.id, { sort: index }, { invalidateWorks: false, invalidateWork: false });
   });
 };
 
@@ -222,7 +222,7 @@ const onClickSort = () => {
   setWorksCache(() => sorted);
 
   works.value.forEach((work, index) => {
-    updateWork(work.id, { sort: index });
+    updateWork(work.id, { sort: index }, { invalidateWorks: false, invalidateWork: false });
   });
 };
 
