@@ -192,17 +192,18 @@ import { useCode } from '@/composables/code';
 import { useModal } from '@/composables/modal';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
+import { useQuery } from '@tanstack/vue-query';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const { deleteWork } = useWork();
+const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();
-const { developers, selectDeveloperFullList } = useDeveloper();
+const { developers, fetchDevelopers } = useDeveloper();
 const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
 const router = useRouter();
 const keys = useMagicKeys();
@@ -224,16 +225,31 @@ const redmineData = ref({
   notes: '',
   watchers: [],
 });
+const workQuery = useQuery({
+  queryKey: computed(() => ['work', route.params.id]),
+  queryFn: () =>
+    pb.collection('works').getOne(route.params.id, {
+      expand: 'scheduledNotifications',
+    }),
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
-watch(keys.alt_s, (v) => v && updateWork());
+watch(keys.alt_s, (v) => v && updateWorkDetail());
+watch(
+  () => workQuery.data.value,
+  (data) => {
+    if (data) {
+      work.value = structuredClone(data);
+    }
+  },
+  { immediate: true },
+);
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  selectWork(route.params.id);
-  selectDeveloperFullList();
+  fetchDevelopers();
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -257,7 +273,7 @@ const onClickJoplin = (url: string) => {
 };
 
 const onClickUpdate = () => {
-  updateWork();
+  updateWorkDetail();
 };
 
 const onClickDelete = () => {
@@ -267,7 +283,7 @@ const onClickDelete = () => {
 };
 
 const onClickDeleteWorkFile = async (work: WorksResponse) => {
-  await pb.collection('works').update(work.id, {
+  await updateWork(work.id, {
     file: null,
   });
   // work.file = '';
@@ -280,14 +296,14 @@ const onClickCreateScheduledNotification = async () => {
     time: dayjs(scheduledNotificationTime.value).add(9, 'h').toISOString(),
   } as ScheduledNotificationsRecord);
   await updateWorkByCreateScheduledNotification(result.id);
-  await selectWork(work.value.id);
+  await workQuery.refetch();
   scheduledNotificationTime.value = '';
 };
 
 const onClickDeleteScheduledNotification = async (scheduledNotificationId: string) => {
   await pb.collection('scheduledNotifications').delete(scheduledNotificationId);
   await updateWorkByDeleteScheduledNotification(scheduledNotificationId);
-  await selectWork(work.value.id);
+  await workQuery.refetch();
 };
 
 const onClickMarkdownCopy = () => {
@@ -300,13 +316,7 @@ const onClickRemoveDeveloper = () => {
   work.value.developer = '';
 };
 
-const selectWork = async (id: string) => {
-  work.value = await pb.collection('works').getOne(id, {
-    expand: 'scheduledNotifications',
-  });
-};
-
-const updateWork = async () => {
+const updateWorkDetail = async () => {
   const formDate = new FormData();
   for (const [key, value] of Object.entries(work.value)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -321,22 +331,22 @@ const updateWork = async () => {
     formDate.append('file', file);
   }
 
-  await pb.collection('works').update(work.value.id, formDate);
+  await updateWork(work.value.id, formDate);
   showMessageModal('수정 완료');
 
   // 파일 랜더링을 위해 재조회 및 기존 파일 클리어
-  await selectWork(work.value.id);
+  await workQuery.refetch();
   fileInput.value = '';
 };
 
 const updateWorkByCreateScheduledNotification = async (scheduledNotificationId: string) => {
-  await pb.collection('works').update(work.value.id, {
+  await updateWork(work.value.id, {
     'scheduledNotifications+': scheduledNotificationId,
   });
 };
 
 const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: string) => {
-  await pb.collection('works').update(work.value.id, {
+  await updateWork(work.value.id, {
     'scheduledNotifications-': scheduledNotificationId,
   });
 };

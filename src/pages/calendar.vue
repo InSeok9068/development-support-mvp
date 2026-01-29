@@ -20,13 +20,13 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
 /* ======================= 변수 ======================= */
-const { works, selectWorkFullList } = useWork();
+const { works, fetchWorkFullList } = useWork();
 const router = useRouter();
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onBeforeMount(() => {
-  selectWorkFullList();
+  fetchWorkFullList();
 });
 /* ======================= 생명주기 훅 ======================= */
 

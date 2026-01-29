@@ -14,13 +14,15 @@ import SettingEtc from '@/components/setting/SettingEtc.vue';
 import { useModal } from '@/composables/modal';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { UiDeveloperArgs } from '@/ui/todo.ui';
 import { onMounted, ref } from 'vue';
 
 /* ======================= 변수 ======================= */
-const { setting, selectSetting, updateSetting } = useSetting();
+const { setting, fetchSetting, updateSetting } = useSetting();
 const { showMessageModal } = useModal();
-const { developers, selectDeveloperFullList } = useDeveloper();
+const { developers, fetchDevelopers } = useDeveloper();
+const queryClient = useQueryClient();
 const developerArgs = ref<UiDeveloperArgs>({
   id: '',
   user: pb.authStore.record?.id ?? '',
@@ -29,23 +31,35 @@ const developerArgs = ref<UiDeveloperArgs>({
   leader: false,
   del: false,
 });
+const createDeveloperMutation = useMutation({
+  mutationFn: (payload: UiDeveloperArgs) => pb.collection('developers').create(payload),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ['developers'] });
+    showMessageModal('등록 완료');
+  },
+});
+const updateDeveloperMutation = useMutation({
+  mutationFn: (payload: UiDeveloperArgs) => pb.collection('developers').update(payload.id, payload),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ['developers'] });
+    showMessageModal('수정 완료');
+  },
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  selectSetting();
-  selectDeveloperFullList();
+  fetchSetting();
+  fetchDevelopers();
 });
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
 const onClickSave_1 = async () => {
   if (developerArgs.value.id) {
-    await pb.collection('developers').update(developerArgs.value.id, developerArgs.value);
-    showMessageModal('수정 완료');
+    await updateDeveloperMutation.mutateAsync(developerArgs.value);
   } else {
-    await pb.collection('developers').create(developerArgs.value);
-    showMessageModal('등록 완료');
+    await createDeveloperMutation.mutateAsync(developerArgs.value);
   }
 };
 

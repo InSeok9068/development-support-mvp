@@ -82,9 +82,9 @@
 </template>
 
 <script setup lang="ts">
-import pb from '@/api/pocketbase';
 import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useSearch } from '@/composables/todo/search';
+import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { AgGridVue } from 'ag-grid-vue3';
 import {
@@ -109,10 +109,10 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 /* ======================= 변수 ======================= */
 const router = useRouter();
-const { works, selectWorkList } = useWork();
+const { works, fetchWorkList } = useWork();
+const { developers, fetchDevelopers } = useDeveloper();
 const { listFilter } = useSearch();
 const { global } = useGlobal();
-const developers = ref<DevelopersResponse[]>([]);
 const weeklyReport = ref(false);
 const whiteTheme = themeAlpine;
 const darkTheme = themeAlpine.withPart(colorSchemeDark);
@@ -156,14 +156,14 @@ watch(global.value, (newValue) => {
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  selectDeveloperFullList();
+  fetchDevelopers();
   onClickSearch();
 });
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
 const onClickSearch = () => {
-  selectWorkList({
+  fetchWorkList({
     filter: `
       title ~ '${listFilter.value.text}'
       && created >= '${listFilter.value.createdFrom}'
@@ -189,12 +189,6 @@ const onChangeSetWeeklyReportDate = () => {
   }
 };
 
-const selectDeveloperFullList = async () => {
-  developers.value = await pb.collection('developers').getFullList({
-    filter: `del = false`,
-    sort: 'sort',
-  });
-};
 /* ======================= 메서드 ======================= */
 </script>
 

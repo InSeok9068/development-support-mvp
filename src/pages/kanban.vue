@@ -111,8 +111,8 @@ import dayjs from 'dayjs';
 import { useSetting } from '@/composables/setting.ts';
 
 /* ======================= 변수 ======================= */
-const { works, selectWorkFullList } = useWork();
-const { developers, selectDeveloperFullList } = useDeveloper();
+const { works, fetchWorkFullList, updateWork, setWorksCache } = useWork();
+const { developers, fetchDevelopers } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
 const workStateCodesStep1 = getCodesByType('workState').slice(0, 3);
@@ -122,8 +122,8 @@ const router = useRouter();
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  await selectWorkFullList();
-  await selectDeveloperFullList();
+  await fetchWorkFullList();
+  await fetchDevelopers();
   await subscribeWorks();
 });
 /* ======================= 생명주기 훅 ======================= */
@@ -136,11 +136,11 @@ const onDragStartWork = (event: DragEvent, id: string) => {
 const onDropWork = async (event: DragEvent, state: string) => {
   const transId = event.dataTransfer?.getData('transId') as string;
 
-  await pb.collection('works').update(transId, {
+  await updateWork(transId, {
     state,
   });
 
-  await selectWorkFullList();
+  await fetchWorkFullList();
 };
 
 const subscribeWorks = async () => {
@@ -148,7 +148,7 @@ const subscribeWorks = async () => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {
-          works.value = works.value.filter((i) => i.id !== e.record.id);
+          setWorksCache((current) => current.filter((item) => item.id !== e.record.id));
         }
         break;
     }
