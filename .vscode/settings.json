@@ -11,5 +11,8 @@
   "css.styleSheets": ["./node_modules/@picocss/pico/css/pico.min.css", "**/style.css"],
   "explorer.fileNesting.patterns": {
     "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml"
+  },
+  "code-runner.executorMap": {
+    "typescript": "tsx"
   }
 }
