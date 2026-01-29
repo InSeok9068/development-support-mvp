@@ -100,7 +100,7 @@
 
 <script setup lang="ts">
 import pb from '@/api/pocketbase';
-import type { DevelopersResponse, WorksRecord, WorksResponse } from '@/api/pocketbase-types';
+import type { Collections, Create, DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useCode } from '@/composables/code';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
@@ -118,7 +118,7 @@ const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
 const { validators } = useValidator();
 const router = useRouter();
-const workArgs = ref<WorksRecord>({
+const workArgs = ref<Create<Collections.Works>>({
   id: '',
   user: pb.authStore.record?.id ?? '',
   title: '',

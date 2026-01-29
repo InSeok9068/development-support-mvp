@@ -194,9 +194,9 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
+import TurndownService from 'turndown';
 import { onMounted, ref, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
-import TurndownService from 'turndown';
 
 /* ======================= 변수 ======================= */
 const { deleteWork } = useWork();
@@ -270,7 +270,7 @@ const onClickDeleteWorkFile = async (work: WorksResponse) => {
   await pb.collection('works').update(work.id, {
     file: null,
   });
-  work.file = '';
+  // work.file = '';
 };
 
 const onClickCreateScheduledNotification = async () => {

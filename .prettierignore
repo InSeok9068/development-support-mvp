@@ -2,3 +2,5 @@ docs/ERD/*
 
 src/api/pocketbase.ts
 src/api/pocketbase-types.ts
+
+.history

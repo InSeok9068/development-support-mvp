@@ -1,6 +1,6 @@
-import type { DevelopersRecord } from '@/api/pocketbase-types';
+import type { Collections, Update } from '@/api/pocketbase-types';
 
-export interface UiDeveloperArgs extends DevelopersRecord {
+export interface UiDeveloperArgs extends Update<Collections.Developers> {
   id: string;
 }
 

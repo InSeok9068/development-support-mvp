@@ -22,18 +22,25 @@ export enum Collections {
 
 // Alias types for improved usability
 export type IsoDateString = string
+export type IsoAutoDateString = string & { readonly autodate: unique symbol }
 export type RecordIdString = string
+export type FileNameString = string & { readonly filename: unique symbol }
 export type HTMLString = string
 
+type ExpandType<T> = unknown extends T
+	? T extends unknown
+		? { expand?: unknown }
+		: { expand: T }
+	: { expand: T }
+
 // System fields
-export type BaseSystemFields<T = never> = {
+export type BaseSystemFields<T = unknown> = {
 	id: RecordIdString
 	collectionId: string
 	collectionName: Collections
-	expand?: T
-}
+} & ExpandType<T>
 
-export type AuthSystemFields<T = never> = {
+export type AuthSystemFields<T = unknown> = {
 	email: string
 	emailVisibility: boolean
 	username: string
@@ -44,113 +51,113 @@ export type AuthSystemFields<T = never> = {
 
 export type AuthoriginsRecord = {
 	collectionRef: string
-	created?: IsoDateString
+	created: IsoAutoDateString
 	fingerprint: string
 	id: string
 	recordRef: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 }
 
 export type ExternalauthsRecord = {
 	collectionRef: string
-	created?: IsoDateString
+	created: IsoAutoDateString
 	id: string
 	provider: string
 	providerId: string
 	recordRef: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 }
 
 export type MfasRecord = {
 	collectionRef: string
-	created?: IsoDateString
+	created: IsoAutoDateString
 	id: string
 	method: string
 	recordRef: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 }
 
 export type OtpsRecord = {
 	collectionRef: string
-	created?: IsoDateString
+	created: IsoAutoDateString
 	id: string
 	password: string
 	recordRef: string
 	sentTo?: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 }
 
 export type SuperusersRecord = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	email: string
 	emailVisibility?: boolean
 	id: string
 	password: string
 	tokenKey: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	verified?: boolean
 }
 
 export type CodesRecord = {
 	class?: string
-	created?: IsoDateString
+	created: IsoAutoDateString
 	del?: boolean
 	desc?: string
 	id: string
 	sort?: number
 	type?: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	value?: string
 }
 
 export type DevelopersRecord = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	del?: boolean
 	id: string
 	leader?: boolean
 	name: string
 	sort: number
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	user: RecordIdString
 }
 
 export type NotificationsRecord = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	id: string
 	message?: string
 	read?: boolean
 	title: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	user: RecordIdString
 }
 
 export type ScheduledNotificationsRecord = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	id: string
 	message?: string
 	time?: IsoDateString
 	title: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	user: RecordIdString
 }
 
 export type SettingsRecord<Tdata = unknown> = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	data?: null | Tdata
 	id: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	user: RecordIdString
 }
 
 export type UsersRecord = {
-	created?: IsoDateString
+	created: IsoAutoDateString
 	email?: string
 	emailVisibility?: boolean
 	id: string
 	name?: string
 	password: string
 	tokenKey: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	username: string
 	verified?: boolean
 }
@@ -158,12 +165,12 @@ export type UsersRecord = {
 export type WorksRecord = {
 	content?: HTMLString
 	contentBoxHeight?: number
-	created?: IsoDateString
+	created: IsoAutoDateString
 	developer?: RecordIdString
 	done?: boolean
 	doneDate?: IsoDateString
 	dueDate?: IsoDateString
-	file?: string
+	file?: FileNameString
 	id: string
 	joplin?: string
 	redmine?: string
@@ -172,7 +179,7 @@ export type WorksRecord = {
 	state?: string
 	time?: number
 	title: string
-	updated?: IsoDateString
+	updated: IsoAutoDateString
 	user: RecordIdString
 }
 
@@ -222,20 +229,68 @@ export type CollectionResponses = {
 	works: WorksResponse
 }
 
+// Utility types for create/update operations
+
+type ProcessCreateAndUpdateFields<T> = Omit<{
+	// Omit AutoDate fields
+	[K in keyof T as Extract<T[K], IsoAutoDateString> extends never ? K : never]: 
+		// Convert FileNameString to File
+		T[K] extends infer U ? 
+			U extends (FileNameString | FileNameString[]) ? 
+				U extends any[] ? File[] : File 
+			: U
+		: never
+}, 'id'>
+
+// Create type for Auth collections
+export type CreateAuth<T> = {
+	id?: RecordIdString
+	email: string
+	emailVisibility?: boolean
+	password: string
+	passwordConfirm: string
+	verified?: boolean
+} & ProcessCreateAndUpdateFields<T>
+
+// Create type for Base collections
+export type CreateBase<T> = {
+	id?: RecordIdString
+} & ProcessCreateAndUpdateFields<T>
+
+// Update type for Auth collections
+export type UpdateAuth<T> = Partial<
+	Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
+> & {
+	email?: string
+	emailVisibility?: boolean
+	oldPassword?: string
+	password?: string
+	passwordConfirm?: string
+	verified?: boolean
+}
+
+// Update type for Base collections
+export type UpdateBase<T> = Partial<
+	Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
+>
+
+// Get the correct create type for any collection
+export type Create<T extends keyof CollectionResponses> =
+	CollectionResponses[T] extends AuthSystemFields
+		? CreateAuth<CollectionRecords[T]>
+		: CreateBase<CollectionRecords[T]>
+
+// Get the correct update type for any collection
+export type Update<T extends keyof CollectionResponses> =
+	CollectionResponses[T] extends AuthSystemFields
+		? UpdateAuth<CollectionRecords[T]>
+		: UpdateBase<CollectionRecords[T]>
+
 // Type for usage with type asserted PocketBase instance
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
-export type TypedPocketBase = PocketBase & {
-	collection(idOrName: '_authOrigins'): RecordService<AuthoriginsResponse>
-	collection(idOrName: '_externalAuths'): RecordService<ExternalauthsResponse>
-	collection(idOrName: '_mfas'): RecordService<MfasResponse>
-	collection(idOrName: '_otps'): RecordService<OtpsResponse>
-	collection(idOrName: '_superusers'): RecordService<SuperusersResponse>
-	collection(idOrName: 'codes'): RecordService<CodesResponse>
-	collection(idOrName: 'developers'): RecordService<DevelopersResponse>
-	collection(idOrName: 'notifications'): RecordService<NotificationsResponse>
-	collection(idOrName: 'scheduledNotifications'): RecordService<ScheduledNotificationsResponse>
-	collection(idOrName: 'settings'): RecordService<SettingsResponse>
-	collection(idOrName: 'users'): RecordService<UsersResponse>
-	collection(idOrName: 'works'): RecordService<WorksResponse>
-}
+export type TypedPocketBase = {
+	collection<T extends keyof CollectionResponses>(
+		idOrName: T
+	): RecordService<CollectionResponses[T]>
+} & PocketBase

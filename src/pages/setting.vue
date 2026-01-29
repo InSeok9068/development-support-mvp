@@ -8,14 +8,14 @@
 </template>
 
 <script setup lang="ts">
+import pb from '@/api/pocketbase';
 import SettingDeveloper from '@/components/setting/SettingDeveloper.vue';
 import SettingEtc from '@/components/setting/SettingEtc.vue';
-import { useSetting } from '@/composables/setting';
-import { onMounted, ref } from 'vue';
 import { useModal } from '@/composables/modal';
-import pb from '@/api/pocketbase';
+import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import type { UiDeveloperArgs } from '@/ui/todo.ui';
+import { onMounted, ref } from 'vue';
 
 /* ======================= 변수 ======================= */
 const { setting, selectSetting, updateSetting } = useSetting();

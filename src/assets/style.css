@@ -8,4 +8,4 @@
 /*@import '@picocss/pico/css/pico.zinc.min.css';*/
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
-@config "../../tailwind.config.ts";
+@config '../../tailwind.config.ts';

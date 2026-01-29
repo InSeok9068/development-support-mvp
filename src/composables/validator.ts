@@ -50,7 +50,7 @@ export const useValidator = () => {
       });
       let isValidAll = true;
       for (let i = 0; i < inputsFilter.length; i++) {
-        const input = inputsFilter.at(i)!;
+        const input = inputsFilter[i]!;
         const validator = this.schema.find((value) => value.key === input.name)!;
         validator.isValid = validator.valid(input.value);
         if (!validator.isValid) {
