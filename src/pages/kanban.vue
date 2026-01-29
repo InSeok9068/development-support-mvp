@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { useCode } from '@/composables/code.ts';
 import { useWork } from '@/composables/todo/work.ts';
-import { onMounted } from 'vue';
+import { onBeforeUnmount, onMounted } from 'vue';
 import pb from '@/api/pocketbase.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import type { DevelopersResponse } from '@/api/pocketbase-types.ts';
@@ -118,6 +118,7 @@ const { setting } = useSetting();
 const workStateCodesStep1 = getCodesByType('workState').slice(0, 3);
 const workStateCodesStep2 = getCodesByType('workState').slice(3, 6);
 const router = useRouter();
+let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -125,6 +126,15 @@ onMounted(async () => {
   await fetchWorkFullList();
   await fetchDevelopers();
   await subscribeWorks();
+});
+
+onBeforeUnmount(async () => {
+  if (unsubscribeWorks) {
+    await unsubscribeWorks();
+    unsubscribeWorks = null;
+  } else {
+    await pb.collection('works').unsubscribe('*');
+  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -144,7 +154,7 @@ const onDropWork = async (event: DragEvent, state: string) => {
 };
 
 const subscribeWorks = async () => {
-  await pb.collection('works').subscribe('*', (e) => {
+  unsubscribeWorks = await pb.collection('works').subscribe('*', (e) => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {

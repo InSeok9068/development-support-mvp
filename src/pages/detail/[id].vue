@@ -196,7 +196,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, toRaw, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -228,7 +228,11 @@ const redmineData = ref({
 const workQuery = useQuery({
   queryKey: computed(() => ['work', route.params.id]),
   queryFn: () =>
-    pb.collection('works').getOne(route.params.id, {
+    pb.collection('works').getOne<
+      WorksResponse<{
+        scheduledNotifications?: ScheduledNotificationsResponse[];
+      }>
+    >(route.params.id, {
       expand: 'scheduledNotifications',
     }),
 });
@@ -240,7 +244,7 @@ watch(
   () => workQuery.data.value,
   (data) => {
     if (data) {
-      work.value = structuredClone(data);
+      work.value = structuredClone(toRaw(data));
     }
   },
   { immediate: true },
