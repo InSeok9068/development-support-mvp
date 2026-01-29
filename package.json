@@ -18,6 +18,7 @@
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/vue3": "^6.1.20",
     "@picocss/pico": "^2.1.1",
+    "@tanstack/vue-query": "^5.92.9",
     "@tiptap/core": "^3.4.0",
     "@tiptap/extension-highlight": "^3.4.0",
     "@tiptap/extension-typography": "^3.4.0",
