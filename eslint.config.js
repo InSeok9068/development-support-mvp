@@ -1,18 +1,18 @@
 import eslint from '@eslint/js';
-import tslint from 'typescript-eslint';
-import eslintPluginVue from 'eslint-plugin-vue';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import eslintPluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
+import tslint from 'typescript-eslint';
 
 export default tslint.config(
-  { ignores: ['*.d.ts', 'src/api/pocketbase*'] },
+  { ignores: ['*.d.ts', 'apps/*/src/api/pocketbase*'] },
   {
     extends: [
       eslint.configs.recommended,
       ...tslint.configs.recommended,
       ...eslintPluginVue.configs['flat/recommended'],
     ],
-    files: ['src/**/*.{js,ts,vue}'],
+    files: ['apps/*/src/**/*.{js,ts,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -26,7 +26,7 @@ export default tslint.config(
     },
   },
   {
-    files: ['src/pages/**/*.vue'],
+    files: ['apps/*/src/pages/**/*.vue'],
     rules: {
       'vue/multi-word-component-names': 'off', // unplugin-vue-router
     },

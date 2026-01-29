@@ -1,16 +1,15 @@
 {
   "name": "development-support-mvp",
   "type": "module",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "dev": "vite",
-    "build": "vue-tsc && vite build --emptyOutDir",
-    "preview": "vite preview",
-    "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
-    "lint": "eslint \"src/**/*.{js,ts,vue}\"",
-    "lint:fix": "eslint \"src/**/*.{js,ts,vue,css,html}\" --fix",
-    "lint:format": "prettier --write ."
+    "dev": "pnpm --filter @apps/todo dev",
+    "build": "pnpm --filter @apps/todo build",
+    "preview": "pnpm --filter @apps/todo preview",
+    "lint": "pnpm --filter @apps/todo lint",
+    "lint:fix": "pnpm --filter @apps/todo lint",
+    "lint:format": "pnpm --filter @apps/todo lint"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",

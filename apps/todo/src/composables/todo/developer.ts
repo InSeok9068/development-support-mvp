@@ -1,9 +1,8 @@
 import pb from '@/api/pocketbase';
-import type { DevelopersResponse } from '@/api/pocketbase-types';
 import { useDeveloperStore } from '@/stores/developer.store';
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import type { RecordFullListOptions } from 'pocketbase';
 import { storeToRefs } from 'pinia';
+import type { RecordFullListOptions } from 'pocketbase';
 import { computed, ref } from 'vue';
 
 export const useDeveloper = () => {
