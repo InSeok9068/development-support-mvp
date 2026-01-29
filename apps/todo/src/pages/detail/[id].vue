@@ -189,7 +189,7 @@ import type {
 } from '@/api/pocketbase-types';
 import DetailEditor from '@/components/detail/DetailEditor.vue';
 import { useCode } from '@/composables/code';
-import { useModal } from '@/composables/modal';
+import { useModal } from '@packages/ui';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useQuery } from '@tanstack/vue-query';

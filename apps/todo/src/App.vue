@@ -10,7 +10,6 @@
 import pb from '@/api/pocketbase';
 import { useCode } from '@/composables/code';
 import { useGlobal } from '@/composables/global';
-import { useModal } from '@/composables/modal';
 import { useNotification } from '@/composables/notification';
 import { usePocketbase } from '@/composables/pocketbase';
 import { useSetting } from '@/composables/setting';
@@ -19,6 +18,7 @@ import { useSign } from '@/composables/user/sign';
 import TheLaytoutFooter from '@/layouts/TheLayoutFooter.vue';
 import TheLayoutNavi from '@/layouts/TheLayoutNavi.vue';
 import TheLaytout from '@/layouts/TheLaytout.vue';
+import { AppModal, useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { onMounted, watch } from 'vue';

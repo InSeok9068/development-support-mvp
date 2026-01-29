@@ -11,7 +11,7 @@
 import pb from '@/api/pocketbase';
 import SettingDeveloper from '@/components/setting/SettingDeveloper.vue';
 import SettingEtc from '@/components/setting/SettingEtc.vue';
-import { useModal } from '@/composables/modal';
+import { useModal } from '@packages/ui';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useMutation, useQueryClient } from '@tanstack/vue-query';

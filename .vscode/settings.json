@@ -8,6 +8,7 @@
   "cssvar.ignore": [],
   "cssvar.extensions": ["css", "vue", "ts", "postcss"],
   /* Open Props 자동완성 */
+  "css.styleSheets": ["./node_modules/@picocss/pico/css/pico.min.css", "**/style.css"],
   "explorer.fileNesting.patterns": {
     "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml"
   }

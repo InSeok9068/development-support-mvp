@@ -1,5 +1,5 @@
-import { useModalStore } from '@/stores/modal.store';
-import type { UiModalArgs } from '@/ui/modal.ui';
+import { useModalStore } from '../stores/modal.store';
+import type { UiModalArgs } from '../ui/modal.ui';
 import { storeToRefs } from 'pinia';
 
 export const useModal = () => {

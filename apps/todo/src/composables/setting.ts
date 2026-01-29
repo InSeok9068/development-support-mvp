@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import { useModal } from '@/composables/modal';
+import { useModal } from '@packages/ui';
 import { type SettingJson, useSettingStore } from '@/stores/setting.store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';

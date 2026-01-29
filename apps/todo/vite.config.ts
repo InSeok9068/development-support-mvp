@@ -7,6 +7,8 @@ import { defineConfig } from 'vite';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vitejs.dev/config/
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+
 export default defineConfig({
   plugins: [
     VueRouter(),
@@ -21,6 +23,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@packages/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
+    },
+  },
+  server: {
+    fs: {
+      allow: [repoRoot],
     },
   },
 });

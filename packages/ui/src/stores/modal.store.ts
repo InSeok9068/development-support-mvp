@@ -1,4 +1,4 @@
-import type { UiModalArgs } from '@/ui/modal.ui';
+import type { UiModalArgs } from '../ui/modal.ui';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 

@@ -21,7 +21,7 @@
 import { useSign } from '@/composables/user/sign';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useModal } from '@/composables/modal';
+import { useModal } from '@packages/ui';
 import pb from '@/api/pocketbase';
 
 /* ======================= 변수 ======================= */

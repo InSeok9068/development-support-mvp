@@ -3,7 +3,9 @@
   "include": ["src/**/*", "src/**/*.vue", "env.d.ts", "components.d.ts", "typed-router.d.ts", "vite.config.ts"],
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@packages/ui": ["../../packages/ui/src/index.ts"],
+      "@packages/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

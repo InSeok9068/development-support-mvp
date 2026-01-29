@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import { useModal } from '@/composables/modal';
+import { useModal } from '@packages/ui';
 
 export const usePocketbase = () => {
   /* ======================= 변수 ======================= */
