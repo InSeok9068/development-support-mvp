@@ -1,10 +1,11 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginVue from 'eslint-plugin-vue';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tslint from 'typescript-eslint';
 
-export default tslint.config(
+export default defineConfig(
   { ignores: ['*.d.ts', 'apps/*/src/api/pocketbase*'] },
   {
     extends: [
