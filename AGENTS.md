@@ -261,13 +261,14 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 ## Agent 금지 사항 (절대 규칙)
 
 - pages/ 밖에서 라우팅 구조를 변경하지 않는다.
-- pocketbase-types.ts를 참조 없이 임의 타입을 생성하지 않는다.
+- `pocketbase-types.ts`를 확인하여 데이터 구조를 파악한다. 타입 정의가 없는 필드는 절대 추측하여 사용하지 않는다.
 - composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
 - Tailwind CSS 클래스를 직접 작성하지 않는다.
 - 기존 Tailwind CSS 클래스는 수정/삭제/이동/치환하지 않는다. (사용 여부 판단 포함)
 - SFC의 `<style scoped>` 영역은 추가/수정/삭제하지 않는다.
 - 기존 CSS 클래스명과 class 속성 구조는 변경하지 않는다.
+- 별도의 에러처리를 하지 않는다. 이미 `initPocketbase`에 구현된 전역 핸들러를 신뢰한다.
 - 명시적 요청 없이 구조 개선 또는 리팩터링을 제안하거나 수행하지 않는다.
 - ※ 본 문서의 규칙 간 해석 충돌이 발생할 경우, MVP 속도와 단순성을 우선한다.
 
