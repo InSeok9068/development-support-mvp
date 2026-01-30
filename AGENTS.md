@@ -19,7 +19,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 - 언어 : TypeScript
 - 프론트엔드 프레임워크 : Vue 3 (Composition API + Script Setup)
-- CSS 라이브러리 : Pico CSS + Tailwind CSS
+- CSS 라이브러리 : Pico CSS + Tailwind CSS + Bootstrap Icons
 - 백엔드 BaaS 서비스 : PocketBase
 - 데이터 CRUD : Tanstack Query
 - 상태관리 : Pinia
@@ -59,6 +59,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 ### CSS 라이브러리 사용 가이드
 
 - Pico CSS의 Semantic HTML만 활용하여 화면을 구성한다.
+- Bootstrap Icons는 아이콘 사용에만 사용한다.
 - Tailwind CSS는 개발자 직접 사용 영역으로 두며, Agent는 사용하지 않는다.
 - SFC <style scoped>는 예외적으로만 사용하며, 되도록 최소화한다.
 - 추가적인 CSS 설계나 커스텀 스타일은 최소화한다.
