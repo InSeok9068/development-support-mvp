@@ -79,6 +79,8 @@
 - Mutation 이후에는 표준 invalidation 규칙으로 캐시를 갱신한다.
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (단, 복잡하면 invalidate 우선)
+- 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
+- pages/components에서는 비동기 흐름을 제어하지 않는다.
 
 ---
 
@@ -163,3 +165,12 @@
 - 검토 없이 임의로 추가하지 않는다.
 
 ---
+
+## Agent 금지 사항 (절대 규칙)
+
+- pages/ 밖에서 라우팅 구조를 변경하지 않는다.
+- pocketbase-types.ts를 참조 없이 임의 타입을 생성하지 않는다.
+- composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
+- Pinia를 CRUD 캐시 용도로 사용하지 않는다.
+- Tailwind CSS 클래스를 직접 작성하지 않는다.
+- > 위 규칙을 우회하는 구조적 편법을 사용하지 않는다.
