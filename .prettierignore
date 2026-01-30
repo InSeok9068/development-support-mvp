@@ -1,9 +1,9 @@
 .history
 
-src/api/pocketbase.ts
-src/api/pocketbase-types.ts
 apps/**/src/api/pocketbase.ts
 apps/**/src/api/pocketbase-types.ts
 
 package.json
-!apps/**/package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+

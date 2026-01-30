@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "format": "prettier --write .",
+
     "dev": "pnpm -C apps/todo dev",
     "build": "pnpm -C apps/todo build",
     "preview": "pnpm -C apps/todo preview",
