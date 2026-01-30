@@ -44,7 +44,7 @@
 
       <label>
         <strong>내용</strong>
-        <i class="bi bi-copy float-right cursor-pointer" @click.stop.prevent="onClickMarkdownCopy">마크다운 복사</i>
+        <i class="bi-copy float-right cursor-pointer" @click.stop.prevent="onClickMarkdownCopy">마크다운 복사</i>
         <div role="group">
           <DetailEditor v-model="work.content" />
         </div>
@@ -107,9 +107,7 @@
 
       <label>
         <strong>개발자</strong>
-        <i class="bi bi-person-fill-dash float-right cursor-pointer" @click.stop.prevent="onClickRemoveDeveloper"
-          >삭제</i
-        >
+        <i class="bi-person-fill-dash float-right cursor-pointer" @click.stop.prevent="onClickRemoveDeveloper">삭제</i>
         <select v-model="work.developer">
           <template v-for="developer in developers">
             <option :value="developer.id" :selected="work.developer == developer.id">

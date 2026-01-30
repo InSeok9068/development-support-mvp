@@ -8,7 +8,7 @@
         <li class="hidden sm:block"></li>
         <li class="sm:hidden">
           <details class="dropdown">
-            <summary><i class="bi bi-list-ul"></i></summary>
+            <summary><i class="bi-list-ul"></i></summary>
             <ul>
               <li>
                 <RouterLink to="/" data-tooltip="Alt + 1" data-placement="bottom">
@@ -77,7 +77,7 @@
       <ul>
         <li>
           <details class="dropdown">
-            <summary><i class="bi bi-gear-fill"></i></summary>
+            <summary><i class="bi-gear-fill"></i></summary>
             <ul>
               <li v-show="!isAuth">
                 <a href="#" @click.stop.prevent="$router.push('/sign')">로그인</a>
@@ -97,8 +97,8 @@
         <li>
           <i
             :class="{
-              'bi bi-bell cursor-pointer': global.notificationPermission === 'granted',
-              'bi bi-bell-slash': global.notificationPermission !== 'granted',
+              'bi-bell cursor-pointer': global.notificationPermission === 'granted',
+              'bi-bell-slash': global.notificationPermission !== 'granted',
             }"
             @click.stop.prevent="$router.push('/notification')"
           >
@@ -109,8 +109,8 @@
           <i
             class="cursor-pointer"
             :class="{
-              'bi bi-brightness-high': global.theme === 'dark',
-              'bi bi-brightness-high-fill': global.theme === 'white',
+              'bi-brightness-high': global.theme === 'dark',
+              'bi-brightness-high-fill': global.theme === 'white',
             }"
             @click="toggleTheme"
           ></i>
