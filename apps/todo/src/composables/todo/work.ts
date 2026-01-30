@@ -32,7 +32,7 @@ export const useWork = () => {
   });
   /* ======================= 변수 ======================= */
 
-  /* ======================= 헬퍼 ======================= */
+  /* ======================= 메서드 ======================= */
   const buildQueryKey = (params: WorkQueryParams) => [
     'works',
     params.mode,
@@ -62,9 +62,7 @@ export const useWork = () => {
 
     return list.items;
   };
-  /* ======================= 헬퍼 ======================= */
 
-  /* ======================= 쿼리 ======================= */
   const worksQueryKey = computed(() => buildQueryKey(queryParams.value));
   const worksQuery = useQuery({
     queryKey: worksQueryKey,
@@ -72,9 +70,7 @@ export const useWork = () => {
     placeholderData: keepPreviousData,
   });
   const works = computed(() => worksQuery.data.value ?? []);
-  /* ======================= 쿼리 ======================= */
 
-  /* ======================= 메서드 ======================= */
   const fetchWorkFullList = async ({
     filter = 'done = false',
     sort = 'sort,-created',

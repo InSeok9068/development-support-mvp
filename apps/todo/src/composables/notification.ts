@@ -13,6 +13,18 @@ export const useNotification = () => {
   const queryClient = useQueryClient();
   /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
+  watch(
+    () => unreadQuery.data.value,
+    (count) => {
+      if (typeof count === 'number') {
+        global.value.notificationDot = count > 0;
+      }
+    },
+    { immediate: true },
+  );
+  /* ======================= 감시자 ======================= */
+
   /* ======================= 메서드 ======================= */
   const loadUnreadCount = async () =>
     (
@@ -25,16 +37,6 @@ export const useNotification = () => {
     queryKey: ['notifications', 'unread-count'],
     queryFn: loadUnreadCount,
   });
-
-  watch(
-    () => unreadQuery.data.value,
-    (count) => {
-      if (typeof count === 'number') {
-        global.value.notificationDot = count > 0;
-      }
-    },
-    { immediate: true },
-  );
 
   const fetchUnreadCount = async () => {
     const count = await queryClient.fetchQuery({

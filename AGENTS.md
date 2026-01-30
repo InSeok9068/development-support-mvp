@@ -62,9 +62,9 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 ### CSS 라이브러리 사용 가이드
 
-- Pico CSS의 Semantic HTML만 활용하여 화면을 구성한다.
+- Pico CSS의 Semantic HTML만 활용하여 Agent는 화면을 구성한다.
+- Tailwind CSS는 개발자가 직접 작성하는 영역이며, Agent는 사용하지 않는다.
 - Bootstrap Icons는 아이콘 사용에만 사용한다. (장식용 남발 금지 !)
-- Tailwind CSS는 개발자 직접 사용 영역으로 두며, Agent는 사용하지 않는다.
 - SFC `<style scoped>`는 예외적으로만 사용하며, 되도록 최소화한다.
 - 추가적인 CSS 설계나 커스텀 스타일은 최소화한다.
 
@@ -78,6 +78,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 요청/응답 타입은 임의로 새로 정의하지 않는다.
   - src/api/pocketbase-types.ts를 최우선으로 사용한다.
   - pocketbase-types.ts는 절대 수정하지 않는다.
+  - 커스텀 API (pb.send)를 사용할 경우에만 요청/응답 타입 정의를 예외적으로 허용한다.
 - `pocketbase-types.ts`의 `Collections` Enum을 반드시 사용한다.
 - 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.
   - ❌ `Create<'works'>`
@@ -135,12 +136,13 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 ### Composables 가이드
 
-- composable은 기능 단위가 아닌 도메인 단위로 만든다.
-  - ❌ useModal, useToggle
+- composable은 기본적으로 도메인 단위로 만든다.
   - ✅ useTodos, useAuth, useUserSettings
-- composable 안에서만 TanStack Query를 사용한다.
+  - ❌ 도메인 로직을 잘게 쪼갠 기능 단위 composable 남발하지 않는다. (useToggle, useFetch)
+- 도메인에 속하지 않는 전역/횡단 관심사 composable은 예외로 허용한다.
+  - ✅ useModal, useToast, useGlobal, useValidation
+- TanStack Query는 도메인 composable 내부에서만 사용한다.
 - composable은 UI에 직접 의존하지 않는다.
-- ※ 도메인에 속하지 않는 전역 유틸성 composable은 제한적으로 허용한다. (validation, toast, global 등)
 
 ---
 
