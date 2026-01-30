@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
+// @ts-nocheck
 /// <reference path="types.d.ts" />
 
 // 시간은 UTC 9시간차 고려해서 -9
