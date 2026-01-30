@@ -56,7 +56,7 @@
             <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
               {{ work.title }}
             </a>
-            <i class="bi bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
+            <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
           </h6>
 
           <div class="grid">

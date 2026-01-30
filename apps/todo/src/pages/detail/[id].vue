@@ -9,10 +9,10 @@
         </ul>
         <ul>
           <li>
-            <h4><i class="bi bi-floppy cursor-pointer" @click="onClickUpdate()"></i></h4>
+            <h4><i class="bi-floppy cursor-pointer" @click="onClickUpdate()"></i></h4>
           </li>
           <li>
-            <h4><i class="bi bi-trash cursor-pointer" @click="onClickDelete()"></i></h4>
+            <h4><i class="bi-trash cursor-pointer" @click="onClickDelete()"></i></h4>
           </li>
         </ul>
       </nav>
@@ -143,7 +143,7 @@
               <td>
                 {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
                 <i
-                  class="bi bi-trash ml-1 cursor-pointer"
+                  class="bi-trash ml-1 cursor-pointer"
                   @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
                 ></i>
               </td>
@@ -159,7 +159,7 @@
         <a :href="pb.files.getURL(work, work.file)" target="_blank">
           {{ work.file }}
         </a>
-        <i class="bi bi-trash ml-5 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
+        <i class="bi-trash ml-5 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
       </div>
 
       <div role="group">
@@ -189,9 +189,9 @@ import type {
 } from '@/api/pocketbase-types';
 import DetailEditor from '@/components/detail/DetailEditor.vue';
 import { useCode } from '@/composables/code';
-import { useModal } from '@packages/ui';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
+import { useModal } from '@packages/ui';
 import { useQuery } from '@tanstack/vue-query';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
