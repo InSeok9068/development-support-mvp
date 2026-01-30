@@ -99,7 +99,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - 예: `['todos']`, `['todos', 'list', params]`, `['todos', 'detail', id]`
 - Mutation 이후에는 표준 invalidation 규칙으로 캐시를 갱신한다.
   - 기본: 관련 Query Key invalidate
-  - 필요 시: setQueryData로 optimistic update (단, 복잡하면 invalidate 우선)
+  - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
 - pages/components에서는 비동기 흐름을 제어하지 않는다.
 
@@ -259,4 +259,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
 - Tailwind CSS 클래스를 직접 작성하지 않는다.
-- > 위 규칙을 우회하는 구조적 편법을 사용하지 않는다.
+- 명시적 요청 없이 구조 개선 또는 리팩터링을 제안하거나 수행하지 않는다.
+- ※ 본 문서의 규칙 간 해석 충돌이 발생할 경우, MVP 속도와 단순성을 우선한다.
+
+> 위 규칙을 우회하는 구조적 편법을 사용하지 않는다.
