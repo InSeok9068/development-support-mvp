@@ -7,33 +7,29 @@
 </template>
 
 <script setup lang="ts">
-import pb from '@/api/pocketbase';
 import { useCode } from '@/composables/code';
 import { useGlobal } from '@/composables/global';
 import { useNotification } from '@/composables/notification';
 import { usePocketbase } from '@/composables/pocketbase';
 import { useSetting } from '@/composables/setting';
-import { useToast } from '@/composables/toast';
 import { useSign } from '@/composables/user/sign';
 import TheLaytoutFooter from '@/layouts/TheLayoutFooter.vue';
 import TheLayoutNavi from '@/layouts/TheLayoutNavi.vue';
 import TheLaytout from '@/layouts/TheLaytout.vue';
 import { AppModal, useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
-import dayjs from 'dayjs';
 import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const router = useRouter();
-const { isAuth } = useSign();
+const { checkAuth } = useSign();
 const { initPocketbase } = usePocketbase();
 const { modal, clearModal } = useModal();
-const { fetchUnreadCount } = useNotification();
+const { fetchUnreadCount, subscribeNotification, subscribeScheduledNotifications } = useNotification();
 const { global, initTheme } = useGlobal();
 const { initCodes } = useCode();
 const { initSetting } = useSetting();
-const { showMessageToast } = useToast();
 const keys = useMagicKeys();
 /* ======================= 변수 ======================= */
 
@@ -64,8 +60,7 @@ onMounted(() => {
   initSetting(); // 셋팅 초기화
 
   // 로그인 확인 및 유도
-  isAuth.value = pb.authStore.isValid; // 로그인 여부
-  if (!isAuth.value) {
+  if (!checkAuth()) {
     router.push('/sign'); // 미인증 회원 로그인 유도
   }
 
@@ -80,43 +75,6 @@ onMounted(() => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const subscribeNotification = async (on: boolean = true) => {
-  if (on) {
-    await pb.collection('notifications').subscribe('*', (e) => {
-      switch (e.action) {
-        case 'create':
-          // 브라우저 알림
-          new Notification(e.record.title, {
-            body: e.record.message,
-          });
 
-          // 토스트 알림
-          showMessageToast(`[${e.record.title}] ${e.record.message}`);
-
-          // 알림 Dot 표기
-          global.value.notificationDot = true;
-      }
-    });
-  } else {
-    await pb.collection('notifications').unsubscribe('*');
-  }
-};
-
-const subscribeScheduledNotifications = async (on: boolean = true) => {
-  if (on) {
-    // 1분 마다 확인
-    setInterval(async () => {
-      const scheduledNotifications = await pb.collection('scheduledNotifications').getFullList({
-        filter: `time <= '${dayjs().format('YYYY-MM-DD HH:mm')}'`,
-        sort: 'created',
-      });
-
-      scheduledNotifications.forEach((record) => {
-        pb.collection('scheduledNotifications').delete(record.id);
-        pb.collection('notifications').create(record);
-      });
-    }, 1000 * 60);
-  }
-};
 /* ======================= 메서드 ======================= */
 </script>

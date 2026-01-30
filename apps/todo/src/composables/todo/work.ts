@@ -162,6 +162,16 @@ export const useWork = () => {
   const setWorksCache = (updater: (current: WorksResponse[]) => WorksResponse[]) => {
     queryClient.setQueryData<WorksResponse[]>(worksQueryKey.value, (current = []) => updater([...current]));
   };
+
+  const subscribeWorks = (callback: (e: { action: string; record: WorksResponse }) => void) => {
+    return pb.collection('works').subscribe('*', (e) => {
+      callback({ action: e.action, record: e.record });
+    });
+  };
+
+  const unsubscribeWorks = () => {
+    return pb.collection('works').unsubscribe('*');
+  };
   /* ======================= 메서드 ======================= */
 
   return {
@@ -175,5 +185,7 @@ export const useWork = () => {
     updateWork,
     deleteWork,
     setWorksCache,
+    subscribeWorks,
+    unsubscribeWorks,
   };
 };

@@ -99,12 +99,12 @@
 </template>
 
 <script setup lang="ts">
-import pb from '@/api/pocketbase';
 import type { Collections, Create, DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useCode } from '@/composables/code';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
+import { useSign } from '@/composables/user/sign';
 import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
@@ -113,14 +113,23 @@ import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { selectDeveloper, developers, fetchDevelopers } = useDeveloper();
-const { works, fetchWorkFullList, createWork, updateWork, deleteWork, setWorksCache } = useWork();
+const {
+  works,
+  fetchWorkFullList,
+  createWork,
+  updateWork,
+  deleteWork,
+  setWorksCache,
+  subscribeWorks: requestSubscribe,
+} = useWork();
+const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
 const { validators } = useValidator();
 const router = useRouter();
 const workArgs = ref<Create<Collections.Works>>({
   id: '',
-  user: pb.authStore.record?.id ?? '',
+  user: getUserId(),
   title: '',
   time: 0,
   state: 'wait',
@@ -227,7 +236,7 @@ const onClickSort = () => {
 };
 
 const subscribeWorks = async () => {
-  await pb.collection('works').subscribe('*', (e) => {
+  await requestSubscribe((e) => {
     switch (e.action) {
       case 'create':
         setWorksCache((current) => [...current, e.record]);

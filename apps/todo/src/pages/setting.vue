@@ -8,42 +8,27 @@
 </template>
 
 <script setup lang="ts">
-import pb from '@/api/pocketbase';
 import SettingDeveloper from '@/components/setting/SettingDeveloper.vue';
 import SettingEtc from '@/components/setting/SettingEtc.vue';
-import { useModal } from '@packages/ui';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
-import { useMutation, useQueryClient } from '@tanstack/vue-query';
+import { useSign } from '@/composables/user/sign';
 import type { UiDeveloperArgs } from '@/ui/todo.ui';
+import { useModal } from '@packages/ui';
 import { onMounted, ref } from 'vue';
 
 /* ======================= 변수 ======================= */
 const { setting, fetchSetting, updateSetting } = useSetting();
 const { showMessageModal } = useModal();
-const { developers, fetchDevelopers } = useDeveloper();
-const queryClient = useQueryClient();
+const { developers, fetchDevelopers, createDeveloperMutation, updateDeveloperMutation } = useDeveloper();
+const { getUserId } = useSign();
 const developerArgs = ref<UiDeveloperArgs>({
   id: '',
-  user: pb.authStore.record?.id ?? '',
+  user: getUserId(),
   name: '',
   sort: 1,
   leader: false,
   del: false,
-});
-const createDeveloperMutation = useMutation({
-  mutationFn: (payload: UiDeveloperArgs) => pb.collection('developers').create(payload),
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['developers'] });
-    showMessageModal('등록 완료');
-  },
-});
-const updateDeveloperMutation = useMutation({
-  mutationFn: (payload: UiDeveloperArgs) => pb.collection('developers').update(payload.id, payload),
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['developers'] });
-    showMessageModal('수정 완료');
-  },
 });
 /* ======================= 변수 ======================= */
 
@@ -58,8 +43,10 @@ onMounted(() => {
 const onClickSave_1 = async () => {
   if (developerArgs.value.id) {
     await updateDeveloperMutation.mutateAsync(developerArgs.value);
+    showMessageModal('수정 완료');
   } else {
     await createDeveloperMutation.mutateAsync(developerArgs.value);
+    showMessageModal('등록 완료');
   }
 };
 

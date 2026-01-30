@@ -19,14 +19,11 @@
 
 <script setup lang="ts">
 import { useSign } from '@/composables/user/sign';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { useModal } from '@packages/ui';
-import pb from '@/api/pocketbase';
+import { ref } from 'vue';
 
 /* ======================= 변수 ======================= */
-const { isAuth } = useSign();
-const router = useRouter();
+const { signin: requestSignin, signup: requestSignup } = useSign();
 const { showMessageModal } = useModal();
 const signinFormArgs = ref({
   email: '',
@@ -42,13 +39,11 @@ const signupFormArgs = ref({
 
 /* ======================= 메서드 ======================= */
 const signin = async () => {
-  await pb.collection('users').authWithPassword(signinFormArgs.value.email, signinFormArgs.value.password);
-  isAuth.value = true;
-  await router.push('/');
+  await requestSignin(signinFormArgs.value.email, signinFormArgs.value.password);
 };
 
 const signup = async () => {
-  await pb.collection('users').create({
+  await requestSignup({
     name: signupFormArgs.value.nickname,
     email: signupFormArgs.value.email,
     password: signupFormArgs.value.password,

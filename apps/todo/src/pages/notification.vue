@@ -23,41 +23,20 @@
 
 <script setup lang="ts">
 import type { NotificationsResponse } from '@/api/pocketbase-types';
-import dayjs from 'dayjs';
-import pb from '@/api/pocketbase';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { computed } from 'vue';
 import { useNotification } from '@/composables/notification';
+import dayjs from 'dayjs';
+import { computed, ref } from 'vue';
 
 /* ======================= 변수 ======================= */
-const queryClient = useQueryClient();
-const notificationsQuery = useQuery({
-  queryKey: ['notifications', { page: 1, perPage: 20, sort: '-created' }],
-  queryFn: async () =>
-    (
-      await pb.collection('notifications').getList(1, 20, {
-        sort: '-created',
-      })
-    ).items,
-});
+const { fetchUnreadCount, useNotificationsQuery, useMarkReadMutation } = useNotification();
+const notificationsQuery = useNotificationsQuery(ref({ page: 1, perPage: 20, sort: '-created' }));
 const notifications = computed(() => notificationsQuery.data.value ?? []);
-const { fetchUnreadCount } = useNotification();
-const markReadMutation = useMutation({
-  mutationFn: (notification: NotificationsResponse) =>
-    pb.collection('notifications').update(notification.id, {
-      ...notification,
-      read: true,
-    }),
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    await queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
-  },
-});
+const markReadMutation = useMarkReadMutation();
 /* ======================= 변수 ======================= */
 
 /* ======================= 메서드 ======================= */
 const onClickRead = async (notification: NotificationsResponse) => {
-  await markReadMutation.mutateAsync(notification);
+  await markReadMutation.mutateAsync(notification.id);
   await fetchUnreadCount();
 };
 /* ======================= 메서드 ======================= */

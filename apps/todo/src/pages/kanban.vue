@@ -100,18 +100,24 @@
 </template>
 
 <script setup lang="ts">
-import { useCode } from '@/composables/code.ts';
-import { useWork } from '@/composables/todo/work.ts';
-import { onBeforeUnmount, onMounted } from 'vue';
-import pb from '@/api/pocketbase.ts';
-import { useDeveloper } from '@/composables/todo/developer.ts';
 import type { DevelopersResponse } from '@/api/pocketbase-types.ts';
-import { useRouter } from 'vue-router';
-import dayjs from 'dayjs';
+import { useCode } from '@/composables/code.ts';
 import { useSetting } from '@/composables/setting.ts';
+import { useDeveloper } from '@/composables/todo/developer.ts';
+import { useWork } from '@/composables/todo/work.ts';
+import dayjs from 'dayjs';
+import { onBeforeUnmount, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const { works, fetchWorkFullList, updateWork, setWorksCache } = useWork();
+const {
+  works,
+  fetchWorkFullList,
+  updateWork,
+  setWorksCache,
+  subscribeWorks: requestSubscribe,
+  unsubscribeWorks: requestUnsubscribe,
+} = useWork();
 const { developers, fetchDevelopers } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
@@ -133,7 +139,7 @@ onBeforeUnmount(async () => {
     await unsubscribeWorks();
     unsubscribeWorks = null;
   } else {
-    await pb.collection('works').unsubscribe('*');
+    await requestUnsubscribe();
   }
 });
 /* ======================= 생명주기 훅 ======================= */
@@ -154,7 +160,7 @@ const onDropWork = async (event: DragEvent, state: string) => {
 };
 
 const subscribeWorks = async () => {
-  unsubscribeWorks = await pb.collection('works').subscribe('*', (e) => {
+  unsubscribeWorks = await requestSubscribe((e) => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {

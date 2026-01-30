@@ -156,7 +156,7 @@
       <strong>첨부파일</strong>
       <input id="fileInput" type="file" class="block !w-[unset]" />
       <div v-show="work.file" class="mb-5">
-        <a :href="pb.files.getURL(work, work.file)" target="_blank">
+        <a :href="getWorkFileUrl(work, work.file)" target="_blank">
           {{ work.file }}
         </a>
         <i class="bi-trash ml-5 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
@@ -181,18 +181,14 @@
 </template>
 
 <script setup lang="ts">
-import pb from '@/api/pocketbase';
-import type {
-  ScheduledNotificationsRecord,
-  ScheduledNotificationsResponse,
-  WorksResponse,
-} from '@/api/pocketbase-types';
+import type { ScheduledNotificationsResponse, WorksResponse } from '@/api/pocketbase-types';
 import DetailEditor from '@/components/detail/DetailEditor.vue';
 import { useCode } from '@/composables/code';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
+import { useWorkDetail } from '@/composables/todo/work-detail';
+import { useSign } from '@/composables/user/sign';
 import { useModal } from '@packages/ui';
-import { useQuery } from '@tanstack/vue-query';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
@@ -200,11 +196,20 @@ import { computed, onMounted, ref, toRaw, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
+const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
+const {
+  workQuery,
+  createScheduledNotification,
+  deleteScheduledNotification,
+  fetchRedmineData: requestFetchRedmineData,
+  updateRedmineData: requestUpdateRedmineData,
+  getWorkFileUrl,
+} = useWorkDetail(computed(() => route.params.id));
 const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();
 const { developers, fetchDevelopers } = useDeveloper();
-const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
+const { getUserId } = useSign();
 const router = useRouter();
 const keys = useMagicKeys();
 const scheduledNotificationTime = ref<string>('');
@@ -224,17 +229,6 @@ const redmineData = ref({
   doneRatio: 0,
   notes: '',
   watchers: [],
-});
-const workQuery = useQuery({
-  queryKey: computed(() => ['work', route.params.id]),
-  queryFn: () =>
-    pb.collection('works').getOne<
-      WorksResponse<{
-        scheduledNotifications?: ScheduledNotificationsResponse[];
-      }>
-    >(route.params.id, {
-      expand: 'scheduledNotifications',
-    }),
 });
 /* ======================= 변수 ======================= */
 
@@ -294,18 +288,18 @@ const onClickDeleteWorkFile = async (work: WorksResponse) => {
 };
 
 const onClickCreateScheduledNotification = async () => {
-  const result = await pb.collection('scheduledNotifications').create({
-    user: pb.authStore.record?.id,
+  const result = await createScheduledNotification({
+    user: getUserId(),
     title: work.value.title,
     time: dayjs(scheduledNotificationTime.value).add(9, 'h').toISOString(),
-  } as ScheduledNotificationsRecord);
+  } as any);
   await updateWorkByCreateScheduledNotification(result.id);
   await workQuery.refetch();
   scheduledNotificationTime.value = '';
 };
 
 const onClickDeleteScheduledNotification = async (scheduledNotificationId: string) => {
-  await pb.collection('scheduledNotifications').delete(scheduledNotificationId);
+  await deleteScheduledNotification(scheduledNotificationId);
   await updateWorkByDeleteScheduledNotification(scheduledNotificationId);
   await workQuery.refetch();
 };
@@ -357,7 +351,8 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
 
 const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;
-  const res = await pb.send(`/api/redmine-data/${work.value.redmine.match(re)?.[1] ?? ''}`, {});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res: any = await requestFetchRedmineData(work.value.redmine.match(re)?.[1] ?? '');
 
   redmineData.value.startDate = res['issue']['start_date'];
   redmineData.value.dueDate = res['issue']['due_date'];
@@ -369,10 +364,7 @@ const updateRedmineData = async () => {
   redmineData.value.id = work.value.redmine.match(re)?.[1] ?? '';
   redmineData.value.doneRatio = Number(redmineData.value.doneRatio);
 
-  await pb.send('/api/redmine-data', {
-    method: 'POST',
-    body: redmineData.value,
-  });
+  await requestUpdateRedmineData(redmineData.value);
 
   await selectRedmineData();
   redmineData.value.notes = '';

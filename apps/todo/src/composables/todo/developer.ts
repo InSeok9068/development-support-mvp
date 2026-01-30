@@ -1,6 +1,6 @@
 import pb from '@/api/pocketbase';
 import { useDeveloperStore } from '@/stores/developer.store';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
 import type { RecordFullListOptions } from 'pocketbase';
 import { computed, ref } from 'vue';
@@ -52,6 +52,20 @@ export const useDeveloper = () => {
         }),
     });
   };
+
+  const createDeveloperMutation = useMutation({
+    mutationFn: (payload: any) => pb.collection('developers').create(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['developers'] });
+    },
+  });
+
+  const updateDeveloperMutation = useMutation({
+    mutationFn: (payload: any) => pb.collection('developers').update(payload.id, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['developers'] });
+    },
+  });
   /* ======================= 메서드 ======================= */
 
   return {
@@ -59,5 +73,7 @@ export const useDeveloper = () => {
     selectDeveloper,
 
     fetchDevelopers,
+    createDeveloperMutation,
+    updateDeveloperMutation,
   };
 };
