@@ -106,7 +106,7 @@ import { useSetting } from '@/composables/setting.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import { useWork } from '@/composables/todo/work.ts';
 import dayjs from 'dayjs';
-import { onBeforeUnmount, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -121,8 +121,8 @@ const {
 const { developers, fetchDeveloperList } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
-const workStateCodesStep1 = getCodesByType('workState').slice(0, 3);
-const workStateCodesStep2 = getCodesByType('workState').slice(3, 6);
+const workStateCodesStep1 = computed(() => getCodesByType('workState').slice(0, 3));
+const workStateCodesStep2 = computed(() => getCodesByType('workState').slice(3, 6));
 const router = useRouter();
 let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 변수 ======================= */
