@@ -1,6 +1,9 @@
-docs/ERD/*
+.history
 
 src/api/pocketbase.ts
 src/api/pocketbase-types.ts
+apps/**/src/api/pocketbase.ts
+apps/**/src/api/pocketbase-types.ts
 
-.history
+package.json
+!apps/**/package.json
