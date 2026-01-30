@@ -1,9 +1,5 @@
 import pb from '@/api/pocketbase';
-import type {
-  ScheduledNotificationsRecord,
-  ScheduledNotificationsResponse,
-  WorksResponse,
-} from '@/api/pocketbase-types';
+import type { Create, ScheduledNotificationsResponse, WorksResponse } from '@/api/pocketbase-types';
 import { useQuery } from '@tanstack/vue-query';
 import { computed, unref, type Ref } from 'vue';
 
@@ -28,7 +24,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   /* ======================= 쿼리 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const createScheduledNotificationInternal = async (data: ScheduledNotificationsRecord) => {
+  const createScheduledNotificationInternal = async (data: Create<'scheduledNotifications'>) => {
     return await pb.collection('scheduledNotifications').create(data);
   };
 
@@ -36,11 +32,19 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
     return await pb.collection('scheduledNotifications').delete(id);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fetchRedmineData = (issueId: string) => pb.send(`/api/redmine-data/${issueId}`, {});
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateRedmineDataInternal = (data: any) => pb.send('/api/redmine-data', { method: 'POST', body: data });
+  interface RedmineUpdateData {
+    id: string;
+    startDate: string;
+    dueDate: string;
+    doneRatio: number;
+    notes: string;
+    watchers: string[];
+  }
+
+  const updateRedmineDataInternal = (data: RedmineUpdateData) =>
+    pb.send('/api/redmine-data', { method: 'POST', body: data });
 
   const getWorkFileUrl = (record: WorksResponse, filename: string) => pb.files.getURL(record, filename);
   /* ======================= 메서드 ======================= */

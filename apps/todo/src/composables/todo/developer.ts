@@ -1,4 +1,5 @@
 import pb from '@/api/pocketbase';
+import type { Create, Update } from '@/api/pocketbase-types';
 import { useDeveloperStore } from '@/stores/developer.store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
@@ -54,14 +55,15 @@ export const useDeveloper = () => {
   };
 
   const createDeveloperMutation = useMutation({
-    mutationFn: (payload: any) => pb.collection('developers').create(payload),
+    mutationFn: (payload: Create<'developers'>) => pb.collection('developers').create(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['developers'] });
     },
   });
 
   const updateDeveloperMutation = useMutation({
-    mutationFn: (payload: any) => pb.collection('developers').update(payload.id, payload),
+    mutationFn: (payload: Update<'developers'> & { id: string }) =>
+      pb.collection('developers').update(payload.id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['developers'] });
     },

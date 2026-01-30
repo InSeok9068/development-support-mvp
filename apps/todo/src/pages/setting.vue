@@ -45,7 +45,8 @@ const onClickSave_1 = async () => {
     await updateDeveloperMutation.mutateAsync(developerArgs.value);
     showMessageModal('수정 완료');
   } else {
-    await createDeveloperMutation.mutateAsync(developerArgs.value);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await createDeveloperMutation.mutateAsync(developerArgs.value as any);
     showMessageModal('등록 완료');
   }
 };

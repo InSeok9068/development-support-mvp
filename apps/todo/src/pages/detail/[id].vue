@@ -292,7 +292,7 @@ const onClickCreateScheduledNotification = async () => {
     user: getUserId(),
     title: work.value.title,
     time: dayjs(scheduledNotificationTime.value).add(9, 'h').toISOString(),
-  } as any);
+  });
   await updateWorkByCreateScheduledNotification(result.id);
   await workQuery.refetch();
   scheduledNotificationTime.value = '';
@@ -351,6 +351,7 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
 
 const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const res: any = await requestFetchRedmineData(work.value.redmine.match(re)?.[1] ?? '');
 

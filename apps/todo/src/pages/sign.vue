@@ -48,6 +48,8 @@ const signup = async () => {
     email: signupFormArgs.value.email,
     password: signupFormArgs.value.password,
     passwordConfirm: signupFormArgs.value.password,
+    username: '',
+    tokenKey: '',
   });
 
   showMessageModal('회원가입이 완료되었습니다.');

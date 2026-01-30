@@ -1,4 +1,5 @@
 import pb from '@/api/pocketbase';
+import type { Create } from '@/api/pocketbase-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
@@ -16,7 +17,7 @@ export const useSign = () => {
     await router.push('/');
   };
 
-  const signup = async (data: Record<string, any>) => {
+  const signup = async (data: Create<'users'>) => {
     await pb.collection('users').create(data);
   };
 
