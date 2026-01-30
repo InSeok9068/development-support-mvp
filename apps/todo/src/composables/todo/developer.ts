@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import type { Create, Update } from '@/api/pocketbase-types';
+import { Collections, type Create, type Update } from '@/api/pocketbase-types';
 import { useDeveloperStore } from '@/stores/developer.store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
@@ -29,7 +29,7 @@ export const useDeveloper = () => {
   const developersQuery = useQuery({
     queryKey: developersQueryKey,
     queryFn: () =>
-      pb.collection('developers').getFullList({
+      pb.collection(Collections.Developers).getFullList({
         filter: queryParams.value.filter,
         sort: queryParams.value.sort,
         ...queryParams.value.option,
@@ -46,7 +46,7 @@ export const useDeveloper = () => {
     await queryClient.fetchQuery({
       queryKey: developersQueryKey.value,
       queryFn: () =>
-        pb.collection('developers').getFullList({
+        pb.collection(Collections.Developers).getFullList({
           filter,
           sort,
           ...option,
@@ -55,27 +55,33 @@ export const useDeveloper = () => {
   };
 
   const createDeveloperMutation = useMutation({
-    mutationFn: (payload: Create<'developers'>) => pb.collection('developers').create(payload),
+    mutationFn: (payload: Create<Collections.Developers>) => pb.collection(Collections.Developers).create(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['developers'] });
     },
   });
 
   const updateDeveloperMutation = useMutation({
-    mutationFn: (payload: Update<'developers'> & { id: string }) =>
-      pb.collection('developers').update(payload.id, payload),
+    mutationFn: (payload: Update<Collections.Developers> & { id: string }) =>
+      pb.collection(Collections.Developers).update(payload.id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['developers'] });
     },
   });
+
+  const createDeveloper = (payload: Create<Collections.Developers>) => createDeveloperMutation.mutateAsync(payload);
+
+  const updateDeveloper = (payload: Update<Collections.Developers> & { id: string }) =>
+    updateDeveloperMutation.mutateAsync(payload);
   /* ======================= 메서드 ======================= */
 
   return {
     developers,
     selectDeveloper,
+    isLoading: developersQuery.isLoading,
 
     fetchDevelopers,
-    createDeveloperMutation,
-    updateDeveloperMutation,
+    createDeveloper,
+    updateDeveloper,
   };
 };

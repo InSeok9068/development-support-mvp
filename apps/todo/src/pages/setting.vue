@@ -20,7 +20,7 @@ import { onMounted, ref } from 'vue';
 /* ======================= 변수 ======================= */
 const { setting, fetchSetting, updateSetting } = useSetting();
 const { showMessageModal } = useModal();
-const { developers, fetchDevelopers, createDeveloperMutation, updateDeveloperMutation } = useDeveloper();
+const { developers, fetchDevelopers, createDeveloper, updateDeveloper } = useDeveloper();
 const { getUserId } = useSign();
 const developerArgs = ref<UiDeveloperArgs>({
   id: '',
@@ -42,11 +42,11 @@ onMounted(() => {
 /* ======================= 메서드 ======================= */
 const onClickSave_1 = async () => {
   if (developerArgs.value.id) {
-    await updateDeveloperMutation.mutateAsync(developerArgs.value);
+    await updateDeveloper(developerArgs.value);
     showMessageModal('수정 완료');
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await createDeveloperMutation.mutateAsync(developerArgs.value as any);
+    await createDeveloper(developerArgs.value as any);
     showMessageModal('등록 완료');
   }
 };

@@ -1,6 +1,7 @@
 import pb from '@/api/pocketbase';
-import { useModal } from '@packages/ui';
+import { Collections, type SettingsResponse } from '@/api/pocketbase-types';
 import { type SettingJson, useSettingStore } from '@/stores/setting.store';
+import { useModal } from '@packages/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
@@ -19,7 +20,7 @@ export const useSetting = () => {
   };
 
   const loadSettingRecord = async () => {
-    const record = await pb.collection('settings').getFirstListItem('');
+    const record = await pb.collection(Collections.Settings).getFirstListItem<SettingsResponse<SettingJson>>('');
     return { id: record.id, data: record.data as SettingJson };
   };
 
@@ -58,7 +59,7 @@ export const useSetting = () => {
             queryFn: loadSettingRecord,
           })
         ).id;
-      return pb.collection('settings').update(recordId, { data: setting.value });
+      return pb.collection(Collections.Settings).update(recordId, { data: setting.value });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] });

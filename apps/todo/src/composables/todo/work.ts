@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import type { Collections, Create, WorksResponse } from '@/api/pocketbase-types';
+import { Collections, type Create, type WorksResponse } from '@/api/pocketbase-types';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type { RecordFullListOptions, RecordListOptions } from 'pocketbase';
 import { computed, ref } from 'vue';
@@ -47,14 +47,14 @@ export const useWork = () => {
 
   const fetchWorks = async (params: WorkQueryParams) => {
     if (params.mode === 'full') {
-      return pb.collection('works').getFullList({
+      return pb.collection(Collections.Works).getFullList({
         filter: params.filter,
         sort: params.sort,
         ...(params.option as RecordFullListOptions),
       });
     }
 
-    const list = await pb.collection('works').getList(params.page, params.perPage, {
+    const list = await pb.collection(Collections.Works).getList(params.page, params.perPage, {
       filter: params.filter,
       sort: params.sort,
       ...(params.option as RecordListOptions),

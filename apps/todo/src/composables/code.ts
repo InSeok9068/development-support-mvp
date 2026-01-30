@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import type { CodesResponse } from '@/api/pocketbase-types';
+import { Collections, type CodesResponse } from '@/api/pocketbase-types';
 
 export const useCode = () => {
   /* ======================= 변수 ======================= */
@@ -8,7 +8,7 @@ export const useCode = () => {
 
   /* ======================= 메서드 ======================= */
   const initCodes = async () => {
-    codes = await pb.collection('codes').getFullList({
+    codes = await pb.collection(Collections.Codes).getFullList({
       sort: 'type,sort',
     });
     localStorage.removeItem('codes');

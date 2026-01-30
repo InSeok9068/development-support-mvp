@@ -78,6 +78,10 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 요청/응답 타입은 임의로 새로 정의하지 않는다.
   - src/api/pocketbase-types.ts를 최우선으로 사용한다.
   - pocketbase-types.ts는 절대 수정하지 않는다.
+- `pocketbase-types.ts`의 `Collections` Enum을 반드시 사용한다.
+- 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.
+  - ❌ `Create<'works'>`
+  - ✅ `Create<Collections.Works>`
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
@@ -197,6 +201,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - Composable
 
     ```ts
+    /* Composable 표준 패턴 (use[Domain].ts) */
     export const useXXX = () => {
       /* ======================= 변수 ======================= */
       // 변수
@@ -208,11 +213,14 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
       // 생명주기 훅
       /* ======================= 생명주기 훅 ======================= */
       /* ======================= 메서드 ======================= */
-      // 메서드
+      // 1. 상태 및 쿼리 키 (State & Query Key)
+      // 2. Query (useQuery)
+      // 3. Mutations (useMutation) - return에서 직접 노출하지 않고 Wrapper 메서드로 감쌈
+      // 4. Wrapper Methods (create, update, delete 등)
       /* ======================= 메서드 ======================= */
       return {
-        ....
-        ....
+        //   [items],       // 예: works, developers (복수형 데이터)
+        //   [action],      // 예: fetchList, createItem (메서드)
       };
     };
     ```
@@ -263,6 +271,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - pages/ 밖에서 라우팅 구조를 변경하지 않는다.
 - `pocketbase-types.ts`를 확인하여 데이터 구조를 파악한다. 타입 정의가 없는 필드는 절대 추측하여 사용하지 않는다.
 - composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
+- Composable에서 Mutation 객체(`useMutation` 결과)를 그대로 반환하지 않는다. (반드시 함수로 래핑하여 반환)
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
 - Tailwind CSS 클래스를 직접 작성하지 않는다.
 - 기존 Tailwind CSS 클래스는 수정/삭제/이동/치환하지 않는다. (사용 여부 판단 포함)
