@@ -25,7 +25,6 @@
   │     │  ├─ pages/                  # 라우트 단위 페이지
   │     │  ├─ stores/                 # 전역 상태 관리
   │     │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
-  │     │  └─ (shared)                # 설정·초기화·유틸 성 코드
   │     │
   │     ├─ pb_hooks/                 # PocketBase hooks (Go / JS)
   │
