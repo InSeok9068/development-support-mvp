@@ -118,7 +118,7 @@ export const useWork = () => {
   };
 
   const createWorkMutation = useMutation({
-    mutationFn: (payload: Create<Collections.Works>) => pb.collection('works').create(payload),
+    mutationFn: (payload: Create<Collections.Works>) => pb.collection(Collections.Works).create(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['works'] }),
   });
 
@@ -130,7 +130,7 @@ export const useWork = () => {
       id: string;
       data: Record<string, unknown> | FormData | Partial<WorksResponse>;
       options?: UpdateWorkOptions;
-    }) => pb.collection('works').update(id, data),
+    }) => pb.collection(Collections.Works).update(id, data),
     onSuccess: (_result, vars) => {
       const invalidateWorks = vars.options?.invalidateWorks !== false;
       const invalidateWork = vars.options?.invalidateWork !== false;
@@ -144,7 +144,7 @@ export const useWork = () => {
   });
 
   const deleteWorkMutation = useMutation({
-    mutationFn: (id: string) => pb.collection('works').delete(id),
+    mutationFn: (id: string) => pb.collection(Collections.Works).delete(id),
     onSuccess: (_result, id) => {
       queryClient.invalidateQueries({ queryKey: ['works'] });
       queryClient.removeQueries({ queryKey: ['work', id] });
@@ -164,13 +164,13 @@ export const useWork = () => {
   };
 
   const subscribeWorks = (callback: (e: { action: string; record: WorksResponse }) => void) => {
-    return pb.collection('works').subscribe('*', (e) => {
+    return pb.collection(Collections.Works).subscribe('*', (e) => {
       callback({ action: e.action, record: e.record });
     });
   };
 
   const unsubscribeWorks = () => {
-    return pb.collection('works').unsubscribe('*');
+    return pb.collection(Collections.Works).unsubscribe('*');
   };
   /* ======================= 메서드 ======================= */
 
