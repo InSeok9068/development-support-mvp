@@ -50,7 +50,7 @@
         </div>
       </label>
 
-      <label class="!w-auto">
+      <label class="w-auto!">
         <strong>레드마인 URL</strong> >
         <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank"> (+)일감 생성 </a>
         <div role="group">
@@ -152,7 +152,7 @@
 
       <!-- TODO Multiple 파일 업로드 기능 검토 -->
       <strong>첨부파일</strong>
-      <input id="fileInput" type="file" class="block !w-[unset]" />
+      <input id="fileInput" type="file" class="block w-[unset]!" />
       <div v-show="work.file" class="mb-5">
         <a :href="getWorkFileUrl(work, work.file)" target="_blank">
           {{ work.file }}
@@ -206,7 +206,7 @@ const {
 const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();
-const { developers, fetchDevelopers } = useDeveloper();
+const { developers, fetchDeveloperList } = useDeveloper();
 const { getUserId } = useSign();
 const router = useRouter();
 const keys = useMagicKeys();
@@ -245,7 +245,7 @@ watch(
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  fetchDevelopers();
+  fetchDeveloperList();
 });
 /* ======================= 생명주기 훅 ======================= */
 

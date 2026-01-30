@@ -7,7 +7,7 @@ export const useCode = () => {
   /* ======================= 변수 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const initCodes = async () => {
+  const fetchCodeList = async () => {
     codes = await pb.collection(Collections.Codes).getFullList({
       sort: 'type,sort',
     });
@@ -33,7 +33,7 @@ export const useCode = () => {
   return {
     codes,
 
-    initCodes,
+    fetchCodeList,
     getCodesByType,
     getCodeDesc,
     getCodeClass,

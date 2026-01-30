@@ -20,7 +20,7 @@ import { onMounted, ref } from 'vue';
 /* ======================= 변수 ======================= */
 const { setting, fetchSetting, updateSetting } = useSetting();
 const { showMessageModal } = useModal();
-const { developers, fetchDevelopers, createDeveloper, updateDeveloper } = useDeveloper();
+const { developers, fetchDeveloperList, createDeveloper, updateDeveloper } = useDeveloper();
 const { getUserId } = useSign();
 const developerArgs = ref<UiDeveloperArgs>({
   id: '',
@@ -35,7 +35,7 @@ const developerArgs = ref<UiDeveloperArgs>({
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   fetchSetting();
-  fetchDevelopers();
+  fetchDeveloperList();
 });
 /* ======================= 생명주기 훅 ======================= */
 

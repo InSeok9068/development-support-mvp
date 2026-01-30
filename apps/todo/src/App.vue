@@ -28,7 +28,7 @@ const { initPocketbase } = usePocketbase();
 const { modal, clearModal } = useModal();
 const { fetchUnreadCount, subscribeNotification, subscribeScheduledNotifications } = useNotification();
 const { global, initTheme } = useGlobal();
-const { initCodes } = useCode();
+const { fetchCodeList } = useCode();
 const { initSetting } = useSetting();
 const keys = useMagicKeys();
 /* ======================= 변수 ======================= */
@@ -52,11 +52,11 @@ watch(keys.enter, (v) => {
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
-onMounted(() => {
+onMounted(async () => {
   // 초기화 작업
   initPocketbase(); // 포켓베이스 초기화
   initTheme(); // 테마 설정
-  initCodes(); // 시스템 코드 설정
+  await fetchCodeList(); // 시스템 코드 설정
   initSetting(); // 셋팅 초기화
 
   // 로그인 확인 및 유도

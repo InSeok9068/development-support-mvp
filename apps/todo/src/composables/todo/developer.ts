@@ -37,7 +37,7 @@ export const useDeveloper = () => {
   });
   const developers = computed(() => developersQuery.data.value ?? []);
 
-  const fetchDevelopers = async ({
+  const fetchDeveloperList = async ({
     filter = 'del = false',
     sort = 'sort',
     option = {} as RecordFullListOptions,
@@ -80,7 +80,7 @@ export const useDeveloper = () => {
     selectDeveloper,
     isLoading: developersQuery.isLoading,
 
-    fetchDevelopers,
+    fetchDeveloperList,
     createDeveloper,
     updateDeveloper,
   };

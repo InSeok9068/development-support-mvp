@@ -83,26 +83,26 @@
 
 <script setup lang="ts">
 import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
-import { useSearch } from '@/composables/todo/search';
+import { useGlobal } from '@/composables/global';
 import { useDeveloper } from '@/composables/todo/developer';
+import { useSearch } from '@/composables/todo/search';
 import { useWork } from '@/composables/todo/work';
-import { AgGridVue } from 'ag-grid-vue3';
+import type { UiWorkList } from '@/ui/todo.ui';
 import {
   AllCommunityModule,
-  themeAlpine,
   ModuleRegistry,
   colorSchemeDark,
-  type Theme,
+  themeAlpine,
   type ColDef,
   type GridOptions,
   type RowClickedEvent,
+  type Theme,
 } from 'ag-grid-community';
+import { AgGridVue } from 'ag-grid-vue3';
 import dayjs from 'dayjs';
 import weekday from 'dayjs/plugin/weekday';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { UiWorkList } from '@/ui/todo.ui';
-import { useGlobal } from '@/composables/global';
 
 dayjs.extend(weekday);
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -110,7 +110,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { works, fetchWorkList } = useWork();
-const { developers, fetchDevelopers } = useDeveloper();
+const { developers, fetchDeveloperList } = useDeveloper();
 const { listFilter } = useSearch();
 const { global } = useGlobal();
 const weeklyReport = ref(false);
@@ -156,7 +156,7 @@ watch(global.value, (newValue) => {
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
-  fetchDevelopers();
+  fetchDeveloperList();
   onClickSearch();
 });
 /* ======================= 생명주기 훅 ======================= */

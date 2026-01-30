@@ -220,7 +220,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
       /* ======================= 메서드 ======================= */
       return {
         //   [items],       // 예: works, developers (복수형 데이터)
-        //   [action],      // 예: fetchList, createItem (메서드)
+        //   [action],      // 예: fetchWorkList, createWork (메서드)
       };
     };
     ```

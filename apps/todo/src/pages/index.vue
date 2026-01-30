@@ -112,7 +112,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const { selectDeveloper, developers, fetchDevelopers } = useDeveloper();
+const { selectDeveloper, developers, fetchDeveloperList } = useDeveloper();
 const {
   works,
   fetchWorkFullList,
@@ -149,7 +149,7 @@ validators.value.schema = [
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   fetchWorkFullListFilterDeveloper(selectDeveloper.value);
-  fetchDevelopers();
+  fetchDeveloperList();
   subscribeWorks();
 });
 /* ======================= 생명주기 훅 ======================= */

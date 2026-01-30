@@ -118,7 +118,7 @@ const {
   subscribeWorks: requestSubscribe,
   unsubscribeWorks: requestUnsubscribe,
 } = useWork();
-const { developers, fetchDevelopers } = useDeveloper();
+const { developers, fetchDeveloperList } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
 const workStateCodesStep1 = getCodesByType('workState').slice(0, 3);
@@ -130,7 +130,7 @@ let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
   await fetchWorkFullList();
-  await fetchDevelopers();
+  await fetchDeveloperList();
   await subscribeWorks();
 });
 
