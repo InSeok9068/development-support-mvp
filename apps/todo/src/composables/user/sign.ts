@@ -10,6 +10,9 @@ export const useSign = () => {
   const { isAuth } = storeToRefs(useAuthStore());
   /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
+  /* ======================= 감시자 ======================= */
+
   /* ======================= 메서드 ======================= */
   const signin = async (email: string, password: string) => {
     await pb.collection(Collections.Users).authWithPassword(email, password);

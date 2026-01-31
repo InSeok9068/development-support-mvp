@@ -6,6 +6,9 @@ export const useGlobal = () => {
   const { global } = storeToRefs(useGlobalStore());
   /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
+  /* ======================= 감시자 ======================= */
+
   /* ======================= 메서드 ======================= */
   const toggleTheme = () => {
     global.value.theme = global.value.theme === 'white' ? 'dark' : 'white';

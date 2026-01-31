@@ -7,6 +7,9 @@ export const useToast = () => {
   const { toast } = storeToRefs(useToastStore());
   /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
+  /* ======================= 감시자 ======================= */
+
   /* ======================= 메서드 ======================= */
   const updateToast = (args: UiToastArgs) => {
     Object.assign(toast.value, args);

@@ -109,7 +109,6 @@ export const useNotification = () => {
     }, 1000 * 60);
   };
 
-  /* ======================= 쿼리 ======================= */
   const useNotificationsQuery = (
     params: Ref<{ page: number; perPage: number; sort: string }> | { page: number; perPage: number; sort: string },
   ) => {
@@ -124,9 +123,7 @@ export const useNotification = () => {
         ).items,
     });
   };
-  /* ======================= 쿼리 ======================= */
 
-  /* ======================= 뮤테이션 ======================= */
   const markReadMutation = useMutation({
     mutationFn: (id: string) =>
       pb.collection(Collections.Notifications).update(id, {
@@ -141,7 +138,6 @@ export const useNotification = () => {
   });
 
   const markRead = (id: string) => markReadMutation.mutateAsync(id);
-  /* ======================= 뮤테이션 ======================= */
   /* ======================= 메서드 ======================= */
 
   return {

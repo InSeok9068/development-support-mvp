@@ -13,7 +13,10 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   const id = computed(() => unref(workId));
   /* ======================= 변수 ======================= */
 
-  /* ======================= 쿼리 ======================= */
+  /* ======================= 감시자 ======================= */
+  /* ======================= 감시자 ======================= */
+
+  /* ======================= 메서드 ======================= */
   const workQuery = useQuery({
     queryKey: computed(() => ['work', id.value]),
     queryFn: () =>
@@ -26,9 +29,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
       }),
     enabled: computed(() => !!id.value),
   });
-  /* ======================= 쿼리 ======================= */
 
-  /* ======================= 메서드 ======================= */
   const refetchWorkDetail = () => workQuery.refetch();
 
   const createScheduledNotificationMutation = useMutation({

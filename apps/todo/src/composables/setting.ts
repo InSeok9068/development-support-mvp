@@ -12,6 +12,7 @@ export const useSetting = () => {
   const { showMessageModal } = useModal();
   const queryClient = useQueryClient();
   const settingRecordId = ref<string | null>(null);
+
   const loadSettingRecord = async () => {
     const record = await pb.collection(Collections.Settings).getFirstListItem<SettingsResponse<SettingJson>>('');
     return { id: record.id, data: record.data as SettingJson };

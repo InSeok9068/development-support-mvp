@@ -25,6 +25,9 @@ export const useCode = () => {
   const codes = computed(() => codesQuery.data.value ?? []);
   /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
+  /* ======================= 감시자 ======================= */
+
   /* ======================= 메서드 ======================= */
   const fetchCodeList = async () => {
     await queryClient.invalidateQueries({ queryKey: ['codes'] });
