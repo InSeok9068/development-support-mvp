@@ -147,6 +147,17 @@ export const useWork = () => {
     },
   });
 
+  const subscribeWorksMutation = useMutation({
+    mutationFn: (callback: (e: { action: string; record: WorksResponse }) => void) =>
+      pb.collection(Collections.Works).subscribe('*', (e) => {
+        callback({ action: e.action, record: e.record });
+      }),
+  });
+
+  const unsubscribeWorksMutation = useMutation({
+    mutationFn: () => pb.collection(Collections.Works).unsubscribe('*'),
+  });
+
   const createWork = (payload: Create<Collections.Works>) => createWorkMutation.mutateAsync(payload);
   const updateWork = (
     id: string,
@@ -160,13 +171,11 @@ export const useWork = () => {
   };
 
   const subscribeWorks = (callback: (e: { action: string; record: WorksResponse }) => void) => {
-    return pb.collection(Collections.Works).subscribe('*', (e) => {
-      callback({ action: e.action, record: e.record });
-    });
+    return subscribeWorksMutation.mutateAsync(callback);
   };
 
   const unsubscribeWorks = () => {
-    return pb.collection(Collections.Works).unsubscribe('*');
+    return unsubscribeWorksMutation.mutateAsync();
   };
   /* ======================= 메서드 ======================= */
 

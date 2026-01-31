@@ -5,7 +5,7 @@ import {
   type ScheduledNotificationsResponse,
   type WorksResponse,
 } from '@/api/pocketbase-types';
-import { useQuery } from '@tanstack/vue-query';
+import { useMutation, useQuery } from '@tanstack/vue-query';
 import { computed, unref, type Ref } from 'vue';
 
 export const useWorkDetail = (workId: string | Ref<string>) => {
@@ -29,13 +29,21 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   /* ======================= 쿼리 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const createScheduledNotificationInternal = async (data: Create<Collections.ScheduledNotifications>) => {
-    return await pb.collection(Collections.ScheduledNotifications).create(data);
-  };
+  const refetchWorkDetail = () => workQuery.refetch();
 
-  const deleteScheduledNotificationInternal = async (id: string) => {
-    return await pb.collection(Collections.ScheduledNotifications).delete(id);
-  };
+  const createScheduledNotificationMutation = useMutation({
+    mutationFn: (data: Create<Collections.ScheduledNotifications>) =>
+      pb.collection(Collections.ScheduledNotifications).create(data),
+  });
+
+  const deleteScheduledNotificationMutation = useMutation({
+    mutationFn: (id: string) => pb.collection(Collections.ScheduledNotifications).delete(id),
+  });
+
+  const createScheduledNotificationInternal = (data: Create<Collections.ScheduledNotifications>) =>
+    createScheduledNotificationMutation.mutateAsync(data);
+
+  const deleteScheduledNotificationInternal = (id: string) => deleteScheduledNotificationMutation.mutateAsync(id);
 
   const fetchRedmineData = (issueId: string) => pb.send(`/api/redmine-data/${issueId}`, {});
 
@@ -56,6 +64,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
 
   return {
     workQuery,
+    refetchWorkDetail,
     createScheduledNotification: createScheduledNotificationInternal,
     deleteScheduledNotification: deleteScheduledNotificationInternal,
     fetchRedmineData,

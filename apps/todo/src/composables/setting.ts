@@ -12,13 +12,6 @@ export const useSetting = () => {
   const { showMessageModal } = useModal();
   const queryClient = useQueryClient();
   const settingRecordId = ref<string | null>(null);
-  /* ======================= 변수 ======================= */
-
-  /* ======================= 메서드 ======================= */
-  const initSetting = async () => {
-    await fetchSetting();
-  };
-
   const loadSettingRecord = async () => {
     const record = await pb.collection(Collections.Settings).getFirstListItem<SettingsResponse<SettingJson>>('');
     return { id: record.id, data: record.data as SettingJson };
@@ -28,7 +21,9 @@ export const useSetting = () => {
     queryKey: ['settings'],
     queryFn: loadSettingRecord,
   });
+  /* ======================= 변수 ======================= */
 
+  /* ======================= 감시자 ======================= */
   watch(
     () => settingQuery.data.value,
     (data) => {
@@ -39,6 +34,12 @@ export const useSetting = () => {
     },
     { immediate: true },
   );
+  /* ======================= 감시자 ======================= */
+
+  /* ======================= 메서드 ======================= */
+  const initSetting = async () => {
+    await fetchSetting();
+  };
 
   const fetchSetting = async () => {
     const record = await queryClient.fetchQuery({

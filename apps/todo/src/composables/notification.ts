@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import { Collections } from '@/api/pocketbase-types';
+import { Collections, type Create } from '@/api/pocketbase-types';
 import { useGlobal } from '@/composables/global';
 import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
@@ -11,6 +11,18 @@ export const useNotification = () => {
   const { global } = useGlobal();
   const { showMessageToast } = useToast();
   const queryClient = useQueryClient();
+
+  const loadUnreadCount = async () =>
+    (
+      await pb.collection(Collections.Notifications).getFullList({
+        filter: 'read = false',
+      })
+    ).length;
+
+  const unreadQuery = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: loadUnreadCount,
+  });
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */
@@ -26,18 +38,6 @@ export const useNotification = () => {
   /* ======================= 감시자 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const loadUnreadCount = async () =>
-    (
-      await pb.collection(Collections.Notifications).getFullList({
-        filter: 'read = false',
-      })
-    ).length;
-
-  const unreadQuery = useQuery({
-    queryKey: ['notifications', 'unread-count'],
-    queryFn: loadUnreadCount,
-  });
-
   const fetchUnreadCount = async () => {
     const count = await queryClient.fetchQuery({
       queryKey: ['notifications', 'unread-count'],
@@ -46,43 +46,67 @@ export const useNotification = () => {
     global.value.notificationDot = count > 0;
   };
 
-  const subscribeNotification = async (on: boolean = true) => {
-    if (on) {
-      await pb.collection(Collections.Notifications).subscribe('*', (e) => {
-        switch (e.action) {
-          case 'create':
-            // 브라우저 알림
-            new Notification(e.record.title, {
-              body: e.record.message,
-            });
+  const subscribeNotificationMutation = useMutation({
+    mutationFn: async (on: boolean) => {
+      if (on) {
+        await pb.collection(Collections.Notifications).subscribe('*', (e) => {
+          switch (e.action) {
+            case 'create':
+              // 브라우저 알림
+              new Notification(e.record.title, {
+                body: e.record.message,
+              });
 
-            // 토스트 알림
-            showMessageToast(`[${e.record.title}] ${e.record.message}`);
+              // 토스트 알림
+              showMessageToast(`[${e.record.title}] ${e.record.message}`);
 
-            // 알림 Dot 표기
-            global.value.notificationDot = true;
-        }
-      });
-    } else {
-      await pb.collection(Collections.Notifications).unsubscribe('*');
-    }
-  };
+              // 알림 Dot 표기
+              global.value.notificationDot = true;
+          }
+        });
+      } else {
+        await pb.collection(Collections.Notifications).unsubscribe('*');
+      }
+    },
+  });
 
-  const subscribeScheduledNotifications = async (on: boolean = true) => {
-    if (on) {
-      // 1분 마다 확인
-      setInterval(async () => {
-        const scheduledNotifications = await pb.collection(Collections.ScheduledNotifications).getFullList({
+  const subscribeNotification = (on: boolean = true) => subscribeNotificationMutation.mutateAsync(on);
+
+  const fetchDueScheduledNotifications = async () => {
+    return await queryClient.fetchQuery({
+      queryKey: ['scheduled-notifications', 'due'],
+      queryFn: async () =>
+        await pb.collection(Collections.ScheduledNotifications).getFullList({
           filter: `time <= '${dayjs().format('YYYY-MM-DD HH:mm')}'`,
           sort: 'created',
-        });
+        }),
+    });
+  };
 
-        scheduledNotifications.forEach((record) => {
-          pb.collection(Collections.ScheduledNotifications).delete(record.id);
-          pb.collection(Collections.Notifications).create(record);
-        });
-      }, 1000 * 60);
-    }
+  const deleteScheduledNotificationMutation = useMutation({
+    mutationFn: (id: string) => pb.collection(Collections.ScheduledNotifications).delete(id),
+  });
+
+  const createNotificationMutation = useMutation({
+    mutationFn: (payload: Create<Collections.Notifications>) =>
+      pb.collection(Collections.Notifications).create(payload),
+  });
+
+  const removeScheduledNotification = (id: string) => deleteScheduledNotificationMutation.mutateAsync(id);
+  const createNotification = (payload: Create<Collections.Notifications>) =>
+    createNotificationMutation.mutateAsync(payload);
+
+  const subscribeScheduledNotifications = async (on: boolean = true) => {
+    if (!on) return;
+
+    // 1분 마다 확인
+    setInterval(async () => {
+      const scheduledNotifications = await fetchDueScheduledNotifications();
+      for (const record of scheduledNotifications) {
+        await removeScheduledNotification(record.id);
+        await createNotification(record as Create<Collections.Notifications>);
+      }
+    }, 1000 * 60);
   };
 
   /* ======================= 쿼리 ======================= */

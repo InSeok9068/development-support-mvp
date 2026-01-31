@@ -197,6 +197,7 @@ import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-rou
 const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
 const {
   workQuery,
+  refetchWorkDetail,
   createScheduledNotification,
   deleteScheduledNotification,
   fetchRedmineData: requestFetchRedmineData,
@@ -292,14 +293,14 @@ const onClickCreateScheduledNotification = async () => {
     time: dayjs(scheduledNotificationTime.value).add(9, 'h').toISOString(),
   });
   await updateWorkByCreateScheduledNotification(result.id);
-  await workQuery.refetch();
+  await refetchWorkDetail();
   scheduledNotificationTime.value = '';
 };
 
 const onClickDeleteScheduledNotification = async (scheduledNotificationId: string) => {
   await deleteScheduledNotification(scheduledNotificationId);
   await updateWorkByDeleteScheduledNotification(scheduledNotificationId);
-  await workQuery.refetch();
+  await refetchWorkDetail();
 };
 
 const onClickMarkdownCopy = () => {
@@ -331,7 +332,7 @@ const updateWorkDetail = async () => {
   showMessageModal('수정 완료');
 
   // 파일 랜더링을 위해 재조회 및 기존 파일 클리어
-  await workQuery.refetch();
+  await refetchWorkDetail();
   fileInput.value = '';
 };
 
