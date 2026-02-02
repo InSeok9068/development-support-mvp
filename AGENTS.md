@@ -146,6 +146,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 도메인에 속하지 않는 전역/횡단 관심사 composable은 예외로 허용한다.
   - ✅ useModal, useToast, useGlobal, useValidation
 - TanStack Query는 도메인 composable 내부에서만 사용한다.
+- Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
 - composable은 UI에 직접 의존하지 않는다.
 
 ---
