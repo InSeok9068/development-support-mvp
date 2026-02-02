@@ -35,6 +35,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     │  │   ├─ pocketbase-types.ts # PocketBase Types
   │     │  ├─ assets/                 # 정적 리소스
   │     │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
+  |     |  │   ├─ app                 # 전역 컴포넌트
   │     │  ├─ composables/            # 도메인 단위 로직 (Vue composables)
   │     │  ├─ layouts/                # 공통 레이아웃
   │     │  ├─ pages/                  # 라우트 단위 페이지
@@ -60,14 +61,13 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 - AI 요청에 대한 응답, 검토 문서, 리뷰 문서, 코드 주석은 한국어로 작성한다.
 
+---
+
 ### CSS 라이브러리 사용 가이드
 
 - Pico CSS의 Semantic HTML만 활용하여 Agent는 화면을 구성한다.
 - Agent는 Pico CSS의 공식 문서에 명시된 소수의 보조 클래스만 제한적으로 사용할 수 있다.
-- 기존에 존재하는 class 속성(특히 Tailwind 포함)은 어떤 이유로도 수정/삭제/치환/이동하지 않는다.
-- Tailwind CSS는 개발자가 직접 작성하는 영역이며, Agent는 사용하지 않는다.
-- SFC `<style scoped>`는 개발자가 직접 작성하는 영역이며, Agent는 사용하지 않는다.
-- Bootstrap Icons는 아이콘 사용에만 사용한다. (장식용 남발 금지 !)
+- Bootstrap Icons는 아이콘 표현 목적에만 사용한다. (장식용 남발 금지)
 - 추가적인 CSS 설계나 커스텀 스타일은 최소화한다.
 
 ---
