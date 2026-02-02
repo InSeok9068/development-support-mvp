@@ -83,7 +83,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.
   - ❌ `Create<'works'>`
   - ✅ `Create<Collections.Works>`
-- Realtime subscribe 사용 시, 더 이상 필요하지 않은 시점(페이지 이탈/컴포넌트 언마운트 등)에 반드시 unsubscribe 한다.
+- Realtime subscribe는 PocketBase 규칙이며, 페이지 이탈/언마운트 시 반드시 unsubscribe 한다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
@@ -149,8 +149,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - TanStack Query는 도메인 composable 내부에서만 사용한다.
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
 - composable은 UI에 직접 의존하지 않는다.
-- Composable 내부에서 Side Effect(Interval, Listener, Timeout 등)를 사용할 경우,
-  tryOnScopeDispose 등을 활용하여 반드시 정리(cleanup)되도록 구현한다.
+- Composable에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 tryOnScopeDispose로 정리한다.
 
 ---
 
@@ -162,8 +161,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - 3회 이상 재사용되는 경우
   - 페이지 가독성을 심각하게 해치는 경우
 - 컴포넌트 자동 등록은 src/components/app 디렉터리만 허용한다. 그 외 컴포넌트는 명시적으로 import 한다.
-- 컴포넌트에서 Side Effect(Interval, Listener, Timeout 등)를 사용할 경우,
-  onUnmounted 라이프사이클 훅을 통해 반드시 정리한다.
+- 컴포넌트에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 onUnmounted로 정리한다.
 
 ---
 
