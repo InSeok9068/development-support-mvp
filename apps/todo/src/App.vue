@@ -26,7 +26,7 @@ const router = useRouter();
 const { checkAuth } = useSign();
 const { initPocketbase } = usePocketbase();
 const { modal, clearModal } = useModal();
-const { fetchUnreadCount, subscribeNotification, subscribeScheduledNotifications } = useNotification();
+const { fetchUnreadCount, subscribeNotificationsByPermission } = useNotification();
 const { global, initTheme } = useGlobal();
 const { fetchCodeList } = useCode();
 const { initSetting } = useSetting();
@@ -68,9 +68,18 @@ onMounted(async () => {
   fetchUnreadCount(); // 미확인 알림 확인
 
   // 알림 관련 작업
-  Notification.requestPermission(); // 알림 권한 요청
-  subscribeNotification(global.value.notificationPermission === 'granted'); // 알림 구독 활성화
-  subscribeScheduledNotifications(global.value.notificationPermission === 'granted'); // 스케줄 알림 생성 활성화
+  if (typeof Notification !== 'undefined') {
+    const permission = global.value.notificationPermission;
+    if (permission === 'prompt') {
+      const shouldRequest = window.confirm(
+        '알림을 받으려면 브라우저 알림 권한이 필요합니다. 지금 허용하시겠어요?',
+      );
+      if (shouldRequest) {
+        await Notification.requestPermission();
+      }
+    }
+    subscribeNotificationsByPermission(global.value.notificationPermission);
+  }
 });
 /* ======================= 생명주기 훅 ======================= */
 

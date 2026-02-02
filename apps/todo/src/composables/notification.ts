@@ -5,7 +5,7 @@ import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { tryOnScopeDispose } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { computed, unref, watch, type Ref } from 'vue';
+import { computed, isRef, unref, watch, type Ref } from 'vue';
 
 export const useNotification = () => {
   /* ======================= 변수 ======================= */
@@ -116,7 +116,13 @@ export const useNotification = () => {
     createNotificationMutation.mutateAsync(payload);
 
   const subscribeScheduledNotifications = async (on: boolean = true) => {
-    if (!on) return;
+    if (!on) {
+      if (scheduledIntervalIds.length > 0) {
+        scheduledIntervalIds.forEach((id) => window.clearInterval(id));
+        scheduledIntervalIds.length = 0;
+      }
+      return;
+    }
 
     // 1분 마다 확인
     const intervalId = window.setInterval(async () => {
@@ -127,6 +133,18 @@ export const useNotification = () => {
       }
     }, 1000 * 60);
     scheduledIntervalIds.push(intervalId);
+  };
+
+  const subscribeNotificationsByPermission = (permission: Ref<PermissionState | undefined> | PermissionState | undefined) => {
+    watch(
+      () => (isRef(permission) ? permission.value : permission),
+      (value) => {
+        const isGranted = value === 'granted';
+        void subscribeNotification(isGranted);
+        void subscribeScheduledNotifications(isGranted);
+      },
+      { immediate: true },
+    );
   };
 
   const useNotificationsQuery = (
@@ -164,6 +182,7 @@ export const useNotification = () => {
     fetchUnreadCount,
     subscribeNotification,
     subscribeScheduledNotifications,
+    subscribeNotificationsByPermission,
     useNotificationsQuery,
     markRead,
   };
