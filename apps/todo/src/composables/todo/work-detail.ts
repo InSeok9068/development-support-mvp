@@ -1,10 +1,5 @@
 import pb from '@/api/pocketbase';
-import {
-  Collections,
-  type Create,
-  type ScheduledNotificationsResponse,
-  type WorksResponse,
-} from '@/api/pocketbase-types';
+import { Collections, type Create, type ScheduledNotificationsResponse, type WorksResponse } from '@/api/pocketbase-types';
 import { useMutation, useQuery } from '@tanstack/vue-query';
 import { computed, unref, type Ref } from 'vue';
 
@@ -60,6 +55,27 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   const updateRedmineDataInternal = (data: RedmineUpdateData) =>
     pb.send('/api/redmine-data', { method: 'POST', body: data });
 
+  const buildWorkUpdatePayload = (work: WorksResponse, files?: FileList | null) => {
+    const payload = new FormData();
+    payload.append('title', work.title ?? '');
+    payload.append('done', String(work.done ?? false));
+    payload.append('doneDate', work.doneDate ?? '');
+    payload.append('state', work.state ?? '');
+    payload.append('content', work.content ?? '');
+    payload.append('redmine', work.redmine ?? '');
+    payload.append('joplin', work.joplin ?? '');
+    payload.append('developer', work.developer ?? '');
+    payload.append('dueDate', work.dueDate ?? '');
+
+    if (files && files.length > 0) {
+      for (const file of Array.from(files)) {
+        payload.append('file', file);
+      }
+    }
+
+    return payload;
+  };
+
   const getWorkFileUrl = (record: WorksResponse, filename: string) => pb.files.getURL(record, filename);
   /* ======================= 메서드 ======================= */
 
@@ -70,6 +86,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
     deleteScheduledNotification: deleteScheduledNotificationInternal,
     fetchRedmineData,
     updateRedmineData: updateRedmineDataInternal,
+    buildWorkUpdatePayload,
     getWorkFileUrl,
   };
 };

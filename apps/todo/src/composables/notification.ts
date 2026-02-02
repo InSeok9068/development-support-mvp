@@ -12,7 +12,8 @@ export const useNotification = () => {
   const { global } = useGlobal();
   const { showMessageToast } = useToast();
   const queryClient = useQueryClient();
-  const scheduledIntervalIds: number[] = [];
+  let scheduledIntervalId: number | null = null;
+  let isCheckingScheduledNotifications = false;
   let isNotificationSubscribed = false;
 
   const loadUnreadCount = async () =>
@@ -47,9 +48,9 @@ export const useNotification = () => {
       isNotificationSubscribed = false;
     }
 
-    if (scheduledIntervalIds.length > 0) {
-      scheduledIntervalIds.forEach((id) => window.clearInterval(id));
-      scheduledIntervalIds.length = 0;
+    if (scheduledIntervalId) {
+      window.clearInterval(scheduledIntervalId);
+      scheduledIntervalId = null;
     }
   });
   /* ======================= 생명주기 ======================= */
@@ -117,22 +118,34 @@ export const useNotification = () => {
 
   const subscribeScheduledNotifications = async (on: boolean = true) => {
     if (!on) {
-      if (scheduledIntervalIds.length > 0) {
-        scheduledIntervalIds.forEach((id) => window.clearInterval(id));
-        scheduledIntervalIds.length = 0;
+      if (scheduledIntervalId) {
+        window.clearInterval(scheduledIntervalId);
+        scheduledIntervalId = null;
       }
       return;
     }
 
+    if (scheduledIntervalId) {
+      return;
+    }
+
     // 1분 마다 확인
-    const intervalId = window.setInterval(async () => {
-      const scheduledNotifications = await fetchDueScheduledNotifications();
-      for (const record of scheduledNotifications) {
-        await removeScheduledNotification(record.id);
-        await createNotification(record as Create<Collections.Notifications>);
+    scheduledIntervalId = window.setInterval(() => {
+      if (isCheckingScheduledNotifications) {
+        return;
       }
+      isCheckingScheduledNotifications = true;
+      void fetchDueScheduledNotifications()
+        .then(async (scheduledNotifications) => {
+          for (const record of scheduledNotifications) {
+            await removeScheduledNotification(record.id);
+            await createNotification(record as Create<Collections.Notifications>);
+          }
+        })
+        .finally(() => {
+          isCheckingScheduledNotifications = false;
+        });
     }, 1000 * 60);
-    scheduledIntervalIds.push(intervalId);
   };
 
   const subscribeNotificationsByPermission = (permission: Ref<PermissionState | undefined> | PermissionState | undefined) => {

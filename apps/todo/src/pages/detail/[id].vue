@@ -152,7 +152,7 @@
 
       <!-- TODO Multiple 파일 업로드 기능 검토 -->
       <strong>첨부파일</strong>
-      <input id="fileInput" type="file" class="block w-[unset]!" />
+      <input id="fileInput" ref="fileInput" type="file" class="block w-[unset]!" />
       <div v-show="work.file" class="mb-5">
         <a :href="getWorkFileUrl(work, work.file)" target="_blank">
           {{ work.file }}
@@ -195,15 +195,16 @@ import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-rou
 
 /* ======================= 변수 ======================= */
 const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
-const {
-  workQuery,
-  refetchWorkDetail,
-  createScheduledNotification,
-  deleteScheduledNotification,
-  fetchRedmineData: requestFetchRedmineData,
-  updateRedmineData: requestUpdateRedmineData,
-  getWorkFileUrl,
-} = useWorkDetail(computed(() => route.params.id));
+  const {
+    workQuery,
+    refetchWorkDetail,
+    createScheduledNotification,
+    deleteScheduledNotification,
+    fetchRedmineData: requestFetchRedmineData,
+    updateRedmineData: requestUpdateRedmineData,
+    buildWorkUpdatePayload,
+    getWorkFileUrl,
+  } = useWorkDetail(computed(() => route.params.id));
 const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();
@@ -212,6 +213,7 @@ const { getUserId } = useSign();
 const router = useRouter();
 const keys = useMagicKeys();
 const scheduledNotificationTime = ref<string>('');
+const fileInput = ref<HTMLInputElement | null>(null);
 let redirectTimer: number | null = null;
 const work = ref<
   WorksResponse<{
@@ -327,26 +329,15 @@ const onInputDueDate = (event: Event) => {
 };
 
 const updateWorkDetail = async () => {
-  const formDate = new FormData();
-  for (const [key, value] of Object.entries(work.value)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formDate.append(key, value as any);
-  }
-
-  // 스케줄 업데이트는 따로 처리
-  formDate.delete('scheduledNotifications');
-
-  const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-  for (const file of fileInput.files!) {
-    formDate.append('file', file);
-  }
-
-  await updateWork(work.value.id, formDate);
+  const payload = buildWorkUpdatePayload(work.value, fileInput.value?.files ?? null);
+  await updateWork(work.value.id, payload);
   showMessageModal('수정 완료');
 
   // 파일 랜더링을 위해 재조회 및 기존 파일 클리어
   await refetchWorkDetail();
-  fileInput.value = '';
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
 };
 
 const updateWorkByCreateScheduledNotification = async (scheduledNotificationId: string) => {
