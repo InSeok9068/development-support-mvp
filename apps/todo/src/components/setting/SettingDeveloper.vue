@@ -17,7 +17,7 @@
         정렬
         <input v-model="developerArgs.sort" type="number" />
       </label>
-      <input type="button" value="저장" @click="$emit('save')" />
+      <input type="button" value="저장" @click="onClickSave" />
     </article>
   </details>
 </template>
@@ -30,7 +30,7 @@ import { cloneDeep } from 'lodash-es';
 /* ======================= 변수 ======================= */
 const developerArgs = defineModel<UiDeveloperArgs>('developerArgs', { required: true });
 const developers = defineModel<DevelopersResponse[]>('developers', { required: true });
-defineEmits<{
+const emit = defineEmits<{
   (e: 'save'): void;
 }>();
 /* ======================= 변수 ======================= */
@@ -38,6 +38,10 @@ defineEmits<{
 /* ======================= 메서드 ======================= */
 const onClickDeveloper = (developer: DevelopersResponse) => {
   developerArgs.value = cloneDeep(developer);
+};
+
+const onClickSave = () => {
+  emit('save');
 };
 /* ======================= 메서드 ======================= */
 </script>

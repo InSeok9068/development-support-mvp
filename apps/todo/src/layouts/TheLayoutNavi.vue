@@ -80,16 +80,16 @@
             <summary><i class="bi-gear-fill"></i></summary>
             <ul>
               <li v-show="!isAuth">
-                <a href="#" @click.stop.prevent="$router.push('/sign')">로그인</a>
+                <a href="#" @click.stop.prevent="onClickGoSign">로그인</a>
               </li>
               <li>
-                <a href="#" @click.stop.prevent="$router.push('/setting')">설정</a>
+                <a href="#" @click.stop.prevent="onClickGoSetting">설정</a>
               </li>
               <li>
                 <a href="#" @click.stop.prevent="onClickClear">클리어</a>
               </li>
               <li v-show="isAuth">
-                <a href="#" @click.stop.prevent="signout">로그아웃</a>
+                <a href="#" @click.stop.prevent="onClickSignout">로그아웃</a>
               </li>
             </ul>
           </details>
@@ -100,7 +100,7 @@
               'bi-bell cursor-pointer': global.notificationPermission === 'granted',
               'bi-bell-slash': global.notificationPermission !== 'granted',
             }"
-            @click.stop.prevent="$router.push('/notification')"
+            @click.stop.prevent="onClickGoNotification"
           >
           </i>
           <span v-show="global.notificationDot" class="absolute h-1 w-1 animate-ping rounded-full bg-red-700"></span>
@@ -112,7 +112,7 @@
               'bi-brightness-high': global.theme === 'dark',
               'bi-brightness-high-fill': global.theme === 'white',
             }"
-            @click="toggleTheme"
+            @click="onClickToggleTheme"
           ></i>
         </li>
       </ul>
@@ -134,16 +134,21 @@ const { signout, isAuth } = useSign();
 const { global, toggleTheme } = useGlobal();
 /* ======================= 변수 ======================= */
 
-/* ======================= 생명주기 훅 ======================= */
+/* ======================= 감시자 ======================= */
 watch(keys.alt_1, (v) => v && router.push('/'));
 watch(keys.alt_2, (v) => v && router.push('/kanban'));
 watch(keys.alt_3, (v) => v && router.push('/list'));
 watch(keys.alt_4, (v) => v && router.push('/calendar'));
 watch(keys.alt_5, (v) => v && router.push('/dashboard'));
 watch(keys.alt_6, (v) => v && router.push('/project-gantt'));
-/* ======================= 생명주기 훅 ======================= */
+/* ======================= 감시자 ======================= */
 
 /* ======================= 메서드 ======================= */
+const onClickGoSign = () => router.push('/sign');
+const onClickGoSetting = () => router.push('/setting');
+const onClickGoNotification = () => router.push('/notification');
 const onClickClear = () => localStorage.clear();
+const onClickToggleTheme = () => toggleTheme();
+const onClickSignout = () => signout();
 /* ======================= 메서드 ======================= */
 </script>

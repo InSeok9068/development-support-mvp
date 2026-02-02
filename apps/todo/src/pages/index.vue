@@ -34,7 +34,7 @@
             v-model="workArgs.title"
             name="title"
             :aria-invalid="validators.invalid('title')"
-            @keyup="validators.valid('title', workArgs.title)"
+            @keyup="onKeyupWorkTitle"
             @keydown.stop.prevent.enter="onClickCreateWork"
           />
           <input type="button" value="등록" @click="onClickCreateWork" />
@@ -53,7 +53,7 @@
         >
           <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
             <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
-            <a class="cursor-pointer" @click="router.push(`/detail/${work.id}`)">
+            <a class="cursor-pointer" @click="onClickWorkDetail(work.id)">
               {{ work.title }}
             </a>
             <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
@@ -108,7 +108,7 @@ import { useSign } from '@/composables/user/sign';
 import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -121,12 +121,14 @@ const {
   deleteWork,
   setWorksCache,
   subscribeWorks: requestSubscribe,
+  unsubscribeWorks: requestUnsubscribe,
 } = useWork();
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
 const { validators } = useValidator();
 const router = useRouter();
+let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 const workArgs = ref<Create<Collections.Works>>({
   id: '',
   user: getUserId(),
@@ -146,11 +148,23 @@ validators.value.schema = [
 ];
 /* ======================= 변수 ======================= */
 
+/* ======================= 감시자 ======================= */
+/* ======================= 감시자 ======================= */
+
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   fetchWorkFullListFilterDeveloper(selectDeveloper.value);
   fetchDeveloperList();
   subscribeWorks();
+});
+
+onBeforeUnmount(async () => {
+  if (unsubscribeWorks) {
+    await unsubscribeWorks();
+    unsubscribeWorks = null;
+  } else {
+    await requestUnsubscribe();
+  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -161,6 +175,10 @@ const onClickCreateWork = async () => {
     await fetchWorkFullList();
     workArgs.value.title = '';
   }
+};
+
+const onKeyupWorkTitle = () => {
+  validators.value.valid('title', workArgs.value.title);
 };
 
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
@@ -235,8 +253,12 @@ const onClickSort = () => {
   });
 };
 
+const onClickWorkDetail = (id: string) => {
+  router.push(`/detail/${id}`);
+};
+
 const subscribeWorks = async () => {
-  await requestSubscribe((e) => {
+  unsubscribeWorks = await requestSubscribe((e) => {
     switch (e.action) {
       case 'create':
         setWorksCache((current) => [...current, e.record]);

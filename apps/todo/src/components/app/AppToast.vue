@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { useToast } from '@/composables/toast';
-import { watch } from 'vue';
+import { onUnmounted, watch } from 'vue';
 
 /* ======================= 변수 ======================= */
 const { toast } = useToast();
@@ -31,6 +31,12 @@ watch(toast.value, (v) => {
   }
 });
 /* ======================= 감시자 ======================= */
+
+/* ======================= 생명주기 훅 ======================= */
+onUnmounted(() => {
+  clearTimeout(timer);
+});
+/* ======================= 생명주기 훅 ======================= */
 </script>
 
 <style scoped>

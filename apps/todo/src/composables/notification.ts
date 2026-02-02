@@ -3,6 +3,7 @@ import { Collections, type Create } from '@/api/pocketbase-types';
 import { useGlobal } from '@/composables/global';
 import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { tryOnScopeDispose } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { computed, unref, watch, type Ref } from 'vue';
 
@@ -11,6 +12,8 @@ export const useNotification = () => {
   const { global } = useGlobal();
   const { showMessageToast } = useToast();
   const queryClient = useQueryClient();
+  const scheduledIntervalIds: number[] = [];
+  let isNotificationSubscribed = false;
 
   const loadUnreadCount = async () =>
     (
@@ -36,6 +39,20 @@ export const useNotification = () => {
     { immediate: true },
   );
   /* ======================= 감시자 ======================= */
+
+  /* ======================= 생명주기 ======================= */
+  tryOnScopeDispose(() => {
+    if (isNotificationSubscribed) {
+      void pb.collection(Collections.Notifications).unsubscribe('*');
+      isNotificationSubscribed = false;
+    }
+
+    if (scheduledIntervalIds.length > 0) {
+      scheduledIntervalIds.forEach((id) => window.clearInterval(id));
+      scheduledIntervalIds.length = 0;
+    }
+  });
+  /* ======================= 생명주기 ======================= */
 
   /* ======================= 메서드 ======================= */
   const fetchUnreadCount = async () => {
@@ -64,8 +81,10 @@ export const useNotification = () => {
               global.value.notificationDot = true;
           }
         });
+        isNotificationSubscribed = true;
       } else {
         await pb.collection(Collections.Notifications).unsubscribe('*');
+        isNotificationSubscribed = false;
       }
     },
   });
@@ -100,13 +119,14 @@ export const useNotification = () => {
     if (!on) return;
 
     // 1분 마다 확인
-    setInterval(async () => {
+    const intervalId = window.setInterval(async () => {
       const scheduledNotifications = await fetchDueScheduledNotifications();
       for (const record of scheduledNotifications) {
         await removeScheduledNotification(record.id);
         await createNotification(record as Create<Collections.Notifications>);
       }
     }, 1000 * 60);
+    scheduledIntervalIds.push(intervalId);
   };
 
   const useNotificationsQuery = (

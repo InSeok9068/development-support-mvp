@@ -22,7 +22,7 @@
               @drop.prevent="onDropWork($event, code.value)"
               @dragover.prevent
             >
-              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="router.push(`/detail/${work.id}`)">
+              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}
               </a>
               <hr />
@@ -71,7 +71,7 @@
               @drop.prevent="onDropWork($event, code.value)"
               @dragover.prevent
             >
-              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="router.push(`/detail/${work.id}`)">
+              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}
               </a>
               <hr />
@@ -127,6 +127,9 @@ const router = useRouter();
 let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 변수 ======================= */
 
+/* ======================= 감시자 ======================= */
+/* ======================= 감시자 ======================= */
+
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
   await fetchWorkFullList();
@@ -147,6 +150,10 @@ onBeforeUnmount(async () => {
 /* ======================= 메서드 ======================= */
 const onDragStartWork = (event: DragEvent, id: string) => {
   event.dataTransfer?.setData('transId', id);
+};
+
+const onClickWorkDetail = (id: string) => {
+  router.push(`/detail/${id}`);
 };
 
 const onDropWork = async (event: DragEvent, state: string) => {

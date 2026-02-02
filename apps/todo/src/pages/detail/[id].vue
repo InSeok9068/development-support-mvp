@@ -58,7 +58,7 @@
           <button v-show="work.redmine" @click="onClickRedmine(work.redmine)">OPEN</button>
         </div>
         <details v-show="work.redmine">
-          <summary role="button" class="outline" @click="selectRedmineData">레드마인 더보기</summary>
+          <summary role="button" class="outline" @click="onClickSelectRedmineData">레드마인 더보기</summary>
           <article>
             <fieldset>
               <legend>일감 관리자 추가</legend>
@@ -90,8 +90,8 @@
               <textarea v-model="redmineData.notes" />
             </label>
             <div role="group">
-              <button class="secondary" @click="selectRedmineData">불러오기</button>
-              <button class="contrast" @click="updateRedmineData">업데이트</button>
+              <button class="secondary" @click="onClickSelectRedmineData">불러오기</button>
+              <button class="contrast" @click="onClickUpdateRedmineData">업데이트</button>
             </div>
           </article>
         </details>
@@ -122,7 +122,7 @@
         <input
           :value="dayjs(work.dueDate).format('YYYY-MM-DD')"
           type="date"
-          @input="(e: Event) => (work.dueDate = (e.target as any).value)"
+          @input="onInputDueDate"
         />
       </label>
 
@@ -190,7 +190,7 @@ import { useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
-import { computed, onMounted, ref, toRaw, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, toRaw, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -212,6 +212,7 @@ const { getUserId } = useSign();
 const router = useRouter();
 const keys = useMagicKeys();
 const scheduledNotificationTime = ref<string>('');
+let redirectTimer: number | null = null;
 const work = ref<
   WorksResponse<{
     scheduledNotifications?: ScheduledNotificationsResponse[];
@@ -248,6 +249,13 @@ watch(
 onMounted(() => {
   fetchDeveloperList();
 });
+
+onUnmounted(() => {
+  if (redirectTimer) {
+    window.clearTimeout(redirectTimer);
+    redirectTimer = null;
+  }
+});
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
@@ -276,7 +284,7 @@ const onClickUpdate = () => {
 const onClickDelete = () => {
   deleteWork(work.value);
   showMessageModal('삭제 완료');
-  setTimeout(() => router.push('/'), 500);
+  redirectTimer = window.setTimeout(() => router.push('/'), 500);
 };
 
 const onClickDeleteWorkFile = async (work: WorksResponse) => {
@@ -313,6 +321,11 @@ const onClickRemoveDeveloper = () => {
   work.value.developer = '';
 };
 
+const onInputDueDate = (event: Event) => {
+  const target = event.target as HTMLInputElement | null;
+  work.value.dueDate = target?.value ?? '';
+};
+
 const updateWorkDetail = async () => {
   const formDate = new FormData();
   for (const [key, value] of Object.entries(work.value)) {
@@ -347,6 +360,10 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
     'scheduledNotifications-': scheduledNotificationId,
   });
 };
+
+const onClickSelectRedmineData = () => selectRedmineData();
+
+const onClickUpdateRedmineData = () => updateRedmineData();
 
 const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;

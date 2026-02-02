@@ -4,7 +4,7 @@
       <h2>로그인</h2>
       <input v-model="signinFormArgs.email" type="text" placeholder="이메일" />
       <input v-model="signinFormArgs.password" type="password" placeholder="패스워드" />
-      <input type="button" value="로그인" @click="signin" />
+      <input type="button" value="로그인" @click="onClickSignin" />
     </article>
 
     <article>
@@ -12,7 +12,7 @@
       <input v-model="signupFormArgs.nickname" type="text" placeholder="닉네임" />
       <input v-model="signupFormArgs.email" type="text" placeholder="이메일" />
       <input v-model="signupFormArgs.password" type="password" placeholder="패스워드" />
-      <input type="button" value="회원가입" @click="signup" />
+      <input type="button" value="회원가입" @click="onClickSignup" />
     </article>
   </main>
 </template>
@@ -38,11 +38,11 @@ const signupFormArgs = ref({
 /* ======================= 변수 ======================= */
 
 /* ======================= 메서드 ======================= */
-const signin = async () => {
+const onClickSignin = async () => {
   await requestSignin(signinFormArgs.value.email, signinFormArgs.value.password);
 };
 
-const signup = async () => {
+const onClickSignup = async () => {
   await requestSignup({
     name: signupFormArgs.value.nickname,
     email: signupFormArgs.value.email,

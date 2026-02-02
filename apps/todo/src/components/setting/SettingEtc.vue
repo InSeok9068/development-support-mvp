@@ -5,7 +5,7 @@
       <label>
         마감일자 임박
         <input v-model="settingArgs.daysBefore" type="number" />
-        <input type="button" value="저장" @click="$emit('save')" />
+        <input type="button" value="저장" @click="onClickSave" />
       </label>
     </article>
   </details>
@@ -16,8 +16,14 @@ import type { SettingJson } from '@/stores/setting.store';
 
 /* ======================= 변수 ======================= */
 const settingArgs = defineModel<SettingJson>({ required: true });
-defineEmits<{
+const emit = defineEmits<{
   (e: 'save'): void;
 }>();
 /* ======================= 변수 ======================= */
+
+/* ======================= 메서드 ======================= */
+const onClickSave = () => {
+  emit('save');
+};
+/* ======================= 메서드 ======================= */
 </script>

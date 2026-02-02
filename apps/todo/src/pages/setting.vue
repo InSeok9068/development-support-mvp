@@ -1,8 +1,12 @@
 <template>
   <main class="container">
     <article>
-      <SettingDeveloper v-model:developer-args="developerArgs" v-model:developers="developers" @save="onClickSave_1" />
-      <SettingEtc v-model="setting" @save="onClickSave_2" />
+      <SettingDeveloper
+        v-model:developer-args="developerArgs"
+        v-model:developers="developers"
+        @save="onClickSaveDeveloper"
+      />
+      <SettingEtc v-model="setting" @save="onClickSaveSetting" />
     </article>
   </main>
 </template>
@@ -40,7 +44,7 @@ onMounted(() => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const onClickSave_1 = async () => {
+const onClickSaveDeveloper = async () => {
   if (developerArgs.value.id) {
     await updateDeveloper(developerArgs.value);
     showMessageModal('수정 완료');
@@ -51,6 +55,6 @@ const onClickSave_1 = async () => {
   }
 };
 
-const onClickSave_2 = () => updateSetting();
+const onClickSaveSetting = () => updateSetting();
 /* ======================= 메서드 ======================= */
 </script>
