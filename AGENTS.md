@@ -83,6 +83,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.
   - ❌ `Create<'works'>`
   - ✅ `Create<Collections.Works>`
+- Realtime subscribe 사용 시, 더 이상 필요하지 않은 시점(페이지 이탈/컴포넌트 언마운트 등)에 반드시 unsubscribe 한다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
@@ -148,6 +149,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - TanStack Query는 도메인 composable 내부에서만 사용한다.
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
 - composable은 UI에 직접 의존하지 않는다.
+- Composable 내부에서 Side Effect(Interval, Listener, Timeout 등)를 사용할 경우,
+  tryOnScopeDispose 등을 활용하여 반드시 정리(cleanup)되도록 구현한다.
 
 ---
 
@@ -159,6 +162,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - 3회 이상 재사용되는 경우
   - 페이지 가독성을 심각하게 해치는 경우
 - 컴포넌트 자동 등록은 src/components/app 디렉터리만 허용한다. 그 외 컴포넌트는 명시적으로 import 한다.
+- 컴포넌트에서 Side Effect(Interval, Listener, Timeout 등)를 사용할 경우,
+  onUnmounted 라이프사이클 훅을 통해 반드시 정리한다.
 
 ---
 
@@ -179,6 +184,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 목적은 다음과 같다.
   - PocketBase 응답을 그대로 사용하기 어려운 경우
   - 조합 / 가공 / 표시 포맷을 거쳐 UI에서 쓰기 쉬운 형태로 변환하기 위함
+- 복잡한 데이터 변환(FormData 생성, DTO 매핑 등)은 UI 컴포넌트(SFC)가 아닌 Composable 내부로 분리한다.
 
 ---
 
@@ -195,6 +201,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
     - 예: `onClickSearch`, `onChangeFilter`, `onSubmitForm`
   - 가능하면 `onXxx + 대상 + 액션` 패턴으로 명확히 작성한다.
     - 예: `onClickSearchButton`, `onSubmitSearchForm`
+  - 단, 핸들러 내부에서 호출되는 순수 로직 함수나 API 호출 함수는 `on` 접두사를 사용하지 않는다 (동사+목적어).
+  - 이벤트 핸들러(`onXxx`) 내부에는 복잡한 로직을 직접 작성하지 않는다. 복잡한 로직은 Composable의 액션 함수를 호출하는 형태로 위임한다.
   - 사용자 액션과 직접 연결되지 않는 로직은 composable 또는 ui 헬퍼로 이동한다.
 
 - 선언 순서 (예시)
