@@ -89,20 +89,6 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
-~~#### Pocketbase Hooks 가이드~~
-
-~~- PocketBase Hooks는 `src/pb_hooks/` 디렉터리에 위치한다.~~
-~~- 기본 원칙은 **클라이언트 SDK 기반 처리**이며, Hooks 사용은 최소화한다.~~
-~~- Hooks는 다음 조건을 모두 만족하는 경우에만 사용을 검토한다.~~
-~~ - 클라이언트에서 처리할 수 없는 서버 단 로직이 필요한 경우~~
-~~ - PocketBase 기본 CRUD만으로는 해결할 수 없는 경우~~
-~~ - 데이터 무결성, 보안, 트랜잭션 보장이 필요한 경우~~
-~~- Hooks를 추가하는 경우, 반드시 아래 사항을 명시한다.~~
-~~ - 왜 클라이언트 로직으로 해결할 수 없는지~~
-~~ - 해당 로직이 서버에 있어야만 하는 이유~~
-~~ - Hooks가 없을 경우 발생하는 문제점~~
-~~- 단순 편의성, 코드 정리 목적의 Hooks 사용은 금지한다.~~
-
 ---
 
 ### TanStack Query 가이드
@@ -114,7 +100,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
-- pages/components에서는 비동기 흐름을 제어하지 않는다.
+- pages, components에서는 비동기 흐름을 제어하지 않는다.
 - 예외규칙
   - 인증/세션 관련 호출(authWithPassword, authStore)은 예외적으로 TanStack Query 없이 사용 가능하다.
   - ~~ 서버 캐싱이 오히려 손해가되는 경우, TanStack Query 없이 사용 가능하다. 검토요청 필요.~~
@@ -203,6 +189,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
     - 예: `onClickSearchButton`, `onSubmitSearchForm`
   - 단, 핸들러 내부에서 호출되는 순수 로직 함수나 API 호출 함수는 `on` 접두사를 사용하지 않는다 (동사+목적어).
   - 이벤트 핸들러(`onXxx`) 내부에는 복잡한 로직을 직접 작성하지 않는다. 복잡한 로직은 Composable의 액션 함수를 호출하는 형태로 위임한다.
+  - '복잡한 로직'에는 비동기 흐름 제어(async/await 남발, try/catch, 요청 순서/재시도/캐시 갱신 설계)를 포함한다.
   - 사용자 액션과 직접 연결되지 않는 로직은 composable 또는 ui 헬퍼로 이동한다.
 
 - 선언 순서 (예시)
@@ -274,6 +261,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 | 제목                   | 기능             |
 | :--------------------- | :--------------- |
+| vueuse                 | Vue 유틸         |
 | ag-grid-vue            | 테이블           |
 | chart.js + vue-chartjs | 차트             |
 | dayjs                  | 날짜 유틸        |
@@ -316,7 +304,6 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
 - Composable에서 Mutation 객체(`useMutation` 결과)를 그대로 반환하지 않는다. (반드시 함수로 래핑하여 반환)
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
-- Tailwind CSS 클래스를 Agent가 직접 작성하지 않는다.
 - Tailwind CSS 클래스는 Agent가 추가/수정/삭제/이동/치환하지 않는다. (사용 여부 판단 포함)
 - SFC `<style scoped>`는 Agent가 추가/수정/삭제하지 않는다.
 - 기존 CSS 클래스명과 class 속성 구조는 변경하지 않는다.
