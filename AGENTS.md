@@ -192,6 +192,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   - 템플릿 이벤트(@click, @change, @submit 등)와 메서드는 1:1 매칭한다.
   - 이벤트 핸들러는 `onXxx` 접두사를 사용한다.
     - 예: `onClickSearch`, `onChangeFilter`, `onSubmitForm`
+  - 가능하면 `onXxx + 대상 + 액션` 패턴으로 명확히 작성한다.
+    - 예: `onClickSearchButton`, `onSubmitSearchForm`
   - 사용자 액션과 직접 연결되지 않는 로직은 composable 또는 ui 헬퍼로 이동한다.
 
 - 선언 순서
@@ -217,12 +219,16 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 #### Composable 구분자 및 명명
 
 - Composable 메서드 명명 규칙
-  - Composable 메서드는 **도메인 액션** 중심으로만 작성한다.
+  - Composable 메서드는 도메인 액션 중심으로만 작성한다.
   - UI 이벤트 느낌의 `onXxx` 네이밍은 composable에서 금지한다.
   - 접두사는 도메인 표준 동사만 사용한다.
     - `fetch / create / update / delete / subscribe / unsubscribe`
+  - 명명 순서는 반드시 `동사 + 도메인`으로 고정한다.
+    - 예: `fetchWorkList`, `fetchWorkDetail`, `updateWork`, `deleteWork`
   - 도메인 엔티티가 명확히 드러나도록 명명한다.
     - 예: `fetchWorkList`, `createWork`, `updateWork`, `deleteWork`, `subscribeWorks`
+  - 도메인이 명확한 내부 유틸은 예외적으로 허용한다.
+    - 예: `buildQueryKey`, `setWorksCache`
 
 - 선언 순서
   ```ts
@@ -235,7 +241,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
     // 감시자
     /* ======================= 감시자 ======================= */
     /* ======================= 메서드 ======================= */
-    // 메서드: queryKey, useQuery, useMutation, fetchX, createX, updateX, deleteX, subscribeX
+    // 메서드: useQuery, useMutation, fetchX, createX, updateX, deleteX, subscribeX
     /* ======================= 메서드 ======================= */
     return {
       //   [items],       // 예: works, developers (복수형 데이터)
