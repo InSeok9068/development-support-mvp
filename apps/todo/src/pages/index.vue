@@ -108,7 +108,7 @@ import { useSign } from '@/composables/user/sign';
 import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -121,14 +121,12 @@ const {
   deleteWork,
   setWorksCache,
   subscribeWorks: requestSubscribe,
-  unsubscribeWorks: requestUnsubscribe,
 } = useWork();
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
 const { validators } = useValidator();
 const router = useRouter();
-let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 const workArgs = ref<Create<Collections.Works>>({
   id: '',
   user: getUserId(),
@@ -156,15 +154,6 @@ onMounted(() => {
   fetchWorkFullListFilterDeveloper(selectDeveloper.value);
   fetchDeveloperList();
   subscribeWorks();
-});
-
-onBeforeUnmount(async () => {
-  if (unsubscribeWorks) {
-    await unsubscribeWorks();
-    unsubscribeWorks = null;
-  } else {
-    await requestUnsubscribe();
-  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -258,7 +247,7 @@ const onClickWorkDetail = (id: string) => {
 };
 
 const subscribeWorks = async () => {
-  unsubscribeWorks = await requestSubscribe((e) => {
+  await requestSubscribe((e) => {
     switch (e.action) {
       case 'create':
         setWorksCache((current) => [...current, e.record]);

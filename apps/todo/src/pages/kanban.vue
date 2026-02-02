@@ -106,25 +106,17 @@ import { useSetting } from '@/composables/setting.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import { useWork } from '@/composables/todo/work.ts';
 import dayjs from 'dayjs';
-import { computed, onBeforeUnmount, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const {
-  works,
-  fetchWorkFullList,
-  updateWork,
-  setWorksCache,
-  subscribeWorks: requestSubscribe,
-  unsubscribeWorks: requestUnsubscribe,
-} = useWork();
+const { works, fetchWorkFullList, updateWork, setWorksCache, subscribeWorks: requestSubscribe } = useWork();
 const { developers, fetchDeveloperList } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
 const workStateCodesStep1 = computed(() => getCodesByType('workState').slice(0, 3));
 const workStateCodesStep2 = computed(() => getCodesByType('workState').slice(3, 6));
 const router = useRouter();
-let unsubscribeWorks: (() => void | Promise<void>) | null = null;
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -135,15 +127,6 @@ onMounted(async () => {
   await fetchWorkFullList();
   await fetchDeveloperList();
   await subscribeWorks();
-});
-
-onBeforeUnmount(async () => {
-  if (unsubscribeWorks) {
-    await unsubscribeWorks();
-    unsubscribeWorks = null;
-  } else {
-    await requestUnsubscribe();
-  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -167,7 +150,7 @@ const onDropWork = async (event: DragEvent, state: string) => {
 };
 
 const subscribeWorks = async () => {
-  unsubscribeWorks = await requestSubscribe((e) => {
+  await requestSubscribe((e) => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {
