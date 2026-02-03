@@ -119,11 +119,7 @@
 
       <label>
         <strong>마감일시</strong>
-        <input
-          :value="dayjs(work.dueDate).format('YYYY-MM-DD')"
-          type="date"
-          @input="onInputDueDate"
-        />
+        <input :value="dayjs(work.dueDate).format('YYYY-MM-DD')" type="date" @input="onInputDueDate" />
       </label>
 
       <label>
@@ -195,16 +191,16 @@ import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-rou
 
 /* ======================= 변수 ======================= */
 const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
-  const {
-    workQuery,
-    refetchWorkDetail,
-    createScheduledNotification,
-    deleteScheduledNotification,
-    fetchRedmineData: requestFetchRedmineData,
-    updateRedmineData: requestUpdateRedmineData,
-    buildWorkUpdatePayload,
-    getWorkFileUrl,
-  } = useWorkDetail(computed(() => route.params.id));
+const {
+  workQuery,
+  refetchWorkDetail,
+  createScheduledNotification,
+  deleteScheduledNotification,
+  fetchRedmineData: requestFetchRedmineData,
+  updateRedmineData: requestUpdateRedmineData,
+  buildWorkUpdatePayload,
+  getWorkFileUrl,
+} = useWorkDetail(computed(() => route.params.id));
 const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
 const { showMessageModal } = useModal();

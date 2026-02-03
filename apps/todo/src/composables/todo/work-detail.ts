@@ -1,5 +1,10 @@
 import pb from '@/api/pocketbase';
-import { Collections, type Create, type ScheduledNotificationsResponse, type WorksResponse } from '@/api/pocketbase-types';
+import {
+  Collections,
+  type Create,
+  type ScheduledNotificationsResponse,
+  type WorksResponse,
+} from '@/api/pocketbase-types';
 import { useMutation, useQuery } from '@tanstack/vue-query';
 import { computed, unref, type Ref } from 'vue';
 

@@ -148,7 +148,9 @@ export const useNotification = () => {
     }, 1000 * 60);
   };
 
-  const subscribeNotificationsByPermission = (permission: Ref<PermissionState | undefined> | PermissionState | undefined) => {
+  const subscribeNotificationsByPermission = (
+    permission: Ref<PermissionState | undefined> | PermissionState | undefined,
+  ) => {
     watch(
       () => (isRef(permission) ? permission.value : permission),
       (value) => {

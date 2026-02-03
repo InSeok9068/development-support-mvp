@@ -71,9 +71,7 @@ onMounted(async () => {
   if (typeof Notification !== 'undefined') {
     const permission = global.value.notificationPermission;
     if (permission === 'prompt') {
-      const shouldRequest = window.confirm(
-        '알림을 받으려면 브라우저 알림 권한이 필요합니다. 지금 허용하시겠어요?',
-      );
+      const shouldRequest = window.confirm('알림을 받으려면 브라우저 알림 권한이 필요합니다. 지금 허용하시겠어요?');
       if (shouldRequest) {
         await Notification.requestPermission();
       }
