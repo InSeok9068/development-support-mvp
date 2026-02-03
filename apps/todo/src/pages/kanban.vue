@@ -10,7 +10,7 @@
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
-          :animation="150"
+          :animation="300"
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
@@ -57,7 +57,7 @@
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
-          :animation="150"
+          :animation="300"
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
