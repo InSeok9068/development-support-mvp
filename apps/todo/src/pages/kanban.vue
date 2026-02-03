@@ -3,6 +3,7 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep1" :key="code.value">
         <VueDraggable
+          v-auto-animate
           :model-value="getWorksByState(code.value)"
           tag="article"
           class="overflow-auto md:max-h-200 md:min-h-200"
@@ -17,7 +18,7 @@
             <i class="mr-1" :class="code.class"></i>
             {{ code.desc }}
           </h4>
-          <template v-for="work in getWorksByState(code.value)">
+          <template v-for="work in getWorksByState(code.value)" :key="work.id">
             <article class="p-3" :data-id="work.id">
               <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}
@@ -49,6 +50,7 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep2" :key="code.value">
         <VueDraggable
+          v-auto-animate
           :model-value="getWorksByState(code.value)"
           tag="article"
           class="overflow-auto md:max-h-200 md:min-h-200"
@@ -63,7 +65,7 @@
             <i class="mr-1" :class="code.class"></i>
             {{ code.desc }}
           </h4>
-          <template v-for="work in getWorksByState(code.value)">
+          <template v-for="work in getWorksByState(code.value)" :key="work.id">
             <article class="p-3" :data-id="work.id">
               <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}

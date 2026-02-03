@@ -43,11 +43,13 @@
       </form>
       <VueDraggable
         ref="el"
-        v-model="works"
+        v-auto-animate
+        :model-value="works"
         tag="ul"
         :touch-start-threshold="3"
         :delay-on-touch-only="true"
         :delay="100"
+        @update:model-value="onUpdateWorkList"
         @end="onDropWork"
       >
         <li v-for="work in works" :key="work.id" class="mb-3 sm:mb-5">
@@ -109,7 +111,7 @@ import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
 import { onMounted, ref } from 'vue';
-import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus';
+import { VueDraggable } from 'vue-draggable-plus';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -193,20 +195,16 @@ const fetchWorkFullListFilterDeveloper = (developer: DevelopersResponse | string
   }
 };
 
-const onDropWork = (event: DraggableEvent) => {
-  const transIndex = event.oldIndex as number;
-  const curIndex = event.newIndex as number;
-
-  setWorksCache((current) => {
-    const next = [...current];
-    const [el] = next.splice(transIndex, 1);
-    next.splice(curIndex, 0, el);
-    return next.map((item, index) => ({ ...item, sort: index }));
-  });
+const onDropWork = () => {
+  setWorksCache((current) => current.map((item, index) => ({ ...item, sort: index })));
 
   works.value.forEach((work, index) => {
     updateWork(work.id, { sort: index }, { invalidateWorks: false, invalidateWork: false });
   });
+};
+
+const onUpdateWorkList = (next: WorksResponse[]) => {
+  setWorksCache(() => [...next]);
 };
 
 const onClickDoneWork = async (work: WorksResponse) => {
