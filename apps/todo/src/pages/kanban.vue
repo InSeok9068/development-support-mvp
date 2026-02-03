@@ -1,27 +1,24 @@
 <template>
   <main class="container">
     <div class="grid">
-      <template v-for="code in workStateCodesStep1">
-        <!-- eslint-disable-next-line vue/valid-v-for -->
-        <TransitionGroup
+      <template v-for="code in workStateCodesStep1" :key="code.value">
+        <VueDraggable
+          :model-value="getWorksByState(code.value)"
           tag="article"
-          name="list"
           class="overflow-auto md:max-h-200 md:min-h-200"
-          @dragover.prevent
-          @drop.prevent="onDropWork($event, code.value)"
+          :touch-start-threshold="3"
+          :delay-on-touch-only="true"
+          :delay="100"
+          group="works"
+          @add="onAddWork($event, code.value)"
+          @update:model-value="onUpdateWorkList(code.value, $event)"
         >
           <h4>
             <i class="mr-1" :class="code.class"></i>
             {{ code.desc }}
           </h4>
-          <template v-for="work in works.filter((val) => val.state === code.value)">
-            <article
-              class="p-3"
-              draggable="true"
-              @dragstart="onDragStartWork($event, work.id)"
-              @drop.prevent="onDropWork($event, code.value)"
-              @dragover.prevent
-            >
+          <template v-for="work in getWorksByState(code.value)">
+            <article class="p-3" :data-id="work.id">
               <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}
               </a>
@@ -45,32 +42,29 @@
               </p>
             </article>
           </template>
-        </TransitionGroup>
+        </VueDraggable>
       </template>
     </div>
     <hr />
     <div class="grid">
-      <template v-for="code in workStateCodesStep2">
-        <!-- eslint-disable-next-line vue/valid-v-for -->
-        <TransitionGroup
+      <template v-for="code in workStateCodesStep2" :key="code.value">
+        <VueDraggable
+          :model-value="getWorksByState(code.value)"
           tag="article"
-          name="list"
           class="overflow-auto md:max-h-200 md:min-h-200"
-          @dragover.prevent
-          @drop.prevent="onDropWork($event, code.value)"
+          :touch-start-threshold="3"
+          :delay-on-touch-only="true"
+          :delay="100"
+          group="works"
+          @add="onAddWork($event, code.value)"
+          @update:model-value="onUpdateWorkList(code.value, $event)"
         >
           <h4>
             <i class="mr-1" :class="code.class"></i>
             {{ code.desc }}
           </h4>
-          <template v-for="work in works.filter((val) => val.state === code.value)">
-            <article
-              class="p-3"
-              draggable="true"
-              @dragstart="onDragStartWork($event, work.id)"
-              @drop.prevent="onDropWork($event, code.value)"
-              @dragover.prevent
-            >
+          <template v-for="work in getWorksByState(code.value)">
+            <article class="p-3" :data-id="work.id">
               <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
                 {{ work.title }}
               </a>
@@ -93,20 +87,21 @@
               </p>
             </article>
           </template>
-        </TransitionGroup>
+        </VueDraggable>
       </template>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import type { DevelopersResponse } from '@/api/pocketbase-types.ts';
+import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types.ts';
 import { useCode } from '@/composables/code.ts';
 import { useSetting } from '@/composables/setting.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import { useWork } from '@/composables/todo/work.ts';
 import dayjs from 'dayjs';
 import { computed, onMounted } from 'vue';
+import { type DraggableEvent, VueDraggable } from 'vue-draggable-plus';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -131,18 +126,26 @@ onMounted(async () => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const onDragStartWork = (event: DragEvent, id: string) => {
-  event.dataTransfer?.setData('transId', id);
-};
-
 const onClickWorkDetail = (id: string) => {
   router.push(`/detail/${id}`);
 };
 
-const onDropWork = async (event: DragEvent, state: string) => {
-  const transId = event.dataTransfer?.getData('transId') as string;
+const getWorksByState = (state: string) => works.value.filter((item) => item.state === state);
 
-  await updateWork(transId, {
+const onUpdateWorkList = (state: string, next: WorksResponse[]) => {
+  setWorksCache((current) => {
+    const nextWithState = next.map((item) => (item.state === state ? item : { ...item, state }));
+    const nextIds = new Set(nextWithState.map((item) => item.id));
+    const keep = current.filter((item) => !nextIds.has(item.id) && item.state !== state);
+    return [...keep, ...nextWithState];
+  });
+};
+
+const onAddWork = async (event: DraggableEvent, state: string) => {
+  const workId = event.item?.dataset?.id;
+  if (!workId) return;
+
+  await updateWork(workId, {
     state,
   });
 
@@ -162,17 +165,3 @@ const subscribeWorks = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
-
-<style scoped>
-.list-move,
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.25s var(--ease-1);
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-</style>
