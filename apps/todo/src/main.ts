@@ -3,6 +3,7 @@ import '@/assets/style.css';
 // 2순위 인식
 import '@/assets/custom.css';
 
+import { autoAnimatePlugin } from '@formkit/auto-animate/vue';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { createPinia } from 'pinia';
@@ -22,6 +23,7 @@ const router = createRouter({
 
 pinia.use(piniaPluginPersistedstate);
 
+app.use(autoAnimatePlugin);
 app.use(VueQueryPlugin);
 app.use(router);
 app.use(pinia);

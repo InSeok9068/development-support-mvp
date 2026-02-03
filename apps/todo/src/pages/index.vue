@@ -41,19 +41,19 @@
         </fieldset>
         <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
       </form>
-      <TransitionGroup tag="ul" name="list">
-        <li
-          v-for="(work, index) in works"
-          :key="work.id"
-          class="mb-3 sm:mb-5"
-          draggable="true"
-          @drop.prevent="onDropWork($event, index)"
-          @dragstart="onDragStartWork($event, index)"
-          @dragover.prevent
-        >
+      <VueDraggable
+        ref="el"
+        v-model="works"
+        tag="ul"
+        :touch-start-threshold="3"
+        :delay-on-touch-only="true"
+        :delay="100"
+        @end="onDropWork"
+      >
+        <li v-for="work in works" :key="work.id" class="mb-3 sm:mb-5">
           <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
             <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
-            <a class="cursor-pointer" @click="onClickWorkDetail(work.id)">
+            <a class="cursor-pointer" draggable="false" @click="onClickWorkDetail(work.id)">
               {{ work.title }}
             </a>
             <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
@@ -93,7 +93,7 @@
             </label>
           </div>
         </li>
-      </TransitionGroup>
+      </VueDraggable>
     </article>
   </main>
 </template>
@@ -109,6 +109,7 @@ import { useValidator } from '@/composables/validator';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
 import { onMounted, ref } from 'vue';
+import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -192,12 +193,9 @@ const fetchWorkFullListFilterDeveloper = (developer: DevelopersResponse | string
   }
 };
 
-const onDragStartWork = (event: DragEvent, curIndex: number) => {
-  event.dataTransfer?.setData('transIndex', String(curIndex));
-};
-
-const onDropWork = (event: DragEvent, curIndex: number) => {
-  const transIndex = Number(event.dataTransfer?.getData('transIndex'));
+const onDropWork = (event: DraggableEvent) => {
+  const transIndex = event.oldIndex as number;
+  const curIndex = event.newIndex as number;
 
   setWorksCache((current) => {
     const next = [...current];
@@ -265,17 +263,3 @@ const subscribeWorks = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
-
-<style scoped>
-.list-move,
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.25s var(--ease-1);
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
-}
-</style>
