@@ -43,12 +43,12 @@
       </form>
       <VueDraggable
         ref="el"
-        v-auto-animate
-        :model-value="works"
         tag="ul"
+        :model-value="works"
         :touch-start-threshold="3"
         :delay-on-touch-only="true"
         :delay="100"
+        :animation="300"
         @update:model-value="onUpdateWorkList"
         @end="onDropWork"
       >

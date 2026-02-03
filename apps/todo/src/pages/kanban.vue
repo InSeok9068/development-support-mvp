@@ -3,14 +3,14 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep1" :key="code.value">
         <VueDraggable
-          v-auto-animate
           :model-value="getWorksByState(code.value)"
-          tag="article"
           class="overflow-auto md:max-h-200 md:min-h-200"
+          tag="article"
+          group="works"
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
-          group="works"
+          :animation="150"
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
@@ -50,14 +50,14 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep2" :key="code.value">
         <VueDraggable
-          v-auto-animate
           :model-value="getWorksByState(code.value)"
-          tag="article"
           class="overflow-auto md:max-h-200 md:min-h-200"
+          tag="article"
+          group="works"
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
-          group="works"
+          :animation="150"
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
