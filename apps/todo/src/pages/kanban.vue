@@ -3,10 +3,9 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep1" :key="code.value">
         <VueDraggable
-          :model-value="getWorksByState(code.value)"
-          class="overflow-auto md:max-h-200 md:min-h-200"
-          tag="article"
           group="works"
+          target=".sort-target-1"
+          :model-value="getWorksByState(code.value)"
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
@@ -14,35 +13,38 @@
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
-          <h4>
-            <i class="mr-1" :class="code.class"></i>
-            {{ code.desc }}
-          </h4>
-          <template v-for="work in getWorksByState(code.value)" :key="work.id">
-            <article class="p-3" :data-id="work.id">
-              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
-                {{ work.title }}
-              </a>
-              <hr />
-              <p class="text-sm">
-                개발자 : {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-              </p>
-              <p
-                v-show="work.dueDate"
-                class="text-sm"
-                :class="{
-                  'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                    dayjs().add(setting.daysBefore, 'd'),
-                  ),
-                }"
-              >
-                마감일자 :
-                <span>
-                  {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-                </span>
-              </p>
-            </article>
-          </template>
+          <TransitionGroup tag="article" name="list" class="sort-target-1 overflow-auto md:max-h-200 md:min-h-200">
+            <h4>
+              <i class="mr-1" :class="code.class"></i>
+              {{ code.desc }}
+            </h4>
+            <template v-for="work in getWorksByState(code.value)" :key="work.id">
+              <article class="p-3" :data-id="work.id">
+                <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
+                  {{ work.title }}
+                </a>
+                <hr />
+                <p class="text-sm">
+                  개발자 :
+                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                </p>
+                <p
+                  v-show="work.dueDate"
+                  class="text-sm"
+                  :class="{
+                    'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                      dayjs().add(setting.daysBefore, 'd'),
+                    ),
+                  }"
+                >
+                  마감일자 :
+                  <span>
+                    {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
+                  </span>
+                </p>
+              </article>
+            </template>
+          </TransitionGroup>
         </VueDraggable>
       </template>
     </div>
@@ -50,10 +52,9 @@
     <div class="grid">
       <template v-for="code in workStateCodesStep2" :key="code.value">
         <VueDraggable
-          :model-value="getWorksByState(code.value)"
-          class="overflow-auto md:max-h-200 md:min-h-200"
-          tag="article"
           group="works"
+          target=".sort-target-2"
+          :model-value="getWorksByState(code.value)"
           :touch-start-threshold="3"
           :delay-on-touch-only="true"
           :delay="100"
@@ -61,34 +62,37 @@
           @add="onAddWork($event, code.value)"
           @update:model-value="onUpdateWorkList(code.value, $event)"
         >
-          <h4>
-            <i class="mr-1" :class="code.class"></i>
-            {{ code.desc }}
-          </h4>
-          <template v-for="work in getWorksByState(code.value)" :key="work.id">
-            <article class="p-3" :data-id="work.id">
-              <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
-                {{ work.title }}
-              </a>
-              <hr />
-              <p class="text-sm">
-                개발자 : {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-              </p>
-              <p
-                class="text-sm"
-                :class="{
-                  'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                    dayjs().add(setting.daysBefore, 'd'),
-                  ),
-                }"
-              >
-                마감일자 :
-                <span>
-                  {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-                </span>
-              </p>
-            </article>
-          </template>
+          <TransitionGroup tag="article" name="list" class="sort-target-2 overflow-auto md:max-h-200 md:min-h-200">
+            <h4>
+              <i class="mr-1" :class="code.class"></i>
+              {{ code.desc }}
+            </h4>
+            <template v-for="work in getWorksByState(code.value)" :key="work.id">
+              <article class="p-3" :data-id="work.id">
+                <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
+                  {{ work.title }}
+                </a>
+                <hr />
+                <p class="text-sm">
+                  개발자 :
+                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                </p>
+                <p
+                  class="text-sm"
+                  :class="{
+                    'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                      dayjs().add(setting.daysBefore, 'd'),
+                    ),
+                  }"
+                >
+                  마감일자 :
+                  <span>
+                    {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
+                  </span>
+                </p>
+              </article>
+            </template>
+          </TransitionGroup>
         </VueDraggable>
       </template>
     </div>
@@ -167,3 +171,17 @@ const subscribeWorks = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
+
+<style scoped>
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.25s var(--ease-1);
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+</style>

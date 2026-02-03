@@ -42,59 +42,59 @@
         <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
       </form>
       <VueDraggable
-        ref="el"
-        tag="ul"
-        :model-value="works"
+        v-model="works"
+        target=".sort-target"
         :touch-start-threshold="3"
         :delay-on-touch-only="true"
         :delay="100"
-        :animation="300"
         @update:model-value="onUpdateWorkList"
         @end="onDropWork"
       >
-        <li v-for="work in works" :key="work.id" class="mb-3 sm:mb-5">
-          <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
-            <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
-            <a class="cursor-pointer" draggable="false" @click="onClickWorkDetail(work.id)">
-              {{ work.title }}
-            </a>
-            <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
-          </h6>
+        <TransitionGroup tag="ul" name="list" class="sort-target">
+          <li v-for="work in works" :key="work.id" class="mb-3 sm:mb-5">
+            <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
+              <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
+              <a class="cursor-pointer" draggable="false" @click="onClickWorkDetail(work.id)">
+                {{ work.title }}
+              </a>
+              <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
+            </h6>
 
-          <div class="grid">
-            <label>
-              개발자 :
-              <span>
-                {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-              </span>
-            </label>
-            <label>
-              상태 :
-              <span>
-                <i :class="getCodeClass('workState', work.state)"></i>
-                {{ getCodeDesc('workState', work.state) }}
-              </span>
-            </label>
-            <label class="hidden sm:block">
-              등록일자 :
-              <span>
-                {{ dayjs(work.created).format('YYYY-MM-DD') }}
-              </span>
-            </label>
-            <label
-              :class="{
-                'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                  dayjs().add(setting.daysBefore, 'd'),
-                ),
-              }"
-            >
-              마감일자 :
-              <span>
-                {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-              </span>
-            </label>
-          </div>
-        </li>
+            <div class="grid">
+              <label>
+                개발자 :
+                <span>
+                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                </span>
+              </label>
+              <label>
+                상태 :
+                <span>
+                  <i :class="getCodeClass('workState', work.state)"></i>
+                  {{ getCodeDesc('workState', work.state) }}
+                </span>
+              </label>
+              <label class="hidden sm:block">
+                등록일자 :
+                <span>
+                  {{ dayjs(work.created).format('YYYY-MM-DD') }}
+                </span>
+              </label>
+              <label
+                :class="{
+                  'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                    dayjs().add(setting.daysBefore, 'd'),
+                  ),
+                }"
+              >
+                마감일자 :
+                <span>
+                  {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
+                </span>
+              </label>
+            </div>
+          </li>
+        </TransitionGroup>
       </VueDraggable>
     </article>
   </main>
@@ -261,3 +261,17 @@ const subscribeWorks = async () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
+
+<style scoped>
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.25s var(--ease-1);
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+</style>
