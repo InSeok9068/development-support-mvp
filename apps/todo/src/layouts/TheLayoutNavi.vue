@@ -16,12 +16,12 @@
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/list" data-tooltip="Alt + 2" data-placement="bottom">
+                <RouterLink to="/kanban" data-tooltip="Alt + 2" data-placement="bottom">
                   <strong>Kanban</strong>
                 </RouterLink>
               </li>
               <li>
-                <RouterLink to="/kanban" data-tooltip="Alt + 3" data-placement="bottom">
+                <RouterLink to="/list" data-tooltip="Alt + 3" data-placement="bottom">
                   <strong>List</strong>
                 </RouterLink>
               </li>

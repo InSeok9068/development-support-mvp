@@ -57,15 +57,17 @@ onMounted(async () => {
   initPocketbase(); // 포켓베이스 초기화
   initTheme(); // 테마 설정
   await fetchCodeList(); // 시스템 코드 설정
-  initSetting(); // 셋팅 초기화
 
   // 로그인 확인 및 유도
   if (!checkAuth()) {
-    router.push('/sign'); // 미인증 회원 로그인 유도
+    await router.push('/sign'); // 미인증 회원 로그인 유도
+    return;
   }
 
+  await initSetting(); // 셋팅 초기화
+
   // 메인 진입 시 필요 API 호출
-  fetchUnreadCount(); // 미확인 알림 확인
+  await fetchUnreadCount(); // 미확인 알림 확인
 
   // 알림 관련 작업
   if (typeof Notification !== 'undefined') {

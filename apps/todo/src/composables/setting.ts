@@ -1,6 +1,7 @@
 import pb from '@/api/pocketbase';
 import { Collections, type SettingsResponse } from '@/api/pocketbase-types';
 import { type SettingJson, useSettingStore } from '@/stores/setting.store';
+import { useSign } from '@/composables/user/sign';
 import { useModal } from '@packages/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
@@ -9,18 +10,34 @@ import { ref, watch } from 'vue';
 export const useSetting = () => {
   /* ======================= 변수 ======================= */
   const { setting } = storeToRefs(useSettingStore());
+  const { getUserId } = useSign();
   const { showMessageModal } = useModal();
   const queryClient = useQueryClient();
   const settingRecordId = ref<string | null>(null);
 
   const loadSettingRecord = async () => {
-    const record = await pb.collection(Collections.Settings).getFirstListItem<SettingsResponse<SettingJson>>('');
-    return { id: record.id, data: record.data as SettingJson };
+    const userId = getUserId();
+    const settingList = await pb.collection(Collections.Settings).getList<SettingsResponse<SettingJson>>(1, 1, {
+      filter: `user = "${userId}"`,
+    });
+
+    if (0 < settingList.items.length) {
+      const record = settingList.items[0];
+      return { id: record.id, data: record.data as SettingJson };
+    }
+
+    const created = await pb.collection(Collections.Settings).create<SettingsResponse<SettingJson>>({
+      user: userId,
+      data: setting.value,
+    });
+
+    return { id: created.id, data: created.data as SettingJson };
   };
 
   const settingQuery = useQuery({
     queryKey: ['settings'],
     queryFn: loadSettingRecord,
+    enabled: false,
   });
   /* ======================= 변수 ======================= */
 
