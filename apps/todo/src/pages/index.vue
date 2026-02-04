@@ -117,15 +117,7 @@ import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { selectDeveloper, developers, fetchDeveloperList } = useDeveloper();
-const {
-  works,
-  fetchWorkFullList,
-  createWork,
-  updateWork,
-  deleteWork,
-  updateWorkSortBatch,
-  setWorksCache,
-} = useWork();
+const { works, fetchWorkFullList, createWork, updateWork, deleteWork, updateWorkSortBatch, setWorksCache } = useWork();
 const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
