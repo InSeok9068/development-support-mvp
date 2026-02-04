@@ -33,13 +33,13 @@
           <input
             v-model="workArgs.title"
             name="title"
-            :aria-invalid="validators.invalid('title')"
-            @keyup="onKeyupWorkTitle"
+            :aria-invalid="validator.invalid('title')"
+            @input="onInputWorkTitle"
             @keydown.stop.prevent.enter="onClickCreateWork"
           />
           <input type="button" value="등록" @click="onClickCreateWork" />
         </fieldset>
-        <small v-show="validators.showMessage('title')" class="font-bold">{{ validators.getMessage('title') }}</small>
+        <small v-show="validator.show('title')" class="font-bold">{{ validator.message('title') }}</small>
       </form>
       <VueDraggable
         v-model="works"
@@ -128,7 +128,13 @@ const {
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
-const { validators } = useValidator();
+const validator = useValidator([
+  {
+    key: 'title',
+    validate: (value) => !isEmpty(String(value ?? '')),
+    message: '최소 1자리 이상 입력해주세요.',
+  },
+]);
 const router = useRouter();
 const workArgs = ref<Create<Collections.Works>>({
   id: '',
@@ -140,13 +146,6 @@ const workArgs = ref<Create<Collections.Works>>({
   developer: '',
   content: `<p></p><p></p><p></p><p></p><p></p>`,
 });
-validators.value.schema = [
-  {
-    key: 'title',
-    valid: (value) => !isEmpty(value as string),
-    message: '최소 1자리 이상 입력해주세요.',
-  },
-];
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -162,15 +161,16 @@ onMounted(() => {
 
 /* ======================= 메서드 ======================= */
 const onClickCreateWork = async () => {
-  if (validators.value.validAll('workArgsForm')) {
+  if (validator.validateForm('workArgsForm')) {
     await createWork(workArgs.value);
     await fetchWorkFullList();
     workArgs.value.title = '';
+    validator.clearFields(['title']);
   }
 };
 
-const onKeyupWorkTitle = () => {
-  validators.value.valid('title', workArgs.value.title);
+const onInputWorkTitle = () => {
+  validator.validateField('title', workArgs.value.title);
 };
 
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
