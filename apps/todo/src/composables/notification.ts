@@ -60,31 +60,28 @@ export const useNotification = () => {
     global.value.notificationDot = count > 0;
   };
 
-  const subscribeNotificationMutation = useMutation({
-    mutationFn: async (on: boolean) => {
-      if (on) {
-        await subscribeRealtime((e) => {
-          switch (e.action) {
-            case 'create':
-              // 브라우저 알림
-              new Notification(e.record.title, {
-                body: e.record.message,
-              });
+  const subscribeNotification = async (on: boolean = true) => {
+    if (on) {
+      await subscribeRealtime((e) => {
+        switch (e.action) {
+          case 'create':
+            // 브라우저 알림
+            new Notification(e.record.title, {
+              body: e.record.message,
+            });
 
-              // 토스트 알림
-              showMessageToast(`[${e.record.title}] ${e.record.message}`);
+            // 토스트 알림
+            showMessageToast(`[${e.record.title}] ${e.record.message}`);
 
-              // 알림 Dot 표기
-              global.value.notificationDot = true;
-          }
-        });
-      } else {
-        await unsubscribeRealtime('*');
-      }
-    },
-  });
+            // 알림 Dot 표기
+            global.value.notificationDot = true;
+        }
+      });
+      return;
+    }
 
-  const subscribeNotification = (on: boolean = true) => subscribeNotificationMutation.mutateAsync(on);
+    await unsubscribeRealtime('*');
+  };
 
   const fetchDueScheduledNotifications = async () => {
     return await queryClient.fetchQuery({
