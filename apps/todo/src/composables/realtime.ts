@@ -4,19 +4,22 @@ import { tryOnScopeDispose } from '@vueuse/core';
 import type { RecordSubscribeOptions } from 'pocketbase';
 
 type RealtimeEvent<TRecord> = {
-  action: string;
+  action: 'create' | 'update' | 'delete';
   record: TRecord;
 };
 
+type RealtimeUnsubscribe = () => Promise<void>;
+
 export const useRealtime = <TRecord = Record<string, unknown>>(collection: Collections) => {
   /* ======================= 변수 ======================= */
-  const topics = new Set<string>();
+  const unsubscribeMap = new Map<string, RealtimeUnsubscribe>();
   /* ======================= 변수 ======================= */
 
   /* ======================= 생명주기 훅 ======================= */
   tryOnScopeDispose(async () => {
-    await pb.collection(collection).unsubscribe();
-    topics.clear();
+    const unsubscribeList = [...unsubscribeMap.values()];
+    await Promise.all(unsubscribeList.map((unsubscribe) => unsubscribe()));
+    unsubscribeMap.clear();
   });
   /* ======================= 생명주기 훅 ======================= */
 
@@ -26,26 +29,42 @@ export const useRealtime = <TRecord = Record<string, unknown>>(collection: Colle
     topic: string = '*',
     options: RecordSubscribeOptions = {},
   ) => {
-    const unsubscribe = await pb.collection(collection).subscribe(
+    const currentUnsubscribe = unsubscribeMap.get(topic);
+    if (currentUnsubscribe) {
+      await currentUnsubscribe();
+    }
+
+    const unsubscribeInternal = await pb.collection(collection).subscribe(
       topic,
       (event) => {
         callback({
-          action: event.action,
+          action: event.action as RealtimeEvent<TRecord>['action'],
           record: event.record as TRecord,
         });
       },
       options,
     );
-    topics.add(topic);
-
-    return async () => {
-      await unsubscribe();
+    let isUnsubscribed = false;
+    const unsubscribe: RealtimeUnsubscribe = async () => {
+      if (isUnsubscribed) {
+        return;
+      }
+      isUnsubscribed = true;
+      unsubscribeMap.delete(topic);
+      await unsubscribeInternal();
     };
+    unsubscribeMap.set(topic, unsubscribe);
+
+    return unsubscribe;
   };
 
   const unsubscribeRealtime = async (topic: string = '*') => {
-    await pb.collection(collection).unsubscribe(topic);
-    topics.delete(topic);
+    const unsubscribe = unsubscribeMap.get(topic);
+    if (!unsubscribe) {
+      return;
+    }
+
+    await unsubscribe();
   };
   /* ======================= 메서드 ======================= */
 
