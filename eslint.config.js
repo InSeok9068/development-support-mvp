@@ -22,9 +22,9 @@ export default defineConfig(
         parser: tslint.parser,
       },
     },
-    rules: {
-      'vue/require-v-for-key': 'off', // v-for
-    },
+    // rules: {
+    //   'vue/require-v-for-key': 'off', // v-for
+    // },
   },
   {
     files: ['apps/*/src/pages/**/*.vue'],

@@ -27,7 +27,7 @@
       </div>
 
       <div class="grid gap-3" role="group">
-        <template v-for="state in getCodesByType('workState')">
+        <template v-for="state in getCodesByType('workState')" :key="state.value">
           <label>
             <i class="mr-1 hidden sm:inline" :class="state.class"></i>
             <span class="mr-1">{{ state.desc }}</span>
@@ -109,7 +109,7 @@
         <strong>개발자</strong>
         <i class="bi-person-fill-dash float-right cursor-pointer" @click.stop.prevent="onClickRemoveDeveloper">삭제</i>
         <select v-model="work.developer">
-          <template v-for="developer in developers">
+          <template v-for="developer in developers" :key="developer.id">
             <option :value="developer.id" :selected="work.developer == developer.id">
               <span>{{ developer.name }}</span>
             </option>
@@ -133,7 +133,7 @@
             <th>알람시간</th>
           </thead>
           <tbody>
-            <tr v-for="scheduledNotification in work.expand?.scheduledNotifications">
+            <tr v-for="scheduledNotification in work.expand?.scheduledNotifications" :key="scheduledNotification.id">
               <td>
                 {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
                 <i

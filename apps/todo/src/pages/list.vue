@@ -47,7 +47,7 @@
               <option value="">
                 <span>미배정</span>
               </option>
-              <template v-for="developer in developers">
+              <template v-for="developer in developers" :key="developer.id">
                 <option :value="developer.id">
                   <span>{{ developer.name }}</span>
                 </option>

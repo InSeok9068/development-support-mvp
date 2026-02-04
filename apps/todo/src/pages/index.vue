@@ -17,7 +17,7 @@
         <button class="w-full" :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">
           미배정
         </button>
-        <template v-for="developer in developers">
+        <template v-for="developer in developers" :key="developer.id">
           <button
             class="w-full"
             :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
