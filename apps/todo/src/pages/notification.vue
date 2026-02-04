@@ -28,7 +28,7 @@ import dayjs from 'dayjs';
 import { computed, ref } from 'vue';
 
 /* ======================= 변수 ======================= */
-const { fetchUnreadCount, useNotificationsQuery, markRead } = useNotification();
+const { useNotificationsQuery, markRead } = useNotification();
 const notificationsQuery = useNotificationsQuery(ref({ page: 1, perPage: 20, sort: '-created' }));
 const notifications = computed(() => notificationsQuery.data.value ?? []);
 /* ======================= 변수 ======================= */
@@ -36,7 +36,6 @@ const notifications = computed(() => notificationsQuery.data.value ?? []);
 /* ======================= 메서드 ======================= */
 const onClickRead = async (notification: NotificationsResponse) => {
   await markRead(notification.id);
-  await fetchUnreadCount();
 };
 /* ======================= 메서드 ======================= */
 </script>
