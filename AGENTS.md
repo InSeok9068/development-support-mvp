@@ -266,6 +266,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 | 제목                   | 기능             |
 | :--------------------- | :--------------- |
 | vueuse                 | Vue 유틸         |
+| es-toolkit             | JS 유틸          |
 | ag-grid-vue            | 테이블           |
 | chart.js + vue-chartjs | 차트             |
 | dayjs                  | 날짜 유틸        |
