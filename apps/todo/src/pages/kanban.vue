@@ -100,8 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import type { DevelopersResponse, WorksResponse } from '@/api/pocketbase-types.ts';
+import { Collections, type DevelopersResponse, type WorksResponse } from '@/api/pocketbase-types.ts';
 import { useCode } from '@/composables/code.ts';
+import { useRealtime } from '@/composables/realtime.ts';
 import { useSetting } from '@/composables/setting.ts';
 import { useDeveloper } from '@/composables/todo/developer.ts';
 import { useWork } from '@/composables/todo/work.ts';
@@ -111,7 +112,8 @@ import { type DraggableEvent, VueDraggable } from 'vue-draggable-plus';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const { works, fetchWorkFullList, updateWork, setWorksCache, subscribeWorks: requestSubscribe } = useWork();
+const { works, fetchWorkFullList, updateWork, setWorksCache } = useWork();
+const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
 const { developers, fetchDeveloperList } = useDeveloper();
 const { getCodesByType } = useCode();
 const { setting } = useSetting();
@@ -159,7 +161,7 @@ const onAddWork = async (event: DraggableEvent, state: string) => {
 };
 
 const subscribeWorks = async () => {
-  await requestSubscribe((e) => {
+  await subscribeRealtime((e) => {
     switch (e.action) {
       case 'update':
         if (e.record.done) {

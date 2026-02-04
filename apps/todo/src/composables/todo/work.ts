@@ -1,7 +1,6 @@
 import pb from '@/api/pocketbase';
 import { Collections, type Create, type WorksResponse } from '@/api/pocketbase-types';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { tryOnScopeDispose } from '@vueuse/core';
 import type { RecordFullListOptions, RecordListOptions } from 'pocketbase';
 import { computed, ref } from 'vue';
 
@@ -31,20 +30,10 @@ export const useWork = () => {
     page: 1,
     perPage: 20,
   });
-  let unsubscribe: (() => Promise<void>) | null = null;
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */
   /* ======================= 감시자 ======================= */
-
-  /* ======================= 생명주기 훅 ======================= */
-  tryOnScopeDispose(async () => {
-    if (unsubscribe) {
-      await unsubscribe();
-      unsubscribe = null;
-    }
-  });
-  /* ======================= 생명주기 훅 ======================= */
 
   /* ======================= 메서드 ======================= */
   const buildQueryKey = (params: WorkQueryParams) => [
@@ -173,22 +162,6 @@ export const useWork = () => {
     queryClient.setQueryData<WorksResponse[]>(worksQueryKey.value, (current = []) => updater([...current]));
   };
 
-  const subscribeWorks = async (callback: (e: { action: string; record: WorksResponse }) => void) => {
-    if (unsubscribe) {
-      await unsubscribe();
-    }
-    unsubscribe = await pb.collection(Collections.Works).subscribe('*', (e) => {
-      callback({ action: e.action, record: e.record });
-    });
-    return unsubscribe;
-  };
-
-  const unsubscribeWorks = async () => {
-    if (unsubscribe) {
-      await unsubscribe();
-      unsubscribe = null;
-    }
-  };
   /* ======================= 메서드 ======================= */
 
   return {
@@ -202,7 +175,5 @@ export const useWork = () => {
     updateWork,
     deleteWork,
     setWorksCache,
-    subscribeWorks,
-    unsubscribeWorks,
   };
 };

@@ -101,8 +101,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Collections, Create, DevelopersResponse, WorksResponse } from '@/api/pocketbase-types';
+import { Collections, type Create, type DevelopersResponse, type WorksResponse } from '@/api/pocketbase-types';
 import { useCode } from '@/composables/code';
+import { useRealtime } from '@/composables/realtime';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
@@ -123,8 +124,8 @@ const {
   updateWork,
   deleteWork,
   setWorksCache,
-  subscribeWorks: requestSubscribe,
 } = useWork();
+const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
@@ -243,7 +244,7 @@ const onClickWorkDetail = (id: string) => {
 };
 
 const subscribeWorks = async () => {
-  await requestSubscribe((e) => {
+  await subscribeRealtime((e) => {
     switch (e.action) {
       case 'create':
         setWorksCache((current) => [...current, e.record]);

@@ -1,6 +1,7 @@
 import pb from '@/api/pocketbase';
-import { Collections, type Create } from '@/api/pocketbase-types';
+import { Collections, type Create, type NotificationsResponse } from '@/api/pocketbase-types';
 import { useGlobal } from '@/composables/global';
+import { useRealtime } from '@/composables/realtime';
 import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { tryOnScopeDispose } from '@vueuse/core';
@@ -11,10 +12,10 @@ export const useNotification = () => {
   /* ======================= 변수 ======================= */
   const { global } = useGlobal();
   const { showMessageToast } = useToast();
+  const { subscribeRealtime, unsubscribeRealtime } = useRealtime<NotificationsResponse>(Collections.Notifications);
   const queryClient = useQueryClient();
   let scheduledIntervalId: number | null = null;
   let isCheckingScheduledNotifications = false;
-  let isNotificationSubscribed = false;
 
   const loadUnreadCount = async () =>
     (
@@ -43,11 +44,6 @@ export const useNotification = () => {
 
   /* ======================= 생명주기 ======================= */
   tryOnScopeDispose(() => {
-    if (isNotificationSubscribed) {
-      void pb.collection(Collections.Notifications).unsubscribe('*');
-      isNotificationSubscribed = false;
-    }
-
     if (scheduledIntervalId) {
       window.clearInterval(scheduledIntervalId);
       scheduledIntervalId = null;
@@ -67,7 +63,7 @@ export const useNotification = () => {
   const subscribeNotificationMutation = useMutation({
     mutationFn: async (on: boolean) => {
       if (on) {
-        await pb.collection(Collections.Notifications).subscribe('*', (e) => {
+        await subscribeRealtime((e) => {
           switch (e.action) {
             case 'create':
               // 브라우저 알림
@@ -82,10 +78,8 @@ export const useNotification = () => {
               global.value.notificationDot = true;
           }
         });
-        isNotificationSubscribed = true;
       } else {
-        await pb.collection(Collections.Notifications).unsubscribe('*');
-        isNotificationSubscribed = false;
+        await unsubscribeRealtime('*');
       }
     },
   });
