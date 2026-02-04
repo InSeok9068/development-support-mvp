@@ -158,6 +158,17 @@ export const useWork = () => {
   ) => updateWorkMutation.mutateAsync({ id, data, options });
   const deleteWork = (work: WorksResponse) => deleteWorkMutation.mutateAsync(work.id);
 
+  const updateWorkSortBatch = async (workList: WorksResponse[]) => {
+    const batch = pb.createBatch();
+
+    workList.forEach((work, index) => {
+      batch.collection(Collections.Works).update(work.id, { sort: index });
+    });
+
+    await batch.send();
+    await queryClient.invalidateQueries({ queryKey: ['works'] });
+  };
+
   const setWorksCache = (updater: (current: WorksResponse[]) => WorksResponse[]) => {
     queryClient.setQueryData<WorksResponse[]>(worksQueryKey.value, (current = []) => updater([...current]));
   };
@@ -174,6 +185,7 @@ export const useWork = () => {
     createWork,
     updateWork,
     deleteWork,
+    updateWorkSortBatch,
     setWorksCache,
   };
 };

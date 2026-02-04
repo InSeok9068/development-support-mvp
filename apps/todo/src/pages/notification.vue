@@ -3,18 +3,22 @@
     <article>
       <table>
         <thead>
-          <th>제목</th>
-          <th>전송일시</th>
-          <th></th>
+          <tr>
+            <th>제목</th>
+            <th>전송일시</th>
+            <th></th>
+          </tr>
         </thead>
-        <tbody v-for="(notification, index) in notifications" :key="index">
-          <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
-            {{ notification.title }}
-          </td>
-          <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
-          <td>
-            <button v-show="!notification.read" class="w-max text-xs" @click="onClickRead(notification)">읽기</button>
-          </td>
+        <tbody>
+          <tr v-for="notification in notifications" :key="notification.id">
+            <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
+              {{ notification.title }}
+            </td>
+            <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
+            <td>
+              <button v-show="!notification.read" class="w-max text-xs" @click="onClickRead(notification)">읽기</button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </article>

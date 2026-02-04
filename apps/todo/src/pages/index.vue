@@ -123,6 +123,7 @@ const {
   createWork,
   updateWork,
   deleteWork,
+  updateWorkSortBatch,
   setWorksCache,
 } = useWork();
 const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
@@ -196,12 +197,10 @@ const fetchWorkFullListFilterDeveloper = (developer: DevelopersResponse | string
   }
 };
 
-const onDropWork = () => {
-  setWorksCache((current) => current.map((item, index) => ({ ...item, sort: index })));
-
-  works.value.forEach((work, index) => {
-    updateWork(work.id, { sort: index }, { invalidateWorks: false, invalidateWork: false });
-  });
+const onDropWork = async () => {
+  const nextWorks = works.value.map((work, index) => ({ ...work, sort: index }));
+  setWorksCache(() => nextWorks);
+  await updateWorkSortBatch(nextWorks);
 };
 
 const onUpdateWorkList = (next: WorksResponse[]) => {
@@ -221,7 +220,7 @@ const onClickDeleteWork = async (work: WorksResponse) => {
   await deleteWork(work);
 };
 
-const onClickSort = () => {
+const onClickSort = async () => {
   // works.value = works.value.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   const sorted = [...works.value].sort((a, b) => {
     const aDate = a.dueDate ? new Date(a.dueDate) : null;
@@ -232,11 +231,9 @@ const onClickSort = () => {
     return aDate.getTime() - bDate.getTime();
   });
 
-  setWorksCache(() => sorted);
-
-  works.value.forEach((work, index) => {
-    updateWork(work.id, { sort: index }, { invalidateWorks: false, invalidateWork: false });
-  });
+  const sortedWorks = sorted.map((work, index) => ({ ...work, sort: index }));
+  setWorksCache(() => sortedWorks);
+  await updateWorkSortBatch(sortedWorks);
 };
 
 const onClickWorkDetail = (id: string) => {

@@ -63,15 +63,15 @@
             <fieldset>
               <legend>일감 관리자 추가</legend>
               <input id="cx" v-model="redmineData.watchers" type="checkbox" name="assigned" value="cx" />
-              <label htmlFor="cx">CX팀</label>
-              <input id="dev" v-model="redmineData.watchers" type="checkbox" name="assigned" value="server" />
-              <label htmlFor="dev">개발팀(서버)</label>
-              <input id="dev" v-model="redmineData.watchers" type="checkbox" name="assigned" value="client" />
-              <label htmlFor="dev">개발팀(클라이언트)</label>
+              <label for="cx">CX팀</label>
+              <input id="server" v-model="redmineData.watchers" type="checkbox" name="assigned" value="server" />
+              <label for="server">개발팀(서버)</label>
+              <input id="client" v-model="redmineData.watchers" type="checkbox" name="assigned" value="client" />
+              <label for="client">개발팀(클라이언트)</label>
               <input id="biz" v-model="redmineData.watchers" type="checkbox" name="assigned" value="biz" />
-              <label htmlFor="biz">사업팀</label>
+              <label for="biz">사업팀</label>
               <input id="manager" v-model="redmineData.watchers" type="checkbox" name="assigned" value="manager" />
-              <label htmlFor="manager">관리자</label>
+              <label for="manager">관리자</label>
             </fieldset>
             <label>
               시작일자

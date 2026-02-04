@@ -14,7 +14,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import type { DateClickArg } from '@fullcalendar/interaction/index.js';
 import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
-import { onBeforeMount, onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
@@ -31,29 +31,25 @@ const calendarOption = ref<CalendarOptions>({
   eventDidMount: onDidMountEvent,
   events: [],
 });
-let syncEventTimer: number | null = null;
 /* ======================= 변수 ======================= */
 
-/* ======================= 생명주기 훅 ======================= */
-onBeforeMount(() => {
-  fetchWorkFullList();
-});
-
-onMounted(() => {
-  syncEventTimer = window.setTimeout(() => {
-    calendarOption.value.events = works.value.map((work) => ({
+/* ======================= 감시자 ======================= */
+watch(
+  works,
+  (currentWorks) => {
+    calendarOption.value.events = currentWorks.map((work) => ({
       id: work.id,
       title: work.title,
       date: dayjs(work.dueDate).format('YYYY-MM-DD'),
     }));
-  }, 100);
-});
+  },
+  { immediate: true },
+);
+/* ======================= 감시자 ======================= */
 
-onUnmounted(() => {
-  if (syncEventTimer) {
-    window.clearTimeout(syncEventTimer);
-    syncEventTimer = null;
-  }
+/* ======================= 생명주기 훅 ======================= */
+onBeforeMount(() => {
+  fetchWorkFullList();
 });
 /* ======================= 생명주기 훅 ======================= */
 
