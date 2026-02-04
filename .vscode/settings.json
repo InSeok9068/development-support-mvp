@@ -3,17 +3,16 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
-  /* Open Props 자동완성 */
   "cssvar.files": ["node_modules/open-props/open-props.min.css"],
   "cssvar.ignore": [],
-  "cssvar.extensions": ["css", "vue", "ts", "postcss"],
-  /* Open Props 자동완성 */
+  "cssvar.extensions": ["css", "vue", "ts"],
   "css.styleSheets": ["node_modules/@picocss/pico/css/pico.min.css", "**/style.css"],
+  "tailwindCSS.lint.usedBlocklistedClass": "ignore",
+  "iconify.inplace": false,
   "explorer.fileNesting.patterns": {
     "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml"
   },
   "code-runner.executorMap": {
     "typescript": "tsx"
-  },
-  "tailwindCSS.lint.usedBlocklistedClass": "ignore"
+  }
 }
