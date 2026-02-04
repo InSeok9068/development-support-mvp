@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import type { DevelopersResponse } from '@/api/pocketbase-types';
 import type { UiDeveloperArgs } from '@/ui/todo.ui';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep } from 'es-toolkit';
 
 /* ======================= 변수 ======================= */
 const developerArgs = defineModel<UiDeveloperArgs>('developerArgs', { required: true });
