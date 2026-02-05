@@ -40,36 +40,22 @@ firebase deploy
 
 ---
 
-## 프로젝트 컨벤션
-
-### Vue SFC 선언 구분자
-
-```js
-// 순서
-/* ======================= 변수 ======================= */
-/* ======================= 감시자 ======================= */
-/* ======================= 생명주기 훅 ======================= */
-/* ======================= 메서드 ======================= */
-```
-
----
-
 ## 라이브러리 옵션
 
 ### 1. 프론트엔드
 
 #### UI
 
-| 제목         | 기능                      |
-| :----------- | :------------------------ |
-| picocss      | Minimal CSS Framework ⭐  |
-| primevue     | UI Component Framework ⭐ |
-| shacdn/vue   | UI Component Framework    |
-| element-plus | UI Component Framework    |
-| bootstrap    | CSS Framework             |
-| bulma        | CSS Framework             |
-| daisyui      | CSS Framework             |
-| open-props   | CSS Variables             |
+| 제목       | 기능                      |
+| :--------- | :------------------------ |
+| picocss    | Minimal CSS Framework ⭐  |
+| primevue   | UI Component Framework ⭐ |
+| shacdn/vue | UI Component Framework    |
+| beercss    | CSS Framework ⭐          |
+| bootstrap  | CSS Framework             |
+| bulma      | CSS Framework             |
+| daisyui    | CSS Framework             |
+| open-props | CSS Variables             |
 
 **※ 고려사항** </br>
 
@@ -87,6 +73,8 @@ firebase deploy
 
 | 제목                   | 기능             |
 | :--------------------- | :--------------- |
+| vueuse                 | Vue 유틸         |
+| es-toolkit             | JS 유틸          |
 | ag-grid-vue            | 테이블           |
 | chart.js + vue-chartjs | 차트             |
 | dayjs                  | 날짜 유틸        |
@@ -97,43 +85,14 @@ firebase deploy
 | turndown               | HTML To Markdown |
 | validator              | 문자열 검증      |
 
-### 2. 백엔드
-
-#### CLI
-
-| 제목        | 기능              |
-| :---------- | :---------------- |
-| cobra       | CLI Framework     |
-| survey      | 대화형 인터페이스 |
-| clipboard   | 클립보드          |
-| spinner     | 스피너            |
-| bubbletea   | TUI Framework     |
-| bubbles     | TUI Framework (+) |
-| glamour     | 마크다운 렌더링   |
-| lipgloss    | 문자열 렌더링     |
-| color       | 문자열 색상       |
-| termui      | TUI 렌더링        |
-| tablewriter | 테이블            |
-| progressbar | 프로그레스바      |
-
-#### Util
-
-| 제목          | 기능            |
-| :------------ | :-------------- |
-| viper         | 설정 관리       |
-| chromedp      | Chrome Testing  |
-| playwright-go | Browser Testing |
-| colly         | Scraping        |
-
-### 3. 추가 검토 라이브러리
+### 2. 추가 검토 라이브러리
 
 #### Util (프론트엔드)
 
-| 제목               | 기능                   |
-| :----------------- | :--------------------- |
-| tanstack/vue-query | 서버 상태관리 (+ 캐싱) |
-| zod                | 스키마 검증 (옵션1)    |
-| typebox            | 스키마 검증 (옵션2)    |
-| typia              | 스키마 검증 (옵션3)    |
-| vee-validate       | 폼 입력 검증 컴포지션  |
-| formkit            | 폼 입력 검증 + UI      |
+| 제목         | 기능                  |
+| :----------- | :-------------------- |
+| zod          | 스키마 검증 (옵션1)   |
+| typebox      | 스키마 검증 (옵션2)   |
+| typia        | 스키마 검증 (옵션3)   |
+| vee-validate | 폼 입력 검증 컴포지션 |
+| formkit      | 폼 입력 검증 + UI     |
