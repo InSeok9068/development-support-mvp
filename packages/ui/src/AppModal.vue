@@ -1,6 +1,6 @@
 <template>
   <Transition name="modal">
-    <dialog v-show="modal.show" id="modal" open>
+    <dialog v-show="modal.show" id="modal" open @click.self="onClickModalBackdrop">
       <article>
         <header>
           <button aria-label="Close" rel="prev" data-target="modal" @click="clearModal"></button>
@@ -18,7 +18,15 @@
 <script setup lang="ts">
 import { useModal } from './composables/modal';
 
+/* ======================= 변수 ======================= */
 const { modal, clearModal } = useModal();
+/* ======================= 변수 ======================= */
+
+/* ======================= 메서드 ======================= */
+const onClickModalBackdrop = () => {
+  clearModal();
+};
+/* ======================= 메서드 ======================= */
 </script>
 
 <style scoped>
