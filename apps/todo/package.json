@@ -13,6 +13,6 @@
     "lint:format": "prettier --write ."
   },
   "dependencies": {
-    "@packages/ui": "workspace:*"
+    "@packages": "workspace:*"
   }
 }

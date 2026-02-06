@@ -4,8 +4,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "@packages/ui": ["../../packages/ui/src/index.ts"],
-      "@packages/ui/*": ["../../packages/ui/src/*"]
+      "@packages/ui": ["../../packages/src/ui/index.ts"],
+      "@packages/auth": ["../../packages/src/auth/index.ts"]
     }
   }
 }

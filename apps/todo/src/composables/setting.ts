@@ -1,7 +1,7 @@
 import pb from '@/api/pocketbase';
 import { Collections, type SettingsResponse } from '@/api/pocketbase-types';
-import { type SettingJson, useSettingStore } from '@/stores/setting.store';
 import { useSign } from '@/composables/user/sign';
+import { type SettingJson, useSettingStore } from '@/stores/setting.store';
 import { useModal } from '@packages/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { storeToRefs } from 'pinia';
