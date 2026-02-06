@@ -1,46 +1,75 @@
 <template>
-  <main class="container">
-    <article>
-      <div class="grid grid-cols-[auto_auto_1fr_auto]">
-        <h5 class="font-bold text-red-500">관리되고 있는 TODO가 10개가 넘지 않도록!!</h5>
-        <h5 :class="{ 'animate-pulse': works.length > 10 }">현재 {{ works.length }}개</h5>
-        <div></div>
-        <h6>
-          <i class="bi-sort-up cursor-pointer" @click="onClickSort"> 마감일자 순 재정렬 </i>
-        </h6>
-      </div>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 class="font-semibold tracking-tight">오늘의 업무</h4>
+            <div class="flex items-center gap-3 text-sm text-slate-500">
+              <span :class="{ 'font-semibold text-red-500': works.length > 10, 'animate-pulse': works.length > 10 }">
+                현재 {{ works.length }}개
+              </span>
+              <span class="hidden sm:inline">관리되고 있는 TODO가 10개가 넘지 않도록!!</span>
+            </div>
+          </div>
+          <sl-button variant="default" size="small" @click="onClickSort">
+            <i class="bi-sort-up mr-2"></i>
+            마감일자 순 재정렬
+          </sl-button>
+        </div>
 
-      <div class="mb-3 flex gap-2">
-        <button class="w-full" :class="{ outline: selectDeveloper !== 'ALL' }" @click="onClickSelectDeveloper('ALL')">
-          ALL
-        </button>
-        <button class="w-full" :class="{ outline: selectDeveloper !== '' }" @click="onClickSelectDeveloper('')">
-          미배정
-        </button>
-        <template v-for="developer in developers" :key="developer.id">
-          <button
-            class="w-full"
-            :class="{ outline: (selectDeveloper as DevelopersResponse)?.id !== developer.id }"
-            @click="onClickSelectDeveloper(developer)"
-          >
-            {{ developer.name }}
-          </button>
-        </template>
-      </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span>담당자 필터</span>
+            <span>{{ developers.length }}명</span>
+          </div>
+          <sl-button-group class="w-full">
+            <sl-button
+              class="w-full"
+              :variant="selectDeveloper !== 'ALL' ? 'default' : 'primary'"
+              @click="onClickSelectDeveloper('ALL')"
+            >
+              ALL
+            </sl-button>
+            <sl-button
+              class="w-full"
+              :variant="selectDeveloper !== '' ? 'default' : 'primary'"
+              @click="onClickSelectDeveloper('')"
+            >
+              미배정
+            </sl-button>
+            <template v-for="developer in developers" :key="developer.id">
+              <sl-button
+                class="w-full"
+                :variant="(selectDeveloper as DevelopersResponse)?.id !== developer.id ? 'default' : 'primary'"
+                @click="onClickSelectDeveloper(developer)"
+              >
+                {{ developer.name }}
+              </sl-button>
+            </template>
+          </sl-button-group>
+        </div>
 
-      <form id="workArgsForm">
-        <fieldset role="group">
-          <input
-            v-model="workArgs.title"
-            name="title"
-            :aria-invalid="validator.invalid('title')"
-            @input="onInputWorkTitle"
-            @keydown.stop.prevent.enter="onClickCreateWork"
-          />
-          <input type="button" value="등록" @click="onClickCreateWork" />
-        </fieldset>
-        <small v-show="validator.show('title')" class="font-bold">{{ validator.message('title') }}</small>
-      </form>
+        <form id="workArgsForm" class="rounded-lg border border-slate-200 bg-white p-3">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <sl-input
+              v-model="workArgs.title"
+              class="w-full"
+              name="title"
+              placeholder="할 일을 입력하세요"
+              :aria-invalid="validator.invalid('title')"
+              @input="onInputWorkTitle"
+              @keydown.stop.prevent.enter="onClickCreateWork"
+            />
+            <sl-button class="w-full sm:w-28" variant="primary" type="button" @click="onClickCreateWork">
+              등록
+            </sl-button>
+          </div>
+          <small v-show="validator.show('title')" class="font-bold text-red-500">{{
+            validator.message('title')
+          }}</small>
+        </form>
+      </div>
       <VueDraggable
         v-model="works"
         target=".sort-target"
@@ -50,53 +79,61 @@
         @update:model-value="onUpdateWorkList"
         @end="onDropWork"
       >
-        <TransitionGroup tag="ul" name="list" class="sort-target">
-          <li v-for="work in works" :key="work.id" class="mb-3 sm:mb-5">
-            <h6 class="max-w-150 overflow-hidden text-ellipsis whitespace-nowrap">
-              <input type="checkbox" @click.stop.prevent="onClickDoneWork(work)" />
-              <a class="cursor-pointer" draggable="false" @click="onClickWorkDetail(work.id)">
-                {{ work.title }}
-              </a>
-              <i class="bi-trash ml-3 cursor-pointer" @click="onClickDeleteWork(work)"></i>
-            </h6>
-
-            <div class="grid">
-              <label>
-                개발자 :
-                <span>
-                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-                </span>
-              </label>
-              <label>
-                상태 :
-                <span>
-                  <i :class="getCodeClass('workState', work.state)"></i>
-                  {{ getCodeDesc('workState', work.state) }}
-                </span>
-              </label>
-              <label class="hidden sm:block">
-                등록일자 :
-                <span>
-                  {{ dayjs(work.created).format('YYYY-MM-DD') }}
-                </span>
-              </label>
-              <label
-                :class="{
-                  'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                    dayjs().add(setting.daysBefore, 'd'),
-                  ),
-                }"
-              >
-                마감일자 :
-                <span>
-                  {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-                </span>
-              </label>
+        <TransitionGroup tag="ul" name="list" class="sort-target mt-4 space-y-3 sm:space-y-4">
+          <li
+            v-for="work in works"
+            :key="work.id"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-slate-300 hover:shadow"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex items-center gap-3">
+                  <sl-checkbox @click.stop.prevent="onClickDoneWork(work)"></sl-checkbox>
+                  <h6 class="max-w-150 overflow-hidden font-semibold text-ellipsis whitespace-nowrap">
+                    <a class="cursor-pointer" draggable="false" @click="onClickWorkDetail(work.id)">
+                      {{ work.title }}
+                    </a>
+                  </h6>
+                </div>
+                <div class="mt-2 grid gap-y-2 text-xs text-slate-600 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="min-w-15 font-semibold text-slate-500">개발자</span>
+                    <span class="text-right">
+                      {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="min-w-15 font-semibold text-slate-500">상태</span>
+                    <span class="text-right">
+                      <i :class="getCodeClass('workState', work.state)"></i>
+                      {{ getCodeDesc('workState', work.state) }}
+                    </span>
+                  </div>
+                  <div class="hidden items-center justify-between gap-3 sm:flex">
+                    <span class="min-w-15 font-semibold text-slate-500">등록일자</span>
+                    <span class="text-right">{{ dayjs(work.created).format('YYYY-MM-DD') }}</span>
+                  </div>
+                  <div
+                    class="flex items-center justify-between gap-3"
+                    :class="{
+                      'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                        dayjs().add(setting.daysBefore, 'd'),
+                      ),
+                    }"
+                  >
+                    <span class="min-w-15 font-semibold text-slate-500">마감일자</span>
+                    <span class="text-right">{{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}</span>
+                  </div>
+                </div>
+              </div>
+              <sl-button size="small" variant="text" @click="onClickDeleteWork(work)">
+                <i class="bi-trash text-slate-500"></i>
+              </sl-button>
             </div>
           </li>
         </TransitionGroup>
       </VueDraggable>
-    </article>
+    </sl-card>
   </main>
 </template>
 
