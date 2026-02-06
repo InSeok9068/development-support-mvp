@@ -87,62 +87,49 @@
               </div>
               <div class="grid gap-3">
                 <sl-input v-model="work.redmine" type="url" placeholder="레드마인 URL"></sl-input>
-                <details v-show="work.redmine">
-                  <summary role="button" class="outline" @click="onClickSelectRedmineData">레드마인 더보기</summary>
-                  <article>
-                    <fieldset>
-                      <legend>일감 관리자 추가</legend>
-                      <input id="cx" v-model="redmineData.watchers" type="checkbox" name="assigned" value="cx" />
-                      <label for="cx">CX팀</label>
-                      <input
-                        id="server"
-                        v-model="redmineData.watchers"
-                        type="checkbox"
-                        name="assigned"
-                        value="server"
-                      />
-                      <label for="server">개발팀(서버)</label>
-                      <input
-                        id="client"
-                        v-model="redmineData.watchers"
-                        type="checkbox"
-                        name="assigned"
-                        value="client"
-                      />
-                      <label for="client">개발팀(클라이언트)</label>
-                      <input id="biz" v-model="redmineData.watchers" type="checkbox" name="assigned" value="biz" />
-                      <label for="biz">사업팀</label>
-                      <input
-                        id="manager"
-                        v-model="redmineData.watchers"
-                        type="checkbox"
-                        name="assigned"
-                        value="manager"
-                      />
-                      <label for="manager">관리자</label>
-                    </fieldset>
-                    <label>
-                      시작일자
-                      <input v-model="redmineData.startDate" type="date" />
-                    </label>
-                    <label>
-                      종료일자
-                      <input v-model="redmineData.dueDate" type="date" />
-                    </label>
-                    <label>
-                      진척도 <span class="font-bold" v-text="redmineData.doneRatio"></span>%
-                      <input v-model="redmineData.doneRatio" type="range" min="0" max="100" step="10" />
-                    </label>
-                    <label>
-                      댓글 작성
-                      <sl-textarea v-model="redmineData.notes" resize="auto"></sl-textarea>
-                    </label>
-                    <div role="group">
+                <sl-details v-show="work.redmine" summary="레드마인 더보기">
+                  <div class="mt-3 flex flex-col gap-4">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-600">
+                        <sl-icon name="people"></sl-icon>
+                        일감 관리자 추가
+                      </div>
+                      <div class="flex flex-wrap gap-3">
+                        <sl-checkbox v-model="redmineData.watchers" value="cx">CX팀</sl-checkbox>
+                        <sl-checkbox v-model="redmineData.watchers" value="server">개발팀(서버)</sl-checkbox>
+                        <sl-checkbox v-model="redmineData.watchers" value="client">개발팀(클라이언트)</sl-checkbox>
+                        <sl-checkbox v-model="redmineData.watchers" value="biz">사업팀</sl-checkbox>
+                        <sl-checkbox v-model="redmineData.watchers" value="manager">관리자</sl-checkbox>
+                      </div>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                      <sl-input v-model="redmineData.startDate" type="date" label="시작일자"></sl-input>
+                      <sl-input v-model="redmineData.dueDate" type="date" label="종료일자"></sl-input>
+                    </div>
+
+                    <div class="rounded-lg border border-slate-200 bg-white p-3">
+                      <div class="mb-2 flex items-center justify-between text-sm">
+                        <span class="font-semibold">진척도</span>
+                        <sl-tag size="small">{{ redmineData.doneRatio }}%</sl-tag>
+                      </div>
+                      <sl-range
+                        :value="redmineData.doneRatio"
+                        :min="0"
+                        :max="100"
+                        :step="10"
+                        @sl-change="onChangeRedmineDoneRatio"
+                      ></sl-range>
+                    </div>
+
+                    <sl-textarea v-model="redmineData.notes" label="댓글 작성" resize="auto"></sl-textarea>
+
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                       <sl-button size="small" variant="default" @click="onClickSelectRedmineData">불러오기</sl-button>
                       <sl-button size="small" variant="primary" @click="onClickUpdateRedmineData">업데이트</sl-button>
                     </div>
-                  </article>
-                </details>
+                  </div>
+                </sl-details>
               </div>
             </div>
 
@@ -456,6 +443,11 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
 const onClickSelectRedmineData = () => selectRedmineData();
 
 const onClickUpdateRedmineData = () => updateRedmineData();
+
+const onChangeRedmineDoneRatio = (event: Event) => {
+  const target = event.target as HTMLInputElement | null;
+  redmineData.value.doneRatio = Number(target?.value ?? 0);
+};
 
 const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;
