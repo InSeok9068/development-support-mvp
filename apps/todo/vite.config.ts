@@ -13,7 +13,13 @@ export default defineConfig({
   plugins: [
     VueRouter(),
     VueDevTools(),
-    Vue(),
+    Vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('sl-'),
+        },
+      },
+    }),
     Components({
       dirs: ['src/components/app'],
       dts: true,
