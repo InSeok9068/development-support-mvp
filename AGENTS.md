@@ -42,10 +42,12 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     │  ├─ stores/                 # 전역 상태 관리
   │     │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
   │     │
-  │     ├─ pb_hooks/                 # PocketBase hooks (Go / JS)
+  │     ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
   │
-  ├─ packages/                         # 재사용 패키지 영역
-  │  └─ ui/                            # UI 템플릿 / 컴포넌트 패키지
+  ├─ packages/                        # 재사용 패키지 영역
+  |  ├─ src
+  │  │  └─ ui/                        # 공용 UI
+  │  │  └─ auth/                      # 공용 인증
   ```
 
 ### MVP 서비스 목록
