@@ -67,22 +67,55 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 ### UI(Shoelace) & Tailwind 사용 가이드
 
-- Shoelace 우선 원칙
-  - UI는 Shoelace 컴포넌트 및 내장 옵션(props/attributes, slots, CSS parts, events) 을 1순위로 활용한다.
-  - Vue에서 따로 컴포넌트를 감싸서 기능을 재구현하기 전에, Shoelace 공식 옵션으로 해결 가능한지 먼저 검토한다.
-  - 단순한 요구사항(버튼 상태/로딩, validation 표시, tooltip, dialog, dropdown, input 부가 기능 등)은
-    추가 라이브러리/커스텀 구현보다 Shoelace 기본 제공 기능을 우선한다.
+#### 1. Shoelace 우선 원칙 (절대 기준)
 
-- 불필요한 래핑/재구현 지양
-  - Shoelace 컴포넌트를 Vue 컴포넌트로 과도하게 래핑하거나, 동일 기능을 Vue로 다시 만드는 것을 지양한다.
+- UI 구현 시 Shoelace 컴포넌트 사용을 절대 우선한다.
+- Shoelace에 대응되는 컴포넌트가 존재하는 경우,
+  기본 HTML 태그(input, button, select, textarea 등)를 직접 사용하지 않는다.
+- Shoelace에 대응되는 컴포넌트가 존재하지 않는 경우에만
+  기본 HTML + Tailwind 조합을 예외적으로 허용한다.
+- Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에,
+  반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
 
-- Tailwind 역할 한정
-  - Tailwind는 레이아웃/간격/정렬/반응형 중심으로 사용하고, 컴포넌트 기능/상호작용은 Shoelace로 해결한다.
+#### 2. UI 동작 구현 판단 순서 (필수 준수)
 
-- Shoelace Icon 남발 금지
-  - Shoelace Icon은 아이콘 표현 목적에만 사용한다. (장식용 남발 금지)
+UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
-- 추가적인 CSS 설계나 커스텀 스타일은 최소화한다.
+1. Shoelace 공식 API
+   - props / attributes
+   - slots
+   - events
+
+2. Shoelace 컴포넌트 조합
+   - 여러 Shoelace 컴포넌트를 조합하여 해결
+
+3. Vue / JavaScript 로직
+   - 위 방식으로 해결이 불가능한 경우에만 사용
+
+4. 커스텀 UI 구현
+   - 위 모든 방법이 불가능한 경우에만 검토
+
+#### 3. 불필요한 래핑 / 재구현 금지
+
+- Shoelace 컴포넌트를 Vue 컴포넌트로 과도하게 래핑하지 않는다.
+- Shoelace가 이미 제공하는 기능을 Vue 또는 JavaScript로 동일하게 다시 구현하지 않는다.
+
+#### 4. Tailwind 사용 범위 제한
+
+- Tailwind CSS는 레이아웃 / 간격 / 정렬 / 반응형 조정 용도로만 사용한다.
+- Shoelace 컴포넌트의 기능, 동작, 시각적 표현을 대체하거나 강화하기 위해
+  Tailwind를 사용하는 것을 금지한다.
+- 더 예뻐 보이게 하기 위한 목적의 Tailwind 클래스 남발을 허용하지 않는다.
+
+#### 5. Shoelace Icon 사용 기준
+
+- Shoelace Icon은 의미 전달을 위한 아이콘 표현 목적으로만 사용한다.
+- 장식 목적의 아이콘 남발을 금지한다.
+
+#### 6. 커스텀 스타일 최소화
+
+- 추가적인 CSS 설계 및 커스텀 스타일은 최소화한다.
+- 명확한 필요성과 근거 없이 스타일을 추가하지 않는다.
 
 ---
 
