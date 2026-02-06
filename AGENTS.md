@@ -19,7 +19,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 - 언어 : TypeScript
 - 프론트엔드 프레임워크 : Vue 3 (Composition API + Script Setup)
-- CSS 라이브러리 : Pico CSS + Tailwind CSS + Bootstrap Icons
+- CSS 라이브러리 : Shoelace(Web Component) + Tailwind CSS (Layout Utility) + Shoelace icon (Bootstrap Icons)
 - 백엔드 BaaS 서비스 : PocketBase
 - 데이터 CRUD : Tanstack Query
 - 상태관리 : Pinia
@@ -65,11 +65,23 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 ---
 
-### CSS 라이브러리 사용 가이드
+### UI(Shoelace) & Tailwind 사용 가이드
 
-- Pico CSS의 Semantic HTML만 활용하여 Agent는 화면을 구성한다.
-- Agent는 Pico CSS의 공식 문서에 명시된 소수의 보조 클래스만 제한적으로 사용할 수 있다.
-- Bootstrap Icons는 아이콘 표현 목적에만 사용한다. (장식용 남발 금지)
+- Shoelace 우선 원칙
+  - UI는 Shoelace 컴포넌트 및 내장 옵션(props/attributes, slots, CSS parts, events) 을 1순위로 활용한다.
+  - Vue에서 따로 컴포넌트를 감싸서 기능을 재구현하기 전에, Shoelace 공식 옵션으로 해결 가능한지 먼저 검토한다.
+  - 단순한 요구사항(버튼 상태/로딩, validation 표시, tooltip, dialog, dropdown, input 부가 기능 등)은
+    추가 라이브러리/커스텀 구현보다 Shoelace 기본 제공 기능을 우선한다.
+
+- 불필요한 래핑/재구현 지양
+  - Shoelace 컴포넌트를 Vue 컴포넌트로 과도하게 래핑하거나, 동일 기능을 Vue로 다시 만드는 것을 지양한다.
+
+- Tailwind 역할 한정
+  - Tailwind는 레이아웃/간격/정렬/반응형 중심으로 사용하고, 컴포넌트 기능/상호작용은 Shoelace로 해결한다.
+
+- Shoelace Icon 남발 금지
+  - Shoelace Icon은 아이콘 표현 목적에만 사용한다. (장식용 남발 금지)
+
 - 추가적인 CSS 설계나 커스텀 스타일은 최소화한다.
 
 ---
@@ -311,10 +323,12 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
 - Composable에서 Mutation 객체(`useMutation` 결과)를 그대로 반환하지 않는다. (반드시 함수로 래핑하여 반환)
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
-- Tailwind CSS 클래스는 Agent가 추가/수정/삭제/이동/치환하지 않는다. (사용 여부 판단 포함)
+- Tailwind CSS 사용 시 레이아웃/간격/정렬/반응형 중심으로 사용한다.
+- Tailwind CSS 사용 시 시각적 장식(과도한 색/그라데이션/그림자/애니메이션) 목적의 클래스 남발을 금지한다.
+- 단일 요소에 Tailwind class가 과도하게 누적되는 경우가 없도록 한다. (예: 20개 이상)
+- class 구조 변경은 허용하되, '의미 없는 미관 개선'을 목적으로 한 대규모 class 재정렬/치환은 금지한다.
+- Shoelace 컴포넌트로 가능한 UI를 Tailwind로 재구현하지 않는다.
 - SFC `<style scoped>`는 Agent가 추가/수정/삭제하지 않는다.
-- 기존 CSS 클래스명과 class 속성 구조는 변경하지 않는다.
-- 단, class 속성이 없던 요소에 한해 Pico 공식 보조 클래스 추가는 허용한다.
 - try/catch로 가로채지 않는다. 이미 `initPocketbase`에 구현된 전역 핸들러를 신뢰한다.
 - try/catch 예외가 필요한 경우 사유/범위/대안/영향을 명시하고 사전 합의를 거친다.
 - 명시적 요청 없이 구조 개선 또는 리팩터링을 제안하거나 수행하지 않는다.

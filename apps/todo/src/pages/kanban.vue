@@ -1,101 +1,164 @@
 <template>
-  <main class="container">
-    <div class="grid">
-      <template v-for="code in workStateCodesStep1" :key="code.value">
-        <VueDraggable
-          group="works"
-          target=".sort-target-1"
-          :model-value="getWorksByState(code.value)"
-          :touch-start-threshold="3"
-          :delay-on-touch-only="true"
-          :delay="100"
-          :animation="300"
-          @add="onAddWork($event, code.value)"
-          @update:model-value="onUpdateWorkList(code.value, $event)"
-        >
-          <TransitionGroup tag="article" name="list" class="sort-target-1 overflow-auto md:max-h-200 md:min-h-200">
-            <h4>
-              <i class="mr-1" :class="code.class"></i>
-              {{ code.desc }}
-            </h4>
-            <template v-for="work in getWorksByState(code.value)" :key="work.id">
-              <article class="p-3" :data-id="work.id">
-                <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
-                  {{ work.title }}
-                </a>
-                <hr />
-                <p class="text-sm">
-                  개발자 :
-                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-                </p>
-                <p
-                  v-show="work.dueDate"
-                  class="text-sm"
-                  :class="{
-                    'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                      dayjs().add(setting.daysBefore, 'd'),
-                    ),
-                  }"
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-semibold">칸반 보드</h3>
+          <sl-tag size="small" variant="neutral">실시간 업무 흐름</sl-tag>
+        </div>
+        <div class="text-xs text-slate-500">드래그로 상태 이동</div>
+      </div>
+
+      <section class="flex flex-col gap-6">
+        <div class="flex gap-4 overflow-x-auto pb-2">
+          <template v-for="code in workStateCodesStep1" :key="code.value">
+            <sl-card class="min-w-72 w-72 flex-shrink-0">
+              <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+              <div slot="header">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <i class="text-base" :class="code.class"></i>
+                    <span class="text-sm font-semibold">{{ code.desc }}</span>
+                  </div>
+                  <sl-badge pill>
+                    {{ getWorksByState(code.value).length }}
+                  </sl-badge>
+                </div>
+              </div>
+              <VueDraggable
+                group="works"
+                target=".sort-target-1"
+                :model-value="getWorksByState(code.value)"
+                :touch-start-threshold="3"
+                :delay-on-touch-only="true"
+                :delay="100"
+                :animation="300"
+                @add="onAddWork($event, code.value)"
+                @update:model-value="onUpdateWorkList(code.value, $event)"
+              >
+                <TransitionGroup
+                  tag="div"
+                  name="list"
+                  class="sort-target-1 flex max-h-200 min-h-200 flex-col gap-3 overflow-auto"
                 >
-                  마감일자 :
-                  <span>
-                    {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-                  </span>
-                </p>
-              </article>
-            </template>
-          </TransitionGroup>
-        </VueDraggable>
-      </template>
-    </div>
-    <hr />
-    <div class="grid">
-      <template v-for="code in workStateCodesStep2" :key="code.value">
-        <VueDraggable
-          group="works"
-          target=".sort-target-2"
-          :model-value="getWorksByState(code.value)"
-          :touch-start-threshold="3"
-          :delay-on-touch-only="true"
-          :delay="100"
-          :animation="300"
-          @add="onAddWork($event, code.value)"
-          @update:model-value="onUpdateWorkList(code.value, $event)"
-        >
-          <TransitionGroup tag="article" name="list" class="sort-target-2 overflow-auto md:max-h-200 md:min-h-200">
-            <h4>
-              <i class="mr-1" :class="code.class"></i>
-              {{ code.desc }}
-            </h4>
-            <template v-for="work in getWorksByState(code.value)" :key="work.id">
-              <article class="p-3" :data-id="work.id">
-                <a class="cursor-pointer text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
-                  {{ work.title }}
-                </a>
-                <hr />
-                <p class="text-sm">
-                  개발자 :
-                  {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
-                </p>
-                <p
-                  class="text-sm"
-                  :class="{
-                    'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                      dayjs().add(setting.daysBefore, 'd'),
-                    ),
-                  }"
+                  <template v-for="work in getWorksByState(code.value)" :key="work.id">
+                    <sl-card class="cursor-pointer" :data-id="work.id">
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                          <a class="block text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
+                            {{ work.title }}
+                          </a>
+                          <div class="mt-2 text-xs text-slate-600">
+                            개발자 :
+                            {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                          </div>
+                          <div
+                            v-show="work.dueDate"
+                            class="mt-2 text-xs"
+                            :class="{
+                              'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                                dayjs().add(setting.daysBefore, 'd'),
+                              ),
+                            }"
+                          >
+                            마감일자 :
+                            <sl-tag size="small">
+                              {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
+                            </sl-tag>
+                          </div>
+                        </div>
+                        <sl-icon name="grip-vertical" class="text-slate-400"></sl-icon>
+                      </div>
+                    </sl-card>
+                  </template>
+                  <div
+                    v-if="getWorksByState(code.value).length === 0"
+                    :key="`empty-${code.value}`"
+                    class="py-6 text-center text-xs text-slate-400"
+                  >
+                    아직 할 일이 없습니다
+                  </div>
+                </TransitionGroup>
+              </VueDraggable>
+            </sl-card>
+          </template>
+        </div>
+
+        <div class="flex gap-4 overflow-x-auto pb-2">
+          <template v-for="code in workStateCodesStep2" :key="code.value">
+            <sl-card class="min-w-72 w-72 flex-shrink-0">
+              <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+              <div slot="header">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <i class="text-base" :class="code.class"></i>
+                    <span class="text-sm font-semibold">{{ code.desc }}</span>
+                  </div>
+                  <sl-badge pill>
+                    {{ getWorksByState(code.value).length }}
+                  </sl-badge>
+                </div>
+              </div>
+              <VueDraggable
+                group="works"
+                target=".sort-target-2"
+                :model-value="getWorksByState(code.value)"
+                :touch-start-threshold="3"
+                :delay-on-touch-only="true"
+                :delay="100"
+                :animation="300"
+                @add="onAddWork($event, code.value)"
+                @update:model-value="onUpdateWorkList(code.value, $event)"
+              >
+                <TransitionGroup
+                  tag="div"
+                  name="list"
+                  class="sort-target-2 flex max-h-200 min-h-200 flex-col gap-3 overflow-auto"
                 >
-                  마감일자 :
-                  <span>
-                    {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
-                  </span>
-                </p>
-              </article>
-            </template>
-          </TransitionGroup>
-        </VueDraggable>
-      </template>
-    </div>
+                  <template v-for="work in getWorksByState(code.value)" :key="work.id">
+                    <sl-card class="cursor-pointer" :data-id="work.id">
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                          <a class="block text-sm font-semibold" @click.stop.prevent="onClickWorkDetail(work.id)">
+                            {{ work.title }}
+                          </a>
+                          <div class="mt-2 text-xs text-slate-600">
+                            개발자 :
+                            {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                          </div>
+                          <div
+                            v-show="work.dueDate"
+                            class="mt-2 text-xs"
+                            :class="{
+                              'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
+                                dayjs().add(setting.daysBefore, 'd'),
+                              ),
+                            }"
+                          >
+                            마감일자 :
+                            <sl-tag size="small">
+                              {{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}
+                            </sl-tag>
+                          </div>
+                        </div>
+                        <sl-icon name="grip-vertical" class="text-slate-400"></sl-icon>
+                      </div>
+                    </sl-card>
+                  </template>
+                  <div
+                    v-if="getWorksByState(code.value).length === 0"
+                    :key="`empty-${code.value}`"
+                    class="py-6 text-center text-xs text-slate-400"
+                  >
+                    아직 할 일이 없습니다
+                  </div>
+                </TransitionGroup>
+              </VueDraggable>
+            </sl-card>
+          </template>
+        </div>
+      </section>
+    </sl-card>
   </main>
 </template>
 
