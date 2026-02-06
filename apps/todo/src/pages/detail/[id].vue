@@ -1,176 +1,247 @@
 <template>
-  <main class="container">
-    <article>
-      <nav>
-        <ul>
-          <li>
-            <h4>제목</h4>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <h4><i class="bi-floppy cursor-pointer" @click="onClickUpdate()"></i></h4>
-          </li>
-          <li>
-            <h4><i class="bi-trash cursor-pointer" @click="onClickDelete()"></i></h4>
-          </li>
-        </ul>
-      </nav>
-
-      <input v-model="work.title" class="text-lg sm:text-2xl" />
-
-      <div class="grid" role="group">
-        <label>
-          완료여부
-          <input v-model="work.done" type="checkbox" role="switch" @change="onChangeDone" />
-        </label>
-      </div>
-
-      <div class="grid gap-3" role="group">
-        <template v-for="state in getCodesByType('workState')" :key="state.value">
-          <label>
-            <i class="mr-1 hidden sm:inline" :class="state.class"></i>
-            <span class="mr-1">{{ state.desc }}</span>
-            <input
-              v-model="work.state"
-              type="radio"
-              name="state"
-              :value="state.value"
-              :selected="work.state === state.value"
-            />
-          </label>
-        </template>
-      </div>
-
-      <label>
-        <strong>내용</strong>
-        <i class="bi-copy float-right cursor-pointer" @click.stop.prevent="onClickMarkdownCopy">마크다운 복사</i>
-        <div role="group">
-          <DetailEditor v-model="work.content" />
-        </div>
-      </label>
-
-      <label class="w-auto!">
-        <strong>레드마인 URL</strong> >
-        <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank"> (+)일감 생성 </a>
-        <div role="group">
-          <input v-model="work.redmine" type="url" />
-          <button v-show="work.redmine" @click="onClickRedmine(work.redmine)">OPEN</button>
-        </div>
-        <details v-show="work.redmine">
-          <summary role="button" class="outline" @click="onClickSelectRedmineData">레드마인 더보기</summary>
-          <article>
-            <fieldset>
-              <legend>일감 관리자 추가</legend>
-              <input id="cx" v-model="redmineData.watchers" type="checkbox" name="assigned" value="cx" />
-              <label for="cx">CX팀</label>
-              <input id="server" v-model="redmineData.watchers" type="checkbox" name="assigned" value="server" />
-              <label for="server">개발팀(서버)</label>
-              <input id="client" v-model="redmineData.watchers" type="checkbox" name="assigned" value="client" />
-              <label for="client">개발팀(클라이언트)</label>
-              <input id="biz" v-model="redmineData.watchers" type="checkbox" name="assigned" value="biz" />
-              <label for="biz">사업팀</label>
-              <input id="manager" v-model="redmineData.watchers" type="checkbox" name="assigned" value="manager" />
-              <label for="manager">관리자</label>
-            </fieldset>
-            <label>
-              시작일자
-              <input v-model="redmineData.startDate" type="date" />
-            </label>
-            <label>
-              종료일자
-              <input v-model="redmineData.dueDate" type="date" />
-            </label>
-            <label>
-              진척도 <span class="font-bold" v-text="redmineData.doneRatio"></span>%
-              <input v-model="redmineData.doneRatio" type="range" min="0" max="100" step="10" />
-            </label>
-            <label>
-              댓글 작성
-              <textarea v-model="redmineData.notes" />
-            </label>
-            <div role="group">
-              <button class="secondary" @click="onClickSelectRedmineData">불러오기</button>
-              <button class="contrast" @click="onClickUpdateRedmineData">업데이트</button>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-semibold text-slate-500">업무 상세</div>
+            <div class="flex items-center gap-2">
+              <sl-button size="small" variant="primary" @click="onClickUpdate()">
+                <i class="bi-floppy mr-2"></i>
+                저장
+              </sl-button>
+              <sl-button size="small" variant="text" @click="onClickDelete()">
+                <i class="bi-trash text-slate-500"></i>
+              </sl-button>
             </div>
-          </article>
-        </details>
-      </label>
-
-      <label>
-        <strong>조플린 URL</strong>
-        <div role="group">
-          <input v-model="work.joplin" type="url" />
-          <button v-show="work.joplin" @click="onClickJoplin(work.joplin)">OPEN</button>
+          </div>
+          <sl-input
+            v-model="work.title"
+            class="w-full max-w-none text-lg font-semibold sm:text-2xl"
+            size="large"
+            placeholder="제목을 입력하세요"
+          ></sl-input>
         </div>
-      </label>
 
-      <label>
-        <strong>개발자</strong>
-        <i class="bi-person-fill-dash float-right cursor-pointer" @click.stop.prevent="onClickRemoveDeveloper">삭제</i>
-        <select v-model="work.developer">
-          <template v-for="developer in developers" :key="developer.id">
-            <option :value="developer.id" :selected="work.developer == developer.id">
-              <span>{{ developer.name }}</span>
-            </option>
-          </template>
-        </select>
-      </label>
+        <div class="grid gap-4 lg:grid-cols-[1fr_320px]">
+          <div class="flex flex-col gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <h5 class="font-semibold">진행 상태</h5>
+                <div class="flex items-center gap-2 text-sm text-slate-600">
+                  <span>완료</span>
+                  <sl-switch v-model="work.done" size="small" @sl-change="onChangeDone"></sl-switch>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <sl-button-group class="flex flex-nowrap gap-2 text-xs">
+                  <template v-for="state in getCodesByType('workState')" :key="state.value">
+                    <sl-button
+                      size="small"
+                      :variant="work.state === state.value ? 'primary' : 'default'"
+                      @click="work.state = state.value"
+                    >
+                      {{ state.desc }}
+                      <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+                      <sl-icon slot="suffix" :name="getWorkStateIcon(state.value)"></sl-icon>
+                    </sl-button>
+                  </template>
+                </sl-button-group>
+              </div>
+            </div>
 
-      <label>
-        <strong>마감일시</strong>
-        <input :value="dayjs(work.dueDate).format('YYYY-MM-DD')" type="date" @input="onInputDueDate" />
-      </label>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <h5 class="font-semibold">내용</h5>
+                <sl-button size="small" variant="text" @click.stop.prevent="onClickMarkdownCopy">
+                  <i class="bi-copy mr-1"></i>
+                  마크다운 복사
+                </sl-button>
+              </div>
+              <div role="group">
+                <DetailEditor v-model="work.content" />
+              </div>
+            </div>
 
-      <label>
-        <strong>미리알람</strong>
-        <div role="group">
-          <input v-model="scheduledNotificationTime" type="datetime-local" />
-          <button @click="onClickCreateScheduledNotification">SAVE</button>
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <h5 class="font-semibold">레드마인</h5>
+                  <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank" class="text-xs">
+                    (+)일감 생성
+                  </a>
+                </div>
+                <sl-button v-show="work.redmine" size="small" variant="text" @click="onClickRedmine(work.redmine)">
+                  OPEN
+                </sl-button>
+              </div>
+              <div class="grid gap-3">
+                <sl-input v-model="work.redmine" type="url" placeholder="레드마인 URL"></sl-input>
+                <details v-show="work.redmine">
+                  <summary role="button" class="outline" @click="onClickSelectRedmineData">레드마인 더보기</summary>
+                  <article>
+                    <fieldset>
+                      <legend>일감 관리자 추가</legend>
+                      <input id="cx" v-model="redmineData.watchers" type="checkbox" name="assigned" value="cx" />
+                      <label for="cx">CX팀</label>
+                      <input
+                        id="server"
+                        v-model="redmineData.watchers"
+                        type="checkbox"
+                        name="assigned"
+                        value="server"
+                      />
+                      <label for="server">개발팀(서버)</label>
+                      <input
+                        id="client"
+                        v-model="redmineData.watchers"
+                        type="checkbox"
+                        name="assigned"
+                        value="client"
+                      />
+                      <label for="client">개발팀(클라이언트)</label>
+                      <input id="biz" v-model="redmineData.watchers" type="checkbox" name="assigned" value="biz" />
+                      <label for="biz">사업팀</label>
+                      <input
+                        id="manager"
+                        v-model="redmineData.watchers"
+                        type="checkbox"
+                        name="assigned"
+                        value="manager"
+                      />
+                      <label for="manager">관리자</label>
+                    </fieldset>
+                    <label>
+                      시작일자
+                      <input v-model="redmineData.startDate" type="date" />
+                    </label>
+                    <label>
+                      종료일자
+                      <input v-model="redmineData.dueDate" type="date" />
+                    </label>
+                    <label>
+                      진척도 <span class="font-bold" v-text="redmineData.doneRatio"></span>%
+                      <input v-model="redmineData.doneRatio" type="range" min="0" max="100" step="10" />
+                    </label>
+                    <label>
+                      댓글 작성
+                      <sl-textarea v-model="redmineData.notes" resize="auto"></sl-textarea>
+                    </label>
+                    <div role="group">
+                      <sl-button size="small" variant="default" @click="onClickSelectRedmineData">불러오기</sl-button>
+                      <sl-button size="small" variant="primary" @click="onClickUpdateRedmineData">업데이트</sl-button>
+                    </div>
+                  </article>
+                </details>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <h5 class="font-semibold">조플린</h5>
+                <sl-button v-show="work.joplin" size="small" variant="text" @click="onClickJoplin(work.joplin)">
+                  OPEN
+                </sl-button>
+              </div>
+              <sl-input v-model="work.joplin" type="url" placeholder="조플린 URL"></sl-input>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <h5 class="font-semibold">담당 정보</h5>
+                <sl-button size="small" variant="text" @click.stop.prevent="onClickRemoveDeveloper">
+                  <i class="bi-person-fill-dash mr-1"></i>
+                  해제
+                </sl-button>
+              </div>
+              <div class="grid gap-3">
+                <sl-select v-model="work.developer" label="개발자" placeholder="개발자 선택">
+                  <template v-for="developer in developers" :key="developer.id">
+                    <sl-option :value="developer.id" :selected="work.developer == developer.id">
+                      <span>{{ developer.name }}</span>
+                    </sl-option>
+                  </template>
+                </sl-select>
+                <sl-input
+                  label="마감일시"
+                  :value="dayjs(work.dueDate).format('YYYY-MM-DD')"
+                  type="date"
+                  @sl-input="onInputDueDate"
+                ></sl-input>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <h5 class="mb-3 font-semibold">미리알람</h5>
+              <div role="group" class="flex flex-col gap-2">
+                <sl-input v-model="scheduledNotificationTime" type="datetime-local"></sl-input>
+                <sl-button size="small" variant="default" @click="onClickCreateScheduledNotification">SAVE</sl-button>
+              </div>
+              <table v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3">
+                <thead>
+                  <th>알람시간</th>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="scheduledNotification in work.expand?.scheduledNotifications"
+                    :key="scheduledNotification.id"
+                  >
+                    <td>
+                      {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
+                      <i
+                        class="bi-trash ml-1 cursor-pointer"
+                        @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
+                      ></i>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <h5 class="mb-3 font-semibold">첨부파일</h5>
+              <div class="inline-flex items-center gap-2">
+                <sl-button size="small" variant="default" @click="onClickSelectFile">
+                  <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+                  <sl-icon slot="prefix" name="paperclip"></sl-icon>
+                  파일 선택
+                </sl-button>
+                <input id="fileInput" ref="fileInput" type="file" class="hidden" />
+              </div>
+              <div v-show="work.file" class="mt-3">
+                <a :href="getWorkFileUrl(work, work.file)" target="_blank">
+                  {{ work.file }}
+                </a>
+                <i class="bi-trash ml-3 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-white p-4">
+              <h5 class="mb-3 font-semibold">기록</h5>
+              <div class="grid gap-3 sm:grid-cols-3">
+                <sl-input
+                  label="완료일시"
+                  readonly
+                  :value="work.doneDate && dayjs(work.doneDate).format('YYYY-MM-DD HH:mm:ss')"
+                ></sl-input>
+                <sl-input
+                  label="등록일시"
+                  readonly
+                  :value="dayjs(work.created).format('YYYY-MM-DD HH:mm:ss')"
+                ></sl-input>
+                <sl-input
+                  label="수정일시"
+                  readonly
+                  :value="dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss')"
+                ></sl-input>
+              </div>
+            </div>
+          </div>
         </div>
-        <table v-show="(work.expand?.scheduledNotifications ?? []).length > 0">
-          <thead>
-            <th>알람시간</th>
-          </thead>
-          <tbody>
-            <tr v-for="scheduledNotification in work.expand?.scheduledNotifications" :key="scheduledNotification.id">
-              <td>
-                {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
-                <i
-                  class="bi-trash ml-1 cursor-pointer"
-                  @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
-                ></i>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </label>
-
-      <!-- TODO Multiple 파일 업로드 기능 검토 -->
-      <strong>첨부파일</strong>
-      <input id="fileInput" ref="fileInput" type="file" class="block w-[unset]!" />
-      <div v-show="work.file" class="mb-5">
-        <a :href="getWorkFileUrl(work, work.file)" target="_blank">
-          {{ work.file }}
-        </a>
-        <i class="bi-trash ml-5 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
       </div>
-
-      <div role="group">
-        <label>
-          <strong>완료일시</strong>
-          <input readonly :value="work.doneDate && dayjs(work.doneDate).format('YYYY-MM-DD HH:mm:ss')" />
-        </label>
-        <label>
-          <strong>등록일시</strong>
-          <input readonly :value="dayjs(work.created).format('YYYY-MM-DD HH:mm:ss')" />
-        </label>
-        <label>
-          <strong>수정일시</strong>
-          <input readonly :value="dayjs(work.updated).format('YYYY-MM-DD HH:mm:ss')" />
-        </label>
-      </div>
-    </article>
+    </sl-card>
   </main>
 </template>
 
@@ -257,6 +328,22 @@ onUnmounted(() => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
+const getWorkStateIcon = (value: string) => {
+  const iconMap: Record<string, string> = {
+    wait: 'hourglass',
+    progress: 'play-circle',
+    done: 'check-circle',
+    hold: 'pause-circle',
+    cancel: 'x-circle',
+  };
+
+  return iconMap[value] ?? 'dot';
+};
+
+const onClickSelectFile = () => {
+  fileInput.value?.click();
+};
+
 const onChangeDone = () => {
   if (work.value.done) {
     work.value.doneDate = new Date().toISOString();
