@@ -1,18 +1,8 @@
 <template>
-  <Transition name="modal">
-    <dialog v-show="modal.show" id="modal" open @click.self="onClickModalBackdrop">
-      <article>
-        <header>
-          <button aria-label="Close" rel="prev" data-target="modal" @click="clearModal"></button>
-          <h3>{{ modal.title }}</h3>
-        </header>
-        <p>{{ modal.message }}</p>
-        <footer>
-          <button role="button" class="secondary" data-target="modal" @click="clearModal">Cancel</button>
-        </footer>
-      </article>
-    </dialog>
-  </Transition>
+  <sl-dialog :open="modal.show" :label="modal.title" @sl-request-close="onRequestCloseModal">
+    <div class="text-sm text-slate-700">{{ modal.message }}</div>
+    <sl-button slot="footer" variant="primary" @click="clearModal">확인</sl-button>
+  </sl-dialog>
 </template>
 
 <script setup lang="ts">
@@ -23,19 +13,8 @@ const { modal, clearModal } = useModal();
 /* ======================= 변수 ======================= */
 
 /* ======================= 메서드 ======================= */
-const onClickModalBackdrop = () => {
+const onRequestCloseModal = () => {
   clearModal();
 };
 /* ======================= 메서드 ======================= */
 </script>
-
-<style scoped>
-.modal-enter-active {
-  transition: opacity 0.25s var(--ease-1);
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-</style>
