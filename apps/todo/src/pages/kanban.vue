@@ -12,7 +12,7 @@
       <section class="flex flex-col gap-6">
         <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep1" :key="code.value">
-            <sl-card class="w-full md:flex-1 md:min-w-0">
+            <sl-card class="w-full md:min-w-0 md:flex-1">
               <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
@@ -50,7 +50,9 @@
                           </a>
                           <div class="mt-2 text-xs text-slate-600">
                             개발자 :
-                            {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                            {{
+                              developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name
+                            }}
                           </div>
                           <div
                             v-show="work.dueDate"
@@ -86,7 +88,7 @@
 
         <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep2" :key="code.value">
-            <sl-card class="w-full md:flex-1 md:min-w-0">
+            <sl-card class="w-full md:min-w-0 md:flex-1">
               <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
@@ -124,7 +126,9 @@
                           </a>
                           <div class="mt-2 text-xs text-slate-600">
                             개발자 :
-                            {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                            {{
+                              developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name
+                            }}
                           </div>
                           <div
                             v-show="work.dueDate"

@@ -25,12 +25,7 @@
               </td>
               <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
               <td class="text-center">
-                <sl-button
-                  v-show="!notification.read"
-                  size="small"
-                  variant="text"
-                  @click="onClickRead(notification)"
-                >
+                <sl-button v-show="!notification.read" size="small" variant="text" @click="onClickRead(notification)">
                   읽기
                 </sl-button>
                 <span v-show="notification.read" class="text-xs text-slate-400">읽음</span>

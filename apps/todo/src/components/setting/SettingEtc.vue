@@ -1,12 +1,7 @@
 <template>
   <sl-details summary="기타 설정">
     <div class="mt-3 flex flex-col gap-3">
-      <sl-input
-        v-model="settingArgs.daysBefore"
-        type="number"
-        label="마감일자 임박"
-        placeholder="예: 3"
-      ></sl-input>
+      <sl-input v-model="settingArgs.daysBefore" type="number" label="마감일자 임박" placeholder="예: 3"></sl-input>
       <sl-button variant="primary" @click="onClickSave">저장</sl-button>
     </div>
   </sl-details>
