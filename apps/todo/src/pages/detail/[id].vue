@@ -3,15 +3,16 @@
     <sl-card class="w-full">
       <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-3">
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <div class="text-xs font-semibold text-slate-500">업무 상세</div>
-            <div class="flex items-center gap-2">
+            <div class="ml-auto flex flex-wrap items-center gap-2">
               <sl-button size="small" variant="primary" @click="onClickUpdate()">
                 <i class="bi-floppy mr-2"></i>
                 저장
               </sl-button>
-              <sl-button size="small" variant="text" @click="onClickDelete()">
-                <i class="bi-trash text-slate-500"></i>
+              <sl-button size="small" variant="default" @click="onClickDelete()">
+                <i class="bi-trash mr-2 text-slate-500"></i>
+                삭제
               </sl-button>
             </div>
           </div>
@@ -23,37 +24,40 @@
           ></sl-input>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 lg:flex-row">
+          <div class="flex flex-col gap-4 lg:flex-1">
             <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">진행 상태</h5>
-                <div class="flex items-center gap-2 text-sm text-slate-600">
+                <div class="ml-auto flex items-center gap-2 text-sm text-slate-600">
                   <span>완료</span>
                   <sl-switch v-model="work.done" size="small" @sl-change="onChangeDone"></sl-switch>
                 </div>
               </div>
-              <div class="overflow-x-auto">
-                <sl-button-group class="flex flex-nowrap gap-2 text-xs">
+              <div class="pb-1">
+                <div class="flex flex-wrap gap-2 text-xs">
                   <template v-for="state in getCodesByType('workState')" :key="state.value">
-                    <sl-button
-                      size="small"
-                      :variant="work.state === state.value ? 'primary' : 'default'"
-                      @click="work.state = state.value"
-                    >
-                      {{ state.desc }}
-                      <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-                      <sl-icon slot="suffix" :name="getWorkStateIcon(state.value)"></sl-icon>
-                    </sl-button>
+                    <div class="w-[calc(33.333%-0.34rem)]">
+                      <sl-button
+                        class="w-full"
+                        size="small"
+                        :variant="work.state === state.value ? 'primary' : 'default'"
+                        @click="work.state = state.value"
+                      >
+                        {{ state.desc }}
+                        <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+                        <sl-icon slot="suffix" :name="getWorkStateIcon(state.value)"></sl-icon>
+                      </sl-button>
+                    </div>
                   </template>
-                </sl-button-group>
+                </div>
               </div>
             </div>
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">내용</h5>
-                <sl-button size="small" variant="text" @click.stop.prevent="onClickMarkdownCopy">
+                <sl-button class="ml-auto" size="small" variant="text" @click.stop.prevent="onClickMarkdownCopy">
                   <i class="bi-copy mr-1"></i>
                   마크다운 복사
                 </sl-button>
@@ -64,14 +68,20 @@
             </div>
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
                 <div>
                   <h5 class="font-semibold">레드마인</h5>
                   <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank" class="text-xs">
                     (+)일감 생성
                   </a>
                 </div>
-                <sl-button v-show="work.redmine" size="small" variant="text" @click="onClickRedmine(work.redmine)">
+                <sl-button
+                  v-show="work.redmine"
+                  class="ml-auto"
+                  size="small"
+                  variant="text"
+                  @click="onClickRedmine(work.redmine)"
+                >
                   OPEN
                 </sl-button>
               </div>
@@ -137,9 +147,15 @@
             </div>
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">조플린</h5>
-                <sl-button v-show="work.joplin" size="small" variant="text" @click="onClickJoplin(work.joplin)">
+                <sl-button
+                  v-show="work.joplin"
+                  class="ml-auto"
+                  size="small"
+                  variant="text"
+                  @click="onClickJoplin(work.joplin)"
+                >
                   OPEN
                 </sl-button>
               </div>
@@ -147,11 +163,11 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-4 lg:w-80 lg:flex-shrink-0">
             <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">담당 정보</h5>
-                <sl-button size="small" variant="text" @click.stop.prevent="onClickRemoveDeveloper">
+                <sl-button class="ml-auto" size="small" variant="text" @click.stop.prevent="onClickRemoveDeveloper">
                   <i class="bi-person-fill-dash mr-1"></i>
                   해제
                 </sl-button>
@@ -177,32 +193,34 @@
               <h5 class="mb-3 font-semibold">미리알람</h5>
               <div role="group" class="flex flex-col gap-2">
                 <sl-input v-model="scheduledNotificationTime" type="datetime-local"></sl-input>
-                <sl-button size="small" variant="default" @click="onClickCreateScheduledNotification">SAVE</sl-button>
+                <sl-button size="small" variant="default" @click="onClickCreateScheduledNotification"> SAVE </sl-button>
               </div>
-              <table v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3">
-                <thead>
-                  <th>알람시간</th>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="scheduledNotification in work.expand?.scheduledNotifications"
-                    :key="scheduledNotification.id"
-                  >
-                    <td>
-                      {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
-                      <i
-                        class="bi-trash ml-1 cursor-pointer"
-                        @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
-                      ></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3 overflow-x-auto">
+                <table>
+                  <thead>
+                    <th>알람시간</th>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="scheduledNotification in work.expand?.scheduledNotifications"
+                      :key="scheduledNotification.id"
+                    >
+                      <td>
+                        {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
+                        <i
+                          class="bi-trash ml-1 cursor-pointer"
+                          @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
+                        ></i>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <h5 class="mb-3 font-semibold">첨부파일</h5>
-              <div class="inline-flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <sl-button size="small" variant="default" @click="onClickSelectFile">
                   <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
                   <sl-icon slot="prefix" name="paperclip"></sl-icon>

@@ -1,8 +1,8 @@
 <template>
   <main class="container mx-auto">
     <sl-card class="w-full">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+      <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-center gap-2">
           <h3 class="text-lg font-semibold">칸반 보드</h3>
           <sl-tag size="small" variant="neutral">실시간 업무 흐름</sl-tag>
         </div>
@@ -10,9 +10,9 @@
       </div>
 
       <section class="flex flex-col gap-6">
-        <div class="flex gap-4 overflow-x-auto pb-2">
+        <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep1" :key="code.value">
-            <sl-card class="min-w-72 w-72 flex-shrink-0">
+            <sl-card class="w-full md:flex-1 md:min-w-0">
               <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
@@ -39,7 +39,7 @@
                 <TransitionGroup
                   tag="div"
                   name="list"
-                  class="sort-target-1 flex max-h-200 min-h-200 flex-col gap-3 overflow-auto"
+                  class="sort-target-1 flex flex-col gap-3 md:max-h-200 md:min-h-200 md:overflow-auto"
                 >
                   <template v-for="work in getWorksByState(code.value)" :key="work.id">
                     <sl-card class="cursor-pointer" :data-id="work.id">
@@ -84,9 +84,9 @@
           </template>
         </div>
 
-        <div class="flex gap-4 overflow-x-auto pb-2">
+        <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep2" :key="code.value">
-            <sl-card class="min-w-72 w-72 flex-shrink-0">
+            <sl-card class="w-full md:flex-1 md:min-w-0">
               <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
@@ -113,7 +113,7 @@
                 <TransitionGroup
                   tag="div"
                   name="list"
-                  class="sort-target-2 flex max-h-200 min-h-200 flex-col gap-3 overflow-auto"
+                  class="sort-target-2 flex flex-col gap-3 md:max-h-200 md:min-h-200 md:overflow-auto"
                 >
                   <template v-for="work in getWorksByState(code.value)" :key="work.id">
                     <sl-card class="cursor-pointer" :data-id="work.id">

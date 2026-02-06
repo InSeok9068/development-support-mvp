@@ -1,8 +1,10 @@
 <template>
-  <main class="container">
-    <article>
-      <FullCalendar :options="calendarOption" />
-    </article>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="h-[70vh] min-h-140">
+        <FullCalendar ref="calendarRef" class="h-full" :options="calendarOption" />
+      </div>
+    </sl-card>
   </main>
 </template>
 
@@ -14,17 +16,21 @@ import interactionPlugin from '@fullcalendar/interaction';
 import type { DateClickArg } from '@fullcalendar/interaction/index.js';
 import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
-import { onBeforeMount, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
+import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { works, fetchWorkFullList } = useWork();
 const router = useRouter();
+const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null);
+let resizeTimer: number | null = null;
 const calendarOption = ref<CalendarOptions>({
   plugins: [interactionPlugin, dayGridPlugin],
   initialView: 'dayGridMonth',
+  height: '100%',
+  expandRows: true,
   selectable: true,
   dateClick: onClickDate,
   eventClick: onClickEvent,
@@ -51,9 +57,39 @@ watch(
 onBeforeMount(() => {
   fetchWorkFullList();
 });
+
+onMounted(() => {
+  requestCalendarSize();
+  window.addEventListener('resize', onResizeCalendar);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResizeCalendar);
+  if (resizeTimer) {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = null;
+  }
+});
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
+const requestCalendarSize = () => {
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      calendarRef.value?.getApi().updateSize();
+    });
+  });
+};
+
+const onResizeCalendar = () => {
+  if (resizeTimer) {
+    window.clearTimeout(resizeTimer);
+  }
+  resizeTimer = window.setTimeout(() => {
+    calendarRef.value?.getApi().updateSize();
+  }, 100);
+};
+
 function onClickDate(args: DateClickArg) {
   console.log(args);
 }

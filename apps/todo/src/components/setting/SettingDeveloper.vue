@@ -1,25 +1,25 @@
 <template>
-  <details>
-    <summary role="button" class="contrast outline">개발자 설정</summary>
-    <article>
-      <label>개발자</label>
-      <div role="group">
-        <template v-for="developer in developers" :key="developer.id">
-          <a href="#" @click.stop.prevent="onClickDeveloper(developer)">{{ developer.name }}</a>
-        </template>
+  <sl-details summary="개발자 설정">
+    <div class="mt-3">
+      <div class="flex flex-col gap-3">
+        <div class="text-xs font-semibold text-slate-500">개발자</div>
+        <div class="flex flex-wrap gap-2">
+          <template v-for="developer in developers" :key="developer.id">
+            <sl-button size="small" variant="default" @click.stop.prevent="onClickDeveloper(developer)">
+              {{ developer.name }}
+            </sl-button>
+          </template>
+        </div>
+
+        <input v-model="developerArgs.id" hidden />
+
+        <sl-input v-model="developerArgs.name" label="이름" placeholder="이름을 입력하세요"></sl-input>
+        <sl-input v-model="developerArgs.sort" type="number" label="정렬" placeholder="정렬 순서"></sl-input>
+
+        <sl-button variant="primary" @click="onClickSave">저장</sl-button>
       </div>
-      <input v-model="developerArgs.id" hidden />
-      <label>
-        이름
-        <input v-model="developerArgs.name" />
-      </label>
-      <label>
-        정렬
-        <input v-model="developerArgs.sort" type="number" />
-      </label>
-      <input type="button" value="저장" @click="onClickSave" />
-    </article>
-  </details>
+    </div>
+  </sl-details>
 </template>
 
 <script setup lang="ts">

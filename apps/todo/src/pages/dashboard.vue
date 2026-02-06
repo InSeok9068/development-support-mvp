@@ -1,6 +1,8 @@
 <template>
-  <main class="container">
-    <Bar :data="data" />
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <Bar :data="data" />
+    </sl-card>
   </main>
 </template>
 

@@ -1,72 +1,55 @@
 <template>
-  <main class="container">
-    <article>
-      <div class="grid">
-        <label>
-          등록일자 (FROM)
-          <input v-model="listFilter.createdFrom" type="date" />
-        </label>
-        <label>
-          등록일자 (TO)
-          <input v-model="listFilter.createdTo" type="date" />
-        </label>
-        <label>
-          완료일자
-          <input v-model="listFilter.doneDate" type="date" />
-        </label>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="mb-4">
+        <h4 class="font-semibold">검색 필터</h4>
+        <div class="text-xs text-slate-500">기간/상태/담당 기준으로 빠르게 좁혀보세요</div>
       </div>
 
-      <div class="grid">
-        <label>
-          완료여부
-          <input v-model="listFilter.done" type="checkbox" role="switch" />
-        </label>
+      <div class="grid gap-3 md:grid-cols-3">
+        <sl-input v-model="listFilter.createdFrom" type="date" label="등록일자 (FROM)"></sl-input>
+        <sl-input v-model="listFilter.createdTo" type="date" label="등록일자 (TO)"></sl-input>
+        <sl-input v-model="listFilter.doneDate" type="date" label="완료일자"></sl-input>
       </div>
 
-      <details>
-        <summary role="button" class="outline">옵션 더보기</summary>
-        <div class="grid">
-          <label>
-            수정일자 (FROM)
-            <input v-model="listFilter.updatedFrom" type="date" />
-          </label>
-          <label>
-            수정일자 (TO)
-            <input v-model="listFilter.updatedTo" type="date" />
-          </label>
-          <label>
-            마감일자
-            <input v-model="listFilter.dueDate" type="date" />
-          </label>
-          <label>
-            개발자
-            <select v-model="listFilter.developer">
-              <option value="ALL">
-                <span></span>
-              </option>
-              <option value="">
-                <span>미배정</span>
-              </option>
-              <template v-for="developer in developers" :key="developer.id">
-                <option :value="developer.id">
-                  <span>{{ developer.name }}</span>
-                </option>
-              </template>
-            </select>
-          </label>
+      <div class="mt-3 flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <sl-switch v-model="listFilter.done"></sl-switch>
+          <span class="text-sm">완료여부</span>
         </div>
-        <div class="grid">
-          <label>
-            주간보고서
-            <input v-model="weeklyReport" type="checkbox" role="switch" @change="onChangeSetWeeklyReportDate" />
-          </label>
+        <div class="flex items-center gap-2">
+          <sl-switch v-model="weeklyReport" @sl-change="onChangeSetWeeklyReportDate"></sl-switch>
+          <span class="text-sm">주간보고서</span>
         </div>
-      </details>
+      </div>
 
-      <form role="search">
-        <input v-model="listFilter.text" type="search" @keydown.stop.prevent.enter="onClickSearch" />
-        <input type="button" value="검색" @click="onClickSearch" />
-      </form>
+      <sl-details class="mt-4" summary="옵션 더보기">
+        <div class="mt-3 grid gap-3 md:grid-cols-2">
+          <sl-input v-model="listFilter.updatedFrom" type="date" label="수정일자 (FROM)"></sl-input>
+          <sl-input v-model="listFilter.updatedTo" type="date" label="수정일자 (TO)"></sl-input>
+          <sl-input v-model="listFilter.dueDate" type="date" label="마감일자"></sl-input>
+          <sl-select v-model="listFilter.developer" label="개발자" placeholder="개발자 선택">
+            <sl-option value="ALL">전체</sl-option>
+            <sl-option value="">미배정</sl-option>
+            <template v-for="developer in developers" :key="developer.id">
+              <sl-option :value="developer.id">{{ developer.name }}</sl-option>
+            </template>
+          </sl-select>
+        </div>
+      </sl-details>
+
+      <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <sl-input
+          v-model="listFilter.text"
+          class="w-full"
+          type="search"
+          placeholder="제목 또는 키워드 검색"
+          @keydown.stop.prevent.enter="onClickSearch"
+        ></sl-input>
+        <sl-button class="w-full sm:w-auto" variant="primary" @click="onClickSearch">검색</sl-button>
+      </div>
+
+      <sl-divider class="my-4"></sl-divider>
 
       <AgGridVue
         :theme="theme"
@@ -77,7 +60,7 @@
         :pagination-page-size="15"
         :pagination-page-size-selector="[15, 30, 100]"
       />
-    </article>
+    </sl-card>
   </main>
 </template>
 

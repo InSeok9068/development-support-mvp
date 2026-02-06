@@ -1,27 +1,48 @@
 <template>
-  <main class="container">
-    <article>
-      <table>
-        <thead>
-          <tr>
-            <th>제목</th>
-            <th>전송일시</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="notification in notifications" :key="notification.id">
-            <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
-              {{ notification.title }}
-            </td>
-            <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
-            <td>
-              <button v-show="!notification.read" class="w-max text-xs" @click="onClickRead(notification)">읽기</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </article>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h4 class="font-semibold">알림함</h4>
+          <div class="text-xs text-slate-500">최근 알림 내역</div>
+        </div>
+        <sl-tag size="small" variant="neutral">{{ notifications.length }}건</sl-tag>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th>제목</th>
+              <th>전송일시</th>
+              <th class="w-20 text-center">상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="notification in notifications" :key="notification.id">
+              <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
+                {{ notification.title }}
+              </td>
+              <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
+              <td class="text-center">
+                <sl-button
+                  v-show="!notification.read"
+                  size="small"
+                  variant="text"
+                  @click="onClickRead(notification)"
+                >
+                  읽기
+                </sl-button>
+                <span v-show="notification.read" class="text-xs text-slate-400">읽음</span>
+              </td>
+            </tr>
+            <tr v-if="notifications.length === 0">
+              <td colspan="3" class="py-6 text-center text-sm text-slate-400">알림이 없습니다</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </sl-card>
   </main>
 </template>
 

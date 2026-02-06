@@ -1,6 +1,8 @@
 <template>
-  <main class="container">
-    <div ref="ganttContainer" class="h-svh"></div>
+  <main class="container mx-auto">
+    <sl-card class="w-full">
+      <div ref="ganttContainer" class="h-[70vh] min-h-[560px]"></div>
+    </sl-card>
   </main>
 </template>
 

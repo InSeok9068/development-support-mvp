@@ -2,6 +2,22 @@
   <header class="container mx-auto flex w-full items-center justify-between px-4 py-3">
     <div class="flex items-center gap-3">
       <RouterLink to="/" class="text-lg font-semibold tracking-tight">업무관리</RouterLink>
+      <div class="sm:hidden">
+        <sl-dropdown placement="bottom-start">
+          <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+          <sl-button slot="trigger" variant="text">
+            <i class="bi-list-ul"></i>
+          </sl-button>
+          <sl-menu>
+            <sl-menu-item @click="router.push('/')">Todo</sl-menu-item>
+            <sl-menu-item @click="router.push('/kanban')">Kanban</sl-menu-item>
+            <sl-menu-item @click="router.push('/list')">List</sl-menu-item>
+            <sl-menu-item @click="router.push('/calendar')">Calendar</sl-menu-item>
+            <sl-menu-item @click="router.push('/dashboard')">Dashboard</sl-menu-item>
+            <sl-menu-item @click="router.push('/project-gantt')">Project Gantt</sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
+      </div>
       <div class="hidden items-center sm:flex">
         <sl-tooltip content="Alt + 1">
           <sl-button size="small" variant="text" @click="router.push('/')">Todo</sl-button>
@@ -25,40 +41,17 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <div class="sm:hidden">
-        <sl-dropdown placement="bottom-start">
-          <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-          <sl-button slot="trigger" variant="text">
-            <i class="bi-list-ul"></i>
-          </sl-button>
-          <div class="flex flex-col gap-1 p-2">
-            <sl-button variant="text" class="justify-start" @click="router.push('/')">Todo</sl-button>
-            <sl-button variant="text" class="justify-start" @click="router.push('/kanban')"> Kanban </sl-button>
-            <sl-button variant="text" class="justify-start" @click="router.push('/list')">List</sl-button>
-            <sl-button variant="text" class="justify-start" @click="router.push('/calendar')"> Calendar </sl-button>
-            <sl-button variant="text" class="justify-start" @click="router.push('/dashboard')"> Dashboard </sl-button>
-            <sl-button variant="text" class="justify-start" @click="router.push('/project-gantt')">
-              Project Gantt
-            </sl-button>
-          </div>
-        </sl-dropdown>
-      </div>
-
       <sl-dropdown placement="bottom-end">
         <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
         <sl-button slot="trigger" size="small" variant="text">
           <i class="bi-gear-fill"></i>
         </sl-button>
-        <div class="flex flex-col gap-1 p-2">
-          <sl-button v-if="!isAuth" size="small" variant="text" class="justify-start" @click="onClickGoSign">
-            로그인
-          </sl-button>
-          <sl-button size="small" variant="text" class="justify-start" @click="onClickGoSetting">설정</sl-button>
-          <sl-button size="small" variant="text" class="justify-start" @click="onClickClear">클리어</sl-button>
-          <sl-button v-if="isAuth" size="small" variant="text" class="justify-start" @click="onClickSignout">
-            로그아웃
-          </sl-button>
-        </div>
+        <sl-menu>
+          <sl-menu-item v-if="!isAuth" @click="onClickGoSign">로그인</sl-menu-item>
+          <sl-menu-item @click="onClickGoSetting">설정</sl-menu-item>
+          <sl-menu-item @click="onClickClear">클리어</sl-menu-item>
+          <sl-menu-item v-if="isAuth" @click="onClickSignout">로그아웃</sl-menu-item>
+        </sl-menu>
       </sl-dropdown>
 
       <div class="relative">
