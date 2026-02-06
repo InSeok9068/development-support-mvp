@@ -38,7 +38,7 @@
         </div>
       </sl-details>
 
-      <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <sl-input
           v-model="listFilter.text"
           class="w-full"
@@ -49,7 +49,7 @@
         <sl-button class="w-full sm:w-auto" variant="primary" @click="onClickSearch">검색</sl-button>
       </div>
 
-      <sl-divider class="my-5"></sl-divider>
+      <sl-divider class="my-3"></sl-divider>
 
       <AgGridVue
         :theme="theme"
