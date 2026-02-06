@@ -12,7 +12,7 @@
         <sl-input v-model="listFilter.doneDate" type="date" label="완료일자"></sl-input>
       </div>
 
-      <div class="mt-3 flex flex-wrap items-center gap-4">
+      <div class="mt-4 flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
           <sl-switch v-model="listFilter.done"></sl-switch>
           <span class="text-sm">완료여부</span>
@@ -23,7 +23,7 @@
         </div>
       </div>
 
-      <sl-details class="mt-4" summary="옵션 더보기">
+      <sl-details class="mt-5" summary="옵션 더보기">
         <div class="mt-3 grid gap-3 md:grid-cols-2">
           <sl-input v-model="listFilter.updatedFrom" type="date" label="수정일자 (FROM)"></sl-input>
           <sl-input v-model="listFilter.updatedTo" type="date" label="수정일자 (TO)"></sl-input>
@@ -38,7 +38,7 @@
         </div>
       </sl-details>
 
-      <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
         <sl-input
           v-model="listFilter.text"
           class="w-full"
@@ -49,7 +49,7 @@
         <sl-button class="w-full sm:w-auto" variant="primary" @click="onClickSearch">검색</sl-button>
       </div>
 
-      <sl-divider class="my-4"></sl-divider>
+      <sl-divider class="my-5"></sl-divider>
 
       <AgGridVue
         :theme="theme"
@@ -183,5 +183,26 @@ const onChangeSetWeeklyReportDate = () => {
 
 .ag-paging-panel {
   padding: 25px;
+}
+
+@media (max-width: 640px) {
+  .ag-paging-panel {
+    height: auto;
+    padding: 12px;
+    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ag-paging-panel > * {
+    margin: 0;
+  }
+
+  .ag-paging-page-size,
+  .ag-paging-page-summary-panel,
+  .ag-paging-button-row {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>

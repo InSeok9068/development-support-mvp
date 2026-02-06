@@ -1,6 +1,10 @@
 <template>
   <main class="container mx-auto">
     <sl-card class="w-full">
+      <div class="mb-4">
+        <h4 class="font-semibold">캘린더</h4>
+        <div class="text-xs text-slate-500">마감 일정과 이벤트를 확인하세요</div>
+      </div>
       <div class="h-[70vh] min-h-140">
         <FullCalendar ref="calendarRef" class="h-full" :options="calendarOption" />
       </div>

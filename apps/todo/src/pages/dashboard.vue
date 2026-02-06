@@ -1,6 +1,10 @@
 <template>
   <main class="container mx-auto">
     <sl-card class="w-full">
+      <div class="mb-4">
+        <h4 class="font-semibold">대시보드</h4>
+        <div class="text-xs text-slate-500">업무 현황 요약</div>
+      </div>
       <Bar :data="data" />
     </sl-card>
   </main>

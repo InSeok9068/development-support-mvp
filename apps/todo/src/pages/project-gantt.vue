@@ -1,6 +1,10 @@
 <template>
   <main class="container mx-auto">
     <sl-card class="w-full">
+      <div class="mb-4">
+        <h4 class="font-semibold">프로젝트 간트</h4>
+        <div class="text-xs text-slate-500">일정 흐름을 한눈에 확인하세요</div>
+      </div>
       <div ref="ganttContainer" class="h-[70vh] min-h-[560px]"></div>
     </sl-card>
   </main>

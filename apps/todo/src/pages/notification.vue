@@ -9,6 +9,12 @@
         <sl-tag size="small" variant="neutral">{{ notifications.length }}건</sl-tag>
       </div>
 
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <sl-tag size="small" variant="primary">전체</sl-tag>
+        <sl-tag size="small" variant="neutral">미읽음</sl-tag>
+        <sl-tag size="small" variant="neutral">읽음</sl-tag>
+      </div>
+
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
