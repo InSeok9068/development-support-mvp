@@ -181,6 +181,12 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(typescript@5.9.3)
 
+  apps/portfolio:
+    dependencies:
+      '@packages':
+        specifier: workspace:*
+        version: link:../../packages
+
   apps/todo:
     dependencies:
       '@packages':
