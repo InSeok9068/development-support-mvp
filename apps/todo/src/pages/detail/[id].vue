@@ -57,7 +57,7 @@
                   마크다운 복사
                 </sl-button>
               </div>
-              <div role="group" class="rounded-md border border-slate-200 bg-white p-2">
+              <div class="rounded-md border border-slate-200 bg-white p-2">
                 <DetailEditor v-model="work.content" />
               </div>
             </div>
@@ -173,7 +173,7 @@
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <h5 class="mb-3 font-semibold">미리알람</h5>
-              <div role="group" class="flex flex-col gap-2">
+              <div class="flex flex-col gap-2">
                 <sl-input v-model="scheduledNotificationTime" type="datetime-local"></sl-input>
                 <sl-button size="small" variant="default" @click="onClickCreateScheduledNotification"> SAVE </sl-button>
               </div>
