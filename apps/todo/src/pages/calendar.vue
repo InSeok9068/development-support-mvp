@@ -89,7 +89,7 @@ const buildCalendarEvents = (currentWorks: WorksResponse[]) => {
         backgroundColor: eventTypeColorMap.created,
         borderColor: eventTypeColorMap.created,
         textColor: 'var(--sl-color-neutral-0)',
-        extendedProps: { eventType: 'created' },
+        extendedProps: { eventType: 'created', workId: work.id },
       });
     }
 
@@ -101,7 +101,7 @@ const buildCalendarEvents = (currentWorks: WorksResponse[]) => {
         backgroundColor: eventTypeColorMap.updated,
         borderColor: eventTypeColorMap.updated,
         textColor: 'var(--sl-color-neutral-0)',
-        extendedProps: { eventType: 'updated' },
+        extendedProps: { eventType: 'updated', workId: work.id },
       });
     }
 
@@ -113,7 +113,7 @@ const buildCalendarEvents = (currentWorks: WorksResponse[]) => {
         backgroundColor: eventTypeColorMap.due,
         borderColor: eventTypeColorMap.due,
         textColor: 'var(--sl-color-neutral-0)',
-        extendedProps: { eventType: 'due' },
+        extendedProps: { eventType: 'due', workId: work.id },
       });
     }
   }
@@ -185,7 +185,10 @@ function onClickDate(args: DateClickArg) {
 
 function onClickEvent(args: EventClickArg) {
   console.log(args);
-  router.push(`/detail/${args.event.id}`);
+  const workId = args.event.extendedProps.workId as string | undefined;
+  if (workId) {
+    router.push(`/detail/${workId}`);
+  }
 }
 
 function onDidMountEvent(args: EventMountArg) {
