@@ -213,7 +213,10 @@
                   <sl-icon slot="prefix" name="paperclip"></sl-icon>
                   파일 선택
                 </sl-button>
-                <input id="fileInput" ref="fileInput" type="file" class="hidden" />
+                <input id="fileInput" ref="fileInput" type="file" class="hidden" @change="onChangeFileInput" />
+              </div>
+              <div v-show="selectedFileName" class="mt-3">
+                <sl-tag size="small">선택한 파일: {{ selectedFileName }}</sl-tag>
               </div>
               <div v-show="work.file" class="mt-3">
                 <a :href="getWorkFileUrl(work, work.file)" target="_blank">
@@ -286,6 +289,7 @@ const router = useRouter();
 const keys = useMagicKeys();
 const scheduledNotificationTime = ref<string>('');
 const fileInput = ref<HTMLInputElement | null>(null);
+const selectedFileName = ref<string>('');
 let redirectTimer: number | null = null;
 const work = ref<
   WorksResponse<{
@@ -354,6 +358,12 @@ const getWorkStateIcon = (value: string) => {
 
 const onClickSelectFile = () => {
   fileInput.value?.click();
+};
+
+const onChangeFileInput = (event: Event) => {
+  const target = event.target as HTMLInputElement | null;
+  const file = target?.files?.[0];
+  selectedFileName.value = file?.name ?? '';
 };
 
 const onChangeDone = () => {
@@ -427,6 +437,7 @@ const updateWorkDetail = async () => {
   if (fileInput.value) {
     fileInput.value.value = '';
   }
+  selectedFileName.value = '';
 };
 
 const updateWorkByCreateScheduledNotification = async (scheduledNotificationId: string) => {
