@@ -14,11 +14,11 @@
 
       <div class="mt-4 flex flex-wrap items-center gap-4">
         <div class="flex items-center gap-2">
-          <sl-switch v-model="listFilter.done"></sl-switch>
+          <sl-switch :checked="listFilter.done" @sl-change="onChangeDoneFilter"></sl-switch>
           <span class="text-sm">완료여부</span>
         </div>
         <div class="flex items-center gap-2">
-          <sl-switch v-model="weeklyReport" @sl-change="onChangeSetWeeklyReportDate"></sl-switch>
+          <sl-switch :checked="weeklyReport" @sl-change="onChangeWeeklyReport"></sl-switch>
           <span class="text-sm">주간보고서</span>
         </div>
       </div>
@@ -28,7 +28,12 @@
           <sl-input v-model="listFilter.updatedFrom" type="date" label="수정일자 (FROM)"></sl-input>
           <sl-input v-model="listFilter.updatedTo" type="date" label="수정일자 (TO)"></sl-input>
           <sl-input v-model="listFilter.dueDate" type="date" label="마감일자"></sl-input>
-          <sl-select v-model="listFilter.developer" label="개발자" placeholder="개발자 선택">
+          <sl-select
+            :value="listFilter.developer"
+            label="개발자"
+            placeholder="개발자 선택"
+            @sl-change="onChangeDeveloper"
+          >
             <sl-option value="ALL">전체</sl-option>
             <sl-option value="">미배정</sl-option>
             <template v-for="developer in developers" :key="developer.id">
@@ -160,6 +165,22 @@ const onClickSearch = () => {
     `,
     perPage: 100000,
   });
+};
+
+const onChangeDeveloper = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  listFilter.value.developer = target.value;
+};
+
+const onChangeDoneFilter = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  listFilter.value.done = target.checked;
+};
+
+const onChangeWeeklyReport = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  weeklyReport.value = target.checked;
+  onChangeSetWeeklyReportDate();
 };
 
 const onChangeSetWeeklyReportDate = () => {
