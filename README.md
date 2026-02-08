@@ -38,6 +38,35 @@ firebase deploy
 
 - 클라우드 호스팅
 
+#### PocketHost
+
+**SMTP**
+
+```json
+[
+  {
+    "name": "my-portfolio / pb_public",
+    "host": "ftp.pockethost.io",
+    "protocol": "ftp",
+    "port": 21,
+    "username": "*****************",
+    "password": "*****************",
+    "context": "apps/portfolio/dist",
+    "remotePath": "my-portfolio/pb_public"
+  },
+  {
+    "name": "my-portfolio / pb_hooks",
+    "host": "ftp.pockethost.io",
+    "protocol": "ftp",
+    "port": 21,
+    "username": "*****************",
+    "password": "*****************",
+    "context": "apps/portfolio/pb_hooks",
+    "remotePath": "my-portfolio/pb_hooks"
+  }
+]
+```
+
 ---
 
 ## 라이브러리 옵션
