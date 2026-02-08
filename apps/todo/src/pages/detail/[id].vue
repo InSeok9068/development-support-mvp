@@ -31,11 +31,7 @@
                 <h5 class="font-semibold">진행 상태</h5>
                 <div class="ml-auto flex items-center gap-2 text-sm text-slate-600">
                   <span>완료</span>
-                  <sl-switch
-                    :checked="work.done"
-                    size="small"
-                    @sl-change="onChangeDone"
-                  ></sl-switch>
+                  <sl-switch :checked="work.done" size="small" @sl-change="onChangeDone"></sl-switch>
                 </div>
               </div>
               <div class="pb-1">
@@ -56,13 +52,7 @@
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">내용</h5>
-                <sl-copy-button
-                  class="ml-auto"
-                  size="small"
-                  :value="markdownContent"
-                >
-                  마크다운 복사
-                </sl-copy-button>
+                <sl-copy-button class="ml-auto" size="small" :value="markdownContent"> 마크다운 복사 </sl-copy-button>
               </div>
               <div class="rounded-md border border-slate-200 bg-white p-2">
                 <DetailEditor v-model="work.content" />
@@ -154,12 +144,7 @@
                       ></sl-range>
                     </div>
 
-                    <sl-textarea
-                      :value="redmineData.notes"
-                      label="댓글 작성"
-                      resize="auto"
-                      @sl-change="onChangeRedmineNotes"
-                    ></sl-textarea>
+                    <sl-textarea v-model="redmineData.notes" label="댓글 작성" resize="auto"></sl-textarea>
 
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                       <sl-button size="small" variant="default" @click="onClickSelectRedmineData">불러오기</sl-button>

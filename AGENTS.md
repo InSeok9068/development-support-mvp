@@ -76,7 +76,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   기본 HTML + Tailwind 조합을 예외적으로 허용한다.
 - Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에,
   반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
-- `<sl-input>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트는
+- `<sl-input>`과 `<sl-textarea>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트는
   `<sl-select>`, `<sl-radio>`, `<sl-checkbox>` 등은 `:value`와 `@sl-change`를 사용한다.
 
 #### 2. UI 동작 구현 판단 순서 (필수 준수)
