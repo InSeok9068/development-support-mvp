@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 class="font-semibold tracking-tight">오늘의 업무</h4>
-            <div class="flex items-center gap-3 text-sm text-slate-500">
+            <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
               <span :class="{ 'font-semibold text-red-500': works.length > 10, 'animate-pulse': works.length > 10 }">
                 현재 {{ works.length }}개
               </span>
@@ -18,8 +18,8 @@
           </sl-button>
         </div>
 
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
+          <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
             <span>담당자 필터</span>
             <span>{{ developers.length }}명</span>
           </div>
@@ -50,7 +50,7 @@
           </sl-button-group>
         </div>
 
-        <form id="workArgsForm" class="rounded-lg border border-slate-200 bg-white p-3">
+        <form id="workArgsForm" class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <sl-input
               v-model="workArgs.title"
@@ -83,7 +83,7 @@
           <li
             v-for="work in works"
             :key="work.id"
-            class="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-slate-300 hover:shadow"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow dark:border-slate-700 dark:bg-slate-900"
           >
             <div class="flex items-start justify-between gap-4">
               <div class="min-w-0">
@@ -95,22 +95,22 @@
                     </a>
                   </h6>
                 </div>
-                <div class="mt-2 grid gap-y-2 text-xs text-slate-600 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
+                <div class="mt-2 grid gap-y-2 text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
                   <div class="flex items-center justify-between gap-3">
-                    <span class="min-w-15 font-semibold text-slate-500">개발자</span>
+                    <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">개발자</span>
                     <span class="text-right">
                       {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
                     </span>
                   </div>
                   <div class="flex items-center justify-between gap-3">
-                    <span class="min-w-15 font-semibold text-slate-500">상태</span>
+                    <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">상태</span>
                     <span class="text-right">
                       <i :class="getCodeClass('workState', work.state)"></i>
                       {{ getCodeDesc('workState', work.state) }}
                     </span>
                   </div>
                   <div class="hidden items-center justify-between gap-3 sm:flex">
-                    <span class="min-w-15 font-semibold text-slate-500">등록일자</span>
+                    <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">등록일자</span>
                     <span class="text-right">{{ dayjs(work.created).format('YYYY-MM-DD') }}</span>
                   </div>
                   <div
@@ -121,13 +121,13 @@
                       ),
                     }"
                   >
-                    <span class="min-w-15 font-semibold text-slate-500">마감일자</span>
+                    <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">마감일자</span>
                     <span class="text-right">{{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}</span>
                   </div>
                 </div>
               </div>
               <sl-button size="small" variant="text" @click="onClickDeleteWork(work)">
-                <i class="bi-trash text-slate-500"></i>
+                <i class="bi-trash text-slate-500 dark:text-slate-400"></i>
               </sl-button>
             </div>
           </li>
