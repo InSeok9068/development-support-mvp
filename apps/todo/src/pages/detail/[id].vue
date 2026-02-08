@@ -173,9 +173,11 @@
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <h5 class="mb-3 font-semibold">미리알람</h5>
-              <div class="flex flex-col gap-2">
-                <sl-input v-model="scheduledNotificationTime" type="datetime-local"></sl-input>
-                <sl-button size="small" variant="default" @click="onClickCreateScheduledNotification"> SAVE </sl-button>
+              <div class="flex items-center gap-2">
+                <sl-input v-model="scheduledNotificationTime" type="datetime-local" class="min-w-0 flex-1"></sl-input>
+                <sl-button class="shrink-0" variant="default" @click="onClickCreateScheduledNotification">
+                  SAVE
+                </sl-button>
               </div>
               <div v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3 overflow-x-auto">
                 <table>
