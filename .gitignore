@@ -36,3 +36,6 @@ typed-router.d.ts
 # pb_hooks
 pb_data.zip
 
+# Environment Variables
+.env
+
