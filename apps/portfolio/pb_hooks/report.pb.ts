@@ -62,7 +62,7 @@ routerAdd('POST', '/api/report', (e) => {
   $app.save(reportRecord);
   console.log('[report] report created', { reportId: reportRecord.id });
 
-  const geminiApiKey = $os.getenv('GEMINI_API_KEY');
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   console.log('[report] has GEMINI_API_KEY', !!geminiApiKey);
   if (!geminiApiKey) {
     console.log('[report] missing GEMINI_API_KEY');
@@ -132,7 +132,10 @@ routerAdd('POST', '/api/report', (e) => {
 
   const extractJsonText = (text) => {
     let value = (text ?? '').trim();
-    value = value.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim();
+    value = value
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/```$/i, '')
+      .trim();
     const arrayStart = value.indexOf('[');
     const arrayEnd = value.lastIndexOf(']');
     if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {

@@ -3,11 +3,20 @@
     <div class="flex flex-col gap-6">
       <sl-card class="w-full">
         <div class="flex flex-col gap-3">
-          <h3 class="text-lg font-semibold">한 장의 사진으로 자산 리포트</h3>
+          <h3 class="text-lg font-semibold">포트폴리오 리포트 자동 생성</h3>
           <p class="text-sm text-slate-600 dark:text-slate-300">
-            토스 투자 화면 스크린샷 1장을 올리면 AI가 종목명과 금액을 추출하고,
-            국내/해외 구분과 함께 자산 현황 리포트를 만들어줍니다.
+            투자 화면 스크린샷 1장만 업로드하면, 종목명과 금액을 자동으로 추출해
+            국내/해외 구분과 함께 자산 현황을 정리한 리포트를 제공합니다.
           </p>
+          <sl-divider></sl-divider>
+          <div class="flex flex-col gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div class="font-medium text-slate-600 dark:text-slate-300">서비스 소개</div>
+            <ul class="list-disc pl-4">
+              <li>업로드 파일은 리포트 생성에만 사용되며 저장 목적의 수집은 하지 않습니다.</li>
+              <li>결과는 요약 리포트로 제공되며, 추출된 항목을 바로 확인할 수 있습니다.</li>
+              <li>처리 시간은 보통 수초이며, 파일 크기와 네트워크 환경에 따라 달라집니다.</li>
+            </ul>
+          </div>
         </div>
       </sl-card>
 
@@ -20,13 +29,29 @@
             </p>
           </div>
 
-          <label class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2">
             <span class="text-sm font-medium">투자 화면 스크린샷</span>
-            <input type="file" accept="image/*" @change="onChangeUpload" />
+            <div class="flex items-center gap-3">
+              <sl-button variant="default" @click="onClickSelectFile">
+                <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+                <sl-icon slot="prefix" name="upload"></sl-icon>
+                파일 선택
+              </sl-button>
+              <span class="text-xs text-slate-500 dark:text-slate-400">
+                {{ selectedFileName || '선택된 파일 없음' }}
+              </span>
+            </div>
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="onChangeUpload"
+            />
             <span class="text-xs text-slate-500 dark:text-slate-400">
               한 장만 업로드 가능합니다.
             </span>
-          </label>
+          </div>
 
           <div class="flex items-center gap-3">
             <sl-button
@@ -36,9 +61,6 @@
             >
               분석 시작
             </sl-button>
-            <span class="text-xs text-slate-500 dark:text-slate-400">
-              {{ selectedFileName || '선택된 파일 없음' }}
-            </span>
           </div>
 
           <div v-if="isSubmitting" class="text-xs text-slate-500 dark:text-slate-400">
@@ -98,6 +120,7 @@ import { useReports } from '@/composables/useReports';
 
 const selectedFile = ref<File | null>(null);
 const selectedFileName = ref('');
+const fileInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
 type ReportItem = {
   name: string;
@@ -138,6 +161,10 @@ const onChangeUpload = (event: Event) => {
   selectedFileName.value = file?.name ?? '';
   reportResult.value = '';
   reportSummary.value = null;
+};
+
+const onClickSelectFile = () => {
+  fileInputRef.value?.click();
 };
 
 const onClickAnalyze = () => {
