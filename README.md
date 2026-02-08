@@ -21,6 +21,15 @@
 
 ---
 
+## 로컬 실행 (pb_hooks 리로드)
+
+```powershell
+$env:GEMINI_API_KEY="ENCRYPTION_KEY"
+.\pbw.exe .\pocketbase.exe serve --dev
+```
+
+---
+
 ## 배포
 
 ### 1. 프론트엔드
