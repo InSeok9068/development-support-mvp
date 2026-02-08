@@ -15,6 +15,24 @@
         </div>
       </sl-dialog>
 
+      <div class="flex items-center justify-end">
+        <sl-dropdown>
+          <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+          <sl-icon-button slot="trigger" name="list" label="메뉴"></sl-icon-button>
+          <sl-menu>
+            <sl-menu-item v-if="!isAuth" @click="onClickGoSignin">
+              로그인
+            </sl-menu-item>
+            <sl-menu-item v-if="isAuth" :disabled="!isSuperuser" @click="onClickGoAdmin">
+              관리자 페이지
+            </sl-menu-item>
+            <sl-menu-item v-if="isAuth" @click="onClickSignout">
+              로그아웃
+            </sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
+      </div>
+
       <sl-card class="w-full">
         <div class="flex flex-col gap-3">
           <h3 class="text-lg font-semibold">포트폴리오 리포트 자동 생성</h3>
@@ -192,10 +210,12 @@
 
 <script setup lang="ts">
 /* ======================= 변수 ======================= */
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
+import { useRouter } from 'vue-router';
 
+import { useAuth } from '@/composables/useAuth';
 import { useReports } from '@/composables/useReports';
 
 const selectedFile = ref<File | null>(null);
@@ -227,6 +247,8 @@ type ChartEntry = {
 
 const reportSummary = ref<ReportSummary | null>(null);
 
+const router = useRouter();
+const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
 const { createReportFromImage } = useReports();
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -264,9 +286,27 @@ const pieOptions = {
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
+onMounted(() => {
+  fetchAuthState();
+});
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
+const onClickGoSignin = () => {
+  router.push('/sign');
+};
+
+const onClickGoAdmin = () => {
+  if (!isSuperuser.value) {
+    return;
+  }
+  router.push('/admin');
+};
+
+const onClickSignout = () => {
+  deleteAuthSession();
+};
+
 const onChangeUpload = (event: Event) => {
   const target = event.target as HTMLInputElement | null;
   const file = target?.files?.[0] ?? null;

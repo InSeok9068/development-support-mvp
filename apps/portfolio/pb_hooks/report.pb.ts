@@ -196,13 +196,20 @@ routerAdd('POST', '/api/report', (e) => {
   console.log('[report] done');
   const instrumentsCollection = $app.findCollectionByNameOrId('instruments');
   const holdingsCollection = $app.findCollectionByNameOrId('holdings');
+  const matchLogsCollection = $app.findCollectionByNameOrId('match_logs');
   const savedHoldings = [];
 
   validItems.forEach((item) => {
     let instrumentRecord = null;
+    let matchedBy = 'ai';
+    let confidence = 0.2;
     if (item.name) {
       const found = $app.findRecordsByFilter('instruments', 'name = {:name}', '', 1, 0, { name: item.name });
       instrumentRecord = found?.[0] ?? null;
+      if (instrumentRecord) {
+        matchedBy = 'exact';
+        confidence = 1;
+      }
     }
     if (!instrumentRecord) {
       instrumentRecord = new Record(instrumentsCollection);
@@ -225,6 +232,16 @@ routerAdd('POST', '/api/report', (e) => {
     holdingRecord.set('assetType', item.assetType);
     holdingRecord.set('value', item.amountValue);
     $app.save(holdingRecord);
+
+    const matchLogRecord = new Record(matchLogsCollection);
+    matchLogRecord.set('reportId', reportRecord.id);
+    matchLogRecord.set('rawName', item.name);
+    matchLogRecord.set('matchedBy', matchedBy);
+    matchLogRecord.set('confidence', confidence);
+    if (instrumentRecord?.id) {
+      matchLogRecord.set('instrumentId', instrumentRecord.id);
+    }
+    $app.save(matchLogRecord);
 
     savedHoldings.push({ holdingId: holdingRecord.id, instrumentId: instrumentRecord?.id });
   });

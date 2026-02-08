@@ -52,6 +52,16 @@ erDiagram
       string instrumentId      %% ?선택 instruments 참조 (매칭 실패 시 null)
       float confidence         %% ?선택 매칭 신뢰도 (0~1, 없으면 null)
       string matchedBy         %% !필수 매칭 방식 (exact|alias|ai)
+      string status            %% !필수 매칭 상태 (pending|confirmed|rejected)
+      string candidateName     %% ?선택 관리자 확정용 종목명 (없으면 null)
+      string region            %% ?선택 확정/수정용 KR|US|ETC
+      string assetType         %% ?선택 확정/수정용 stock|etf|fund|bond|cash|etc
+      string sector            %% ?선택 확정/수정용 섹터
+      string style             %% ?선택 확정/수정용 성향 (성장|배당|가치|혼합)
+      string dividendProfile   %% ?선택 확정/수정용 배당 성향
+      bool isBondLike          %% ?선택 확정/수정용 채권 유사 성향 여부
+      string ticker            %% ?선택 확정/수정용 티커
+      string exchange          %% ?선택 확정/수정용 거래소
   }
 
   reports ||--o{ holdings : has
