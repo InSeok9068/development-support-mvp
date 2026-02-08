@@ -68,3 +68,127 @@ erDiagram
   instruments ||--o{ holdings : classified_by
   reports ||--o{ match_logs : logs
   instruments ||--o{ match_logs : matched_to
+
+%% ================================
+%% NEW - 직관적 용어 버전 (MVP)
+%% ================================
+erDiagram
+
+%% 표기 규칙
+%% !필수: null 불가
+%% ?선택: null 가능
+
+  reports_new {
+      %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
+      string sourceImageUrl     %% !필수 업로드 이미지 URL
+      string sourceImageHash    %% !필수 이미지 중복 방지용 해시
+      string baseCurrency       %% !필수 기준 통화 (예: "KRW")
+      float totalValue          %% !필수 전체 평가금액
+      float totalProfit         %% ?선택 전체 손익금액
+      float totalProfitRate     %% ?선택 전체 손익률
+      string status             %% !필수 처리 상태 (pending|processing|done|failed)
+  }
+
+  extracted_assets {
+      %% 이미지에서 뽑아낸 원본 정보
+      string reportId           %% !필수 reports_new 참조
+      string adminAssetId       %% ?선택 admin_assets 참조 (매칭 실패 시 null)
+      string rawName            %% !필수 이미지 원문 자산명
+      string category           %% !필수 자산 카테고리
+      float amount              %% !필수 자산 금액
+      float profit              %% ?선택 손익금액
+      float profitRate          %% ?선택 손익률
+      float quantity            %% ?선택 수량
+  }
+
+  admin_assets {
+      %% 관리자가 관리하는 표준 자산 정보
+      string name               %% !필수 표준 자산명
+      string alias1             %% ?선택 별명1
+      string alias2             %% ?선택 별명2
+      string alias3             %% ?선택 별명3
+      string category           %% !필수 자산 카테고리
+      string groupType          %% !필수 자산 구분
+      string tags               %% ?선택 자산 성향 태그 (복수)
+      string sectors            %% ?선택 자산 섹터 (복수)
+  }
+
+  match_logs_new {
+      %% 매칭 결과 기록
+      string reportId           %% !필수 reports_new 참조
+      string rawName            %% !필수 매칭 대상 원문명
+      string adminAssetId       %% ?선택 admin_assets 참조 (매칭 실패 시 null)
+      float confidence          %% ?선택 매칭 신뢰도 (0~1)
+      string matchedBy          %% !필수 매칭 방식 (exact|alias|ai)
+      string status             %% !필수 매칭 상태 (pending|confirmed|rejected)
+  }
+
+%% 옵션 목록 (확인용)
+%% - 자산 카테고리
+%%   1. 현금 (cash)
+%%   2. 예적금 (deposit)
+%%   3. 주식 (stock)
+%%   4. ETF (etf)
+%%   5. 채권 (bond)
+%%   6. 펀드 (fund)
+%%   7. 연금 (pension)
+%%   8. 암호화폐 (crypto)
+%%   9. 부동산 (real_estate)
+%%   10. 리츠(REITs) (reits)
+%%   11. 원자재·금 (commodity_gold)
+%%   12. 보험 (insurance)
+%%   13. 자동차 (car)
+%%   14. 기타 (etc)
+%%
+%% - 자산 구분
+%%   1. 현금성 (liquid) - 언제든 쓸 돈 / 안전
+%%      예: 현금, 예금, 적금, MMF, CMA
+%%   2. 투자성 (risk) - 수익 추구 / 변동 감수
+%%      예: 주식, 주식형 ETF, 주식형 펀드, 암호화폐, 테마 ETF
+%%   3. 안정·이자형 (defensive) - 이자 / 방어
+%%      예: 국채/회사채, 채권형 ETF, 채권형 펀드, 단기채
+%%   4. 실물·대체 (real) - 실물자산 / 인플레 헤지
+%%      예: 부동산, 리츠, 금/원자재, 자동차(필요 시)
+%%
+%% - 자산 성향 태그 (복수)
+%%   1. 성장 (growth)
+%%   2. 인컴 (income)
+%%   3. 혼합 (blend)
+%%   4. 저변동 (low_vol)
+%%   5. 고위험 (high_risk)
+%%   6. 안정 (stable)
+%%   7. 테마 (theme)
+%%   8. 인플레이션 헤지 (inflation_hedge)
+%%   9. 노후 (retirement)
+%%   10. 세제혜택 (tax_benefit)
+%%
+%% - 자산 섹터 (복수)
+%%   1. IT·소프트웨어 (it_software)
+%%   2. 반도체 (semiconductor)
+%%   3. 하드웨어·장비 (hardware_equipment)
+%%   4. 통신 (telecom)
+%%   5. 인터넷·플랫폼 (internet_platform)
+%%   6. 금융 (finance)
+%%   7. 은행 (bank)
+%%   8. 보험 (insurance)
+%%   9. 증권·자산운용 (securities_asset_mgmt)
+%%   10. 헬스케어 (healthcare)
+%%   11. 바이오·제약 (biotech_pharma)
+%%   12. 소비재(경기소비재) (consumer_discretionary)
+%%   13. 필수소비재 (consumer_staples)
+%%   14. 유통·리테일 (retail)
+%%   15. 자동차 (auto)
+%%   16. 산업재(기계·중공업) (industrials)
+%%   17. 소재(화학·철강 등) (materials)
+%%   18. 에너지 (energy)
+%%   19. 유틸리티 (utilities)
+%%   20. 부동산(리츠 포함) (real_estate)
+%%   21. 운송·물류 (transportation_logistics)
+%%   22. 미디어·엔터 (media_entertainment)
+%%   23. 교육 (education)
+%%   24. 건설 (construction)
+
+  reports_new ||--o{ extracted_assets : has
+  admin_assets ||--o{ extracted_assets : matched_to
+  reports_new ||--o{ match_logs_new : logs
+  admin_assets ||--o{ match_logs_new : matched_to
