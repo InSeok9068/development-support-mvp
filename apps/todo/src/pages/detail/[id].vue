@@ -35,22 +35,17 @@
                 </div>
               </div>
               <div class="pb-1">
-                <div class="flex flex-wrap gap-2 text-xs">
-                  <template v-for="state in getCodesByType('workState')" :key="state.value">
-                    <div class="w-[calc(33.333%-0.34rem)]">
-                      <sl-button
-                        class="w-full"
-                        size="small"
-                        :variant="work.state === state.value ? 'primary' : 'default'"
-                        @click="work.state = state.value"
-                      >
+                <sl-radio-group v-model="work.state" size="small">
+                  <div class="flex flex-wrap gap-2 text-xs">
+                    <template v-for="state in getCodesByType('workState')" :key="state.value">
+                      <sl-radio-button :value="state.value">
                         {{ state.desc }}
                         <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
                         <sl-icon slot="suffix" :name="getWorkStateIcon(state.value)"></sl-icon>
-                      </sl-button>
-                    </div>
-                  </template>
-                </div>
+                      </sl-radio-button>
+                    </template>
+                  </div>
+                </sl-radio-group>
               </div>
             </div>
 
