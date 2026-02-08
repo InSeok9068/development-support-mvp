@@ -97,11 +97,41 @@
                         일감 관리자 추가
                       </div>
                       <div class="flex flex-wrap gap-3">
-                        <sl-checkbox v-model="redmineData.watchers" value="cx">CX팀</sl-checkbox>
-                        <sl-checkbox v-model="redmineData.watchers" value="server">개발팀(서버)</sl-checkbox>
-                        <sl-checkbox v-model="redmineData.watchers" value="client">개발팀(클라이언트)</sl-checkbox>
-                        <sl-checkbox v-model="redmineData.watchers" value="biz">사업팀</sl-checkbox>
-                        <sl-checkbox v-model="redmineData.watchers" value="manager">관리자</sl-checkbox>
+                        <sl-checkbox
+                          :checked="redmineData.watchers.includes('cx')"
+                          value="cx"
+                          @sl-change="onChangeWatcher"
+                        >
+                          CX팀
+                        </sl-checkbox>
+                        <sl-checkbox
+                          :checked="redmineData.watchers.includes('server')"
+                          value="server"
+                          @sl-change="onChangeWatcher"
+                        >
+                          개발팀(서버)
+                        </sl-checkbox>
+                        <sl-checkbox
+                          :checked="redmineData.watchers.includes('client')"
+                          value="client"
+                          @sl-change="onChangeWatcher"
+                        >
+                          개발팀(클라이언트)
+                        </sl-checkbox>
+                        <sl-checkbox
+                          :checked="redmineData.watchers.includes('biz')"
+                          value="biz"
+                          @sl-change="onChangeWatcher"
+                        >
+                          사업팀
+                        </sl-checkbox>
+                        <sl-checkbox
+                          :checked="redmineData.watchers.includes('manager')"
+                          value="manager"
+                          @sl-change="onChangeWatcher"
+                        >
+                          관리자
+                        </sl-checkbox>
                       </div>
                     </div>
 
@@ -124,7 +154,12 @@
                       ></sl-range>
                     </div>
 
-                    <sl-textarea v-model="redmineData.notes" label="댓글 작성" resize="auto"></sl-textarea>
+                    <sl-textarea
+                      :value="redmineData.notes"
+                      label="댓글 작성"
+                      resize="auto"
+                      @sl-change="onChangeRedmineNotes"
+                    ></sl-textarea>
 
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                       <sl-button size="small" variant="default" @click="onClickSelectRedmineData">불러오기</sl-button>
@@ -309,7 +344,14 @@ const work = ref<
     scheduledNotifications?: ScheduledNotificationsResponse[];
   }>,
 );
-const redmineData = ref({
+const redmineData = ref<{
+  id: string;
+  startDate: string;
+  dueDate: string;
+  doneRatio: number;
+  notes: string;
+  watchers: string[];
+}>({
   id: '',
   startDate: '',
   dueDate: '',
@@ -395,6 +437,32 @@ const onChangeWorkState = (event: Event) => {
 const onChangeDeveloper = (event: Event) => {
   const target = event.target as { value?: string } | null;
   work.value.developer = target?.value ?? '';
+};
+
+const onChangeWatcher = (event: Event) => {
+  const target = event.target as { checked?: boolean; value?: string } | null;
+  const value = target?.value ?? '';
+  if (!value) {
+    return;
+  }
+
+  const watchers = [...redmineData.value.watchers];
+  const index = watchers.indexOf(value);
+  const isChecked = Boolean(target?.checked);
+
+  if (isChecked && index === -1) {
+    watchers.push(value);
+  }
+  if (!isChecked && index !== -1) {
+    watchers.splice(index, 1);
+  }
+
+  redmineData.value.watchers = watchers;
+};
+
+const onChangeRedmineNotes = (event: Event) => {
+  const target = event.target as { value?: string } | null;
+  redmineData.value.notes = target?.value ?? '';
 };
 
 const onClickRedmine = (url: string) => {
