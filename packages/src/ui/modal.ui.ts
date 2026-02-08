@@ -3,5 +3,9 @@ export interface UiModalArgs {
   title: string;
   message: string;
   dutationMs?: number;
-  fn?: () => void;
+  fn?: () => void | Promise<void>;
+  cancelFn?: () => void | Promise<void>;
+  confirmText?: string;
+  cancelText?: string;
+  showCancel?: boolean;
 }

@@ -146,6 +146,7 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useSign } from '@/composables/user/sign';
 import { useValidator } from '@/composables/validator';
+import { useModal } from '@packages/ui';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
 import { onMounted, ref } from 'vue';
@@ -159,6 +160,7 @@ const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
+const { showConfirmModal } = useModal();
 const validator = useValidator([
   {
     key: 'title',
@@ -245,8 +247,14 @@ const onClickDoneWork = async (work: WorksResponse) => {
   });
 };
 
-const onClickDeleteWork = async (work: WorksResponse) => {
-  await deleteWork(work);
+const onClickDeleteWork = (work: WorksResponse) => {
+  showConfirmModal({
+    title: '삭제 확인',
+    message: '해당 업무를 삭제할까요?',
+    onConfirm: async () => {
+      await deleteWork(work);
+    },
+  });
 };
 
 const onClickSort = async () => {

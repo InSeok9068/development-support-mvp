@@ -7,6 +7,9 @@ export const useModalStore = defineStore('modal', () => {
     show: false,
     title: '알림',
     message: '',
+    confirmText: '확인',
+    cancelText: '취소',
+    showCancel: false,
   });
 
   return { modal };

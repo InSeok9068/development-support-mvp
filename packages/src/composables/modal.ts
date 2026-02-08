@@ -2,6 +2,15 @@ import { useModalStore } from '../stores/modal.store';
 import type { UiModalArgs } from '../ui/modal.ui';
 import { storeToRefs } from 'pinia';
 
+interface ConfirmModalArgs {
+  title?: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+}
+
 export const useModal = () => {
   /* ======================= 변수 ======================= */
   const { modal } = storeToRefs(useModalStore());
@@ -17,6 +26,25 @@ export const useModal = () => {
       ...modal.value,
       show: true,
       message,
+      showCancel: false,
+      confirmText: '확인',
+      cancelText: '취소',
+      fn: undefined,
+      cancelFn: undefined,
+    });
+  };
+
+  const showConfirmModal = (args: ConfirmModalArgs) => {
+    updateModal({
+      ...modal.value,
+      show: true,
+      title: args.title ?? '확인',
+      message: args.message,
+      confirmText: args.confirmText ?? '확인',
+      cancelText: args.cancelText ?? '취소',
+      showCancel: true,
+      fn: args.onConfirm,
+      cancelFn: args.onCancel,
     });
   };
 
@@ -26,6 +54,10 @@ export const useModal = () => {
     modal.value.message = '';
     modal.value.dutationMs = undefined;
     modal.value.fn = undefined;
+    modal.value.cancelFn = undefined;
+    modal.value.confirmText = '확인';
+    modal.value.cancelText = '취소';
+    modal.value.showCancel = false;
   };
   /* ======================= 메서드 ======================= */
 
@@ -33,6 +65,7 @@ export const useModal = () => {
     modal,
 
     showMessageModal,
+    showConfirmModal,
     clearModal,
   };
 };
