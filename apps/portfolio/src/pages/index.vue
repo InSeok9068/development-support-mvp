@@ -1,6 +1,20 @@
 <template>
   <main class="container mx-auto p-4">
     <div class="flex flex-col gap-6">
+      <sl-dialog
+        no-header
+        :open="isSubmitting"
+        @sl-request-close="onRequestCloseSubmitting"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <sl-spinner></sl-spinner>
+          <div class="text-sm font-medium">투자 분석 중...</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">
+            잠시만 기다려 주세요. 완료되면 자동으로 닫힙니다.
+          </div>
+        </div>
+      </sl-dialog>
+
       <sl-card class="w-full">
         <div class="flex flex-col gap-3">
           <h3 class="text-lg font-semibold">포트폴리오 리포트 자동 생성</h3>
@@ -56,6 +70,7 @@
           <div class="flex items-center gap-3">
             <sl-button
               variant="primary"
+              :loading="isSubmitting"
               :disabled="!selectedFile || isSubmitting"
               @click="onClickAnalyze"
             >
@@ -67,9 +82,6 @@
             리포트를 생성 중입니다.
           </div>
 
-          <div v-if="reportResult" class="text-xs text-slate-500 dark:text-slate-400">
-            {{ reportResult }}
-          </div>
         </div>
       </sl-card>
 
@@ -85,6 +97,72 @@
             <div class="text-right">
               <div class="text-xs text-slate-500 dark:text-slate-400">총 평가액</div>
               <div class="text-lg font-semibold">{{ formatKrw(reportSummary.totalValue) }}</div>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div
+              class="flex flex-col gap-3 rounded border border-slate-200 p-3 dark:border-slate-700"
+            >
+              <div class="text-sm font-semibold">자산 유형 비율</div>
+              <div class="flex items-center gap-4">
+                <div class="h-28 w-28">
+                  <Pie v-if="assetTypeEntries.length" :data="assetTypeChartData" :options="pieOptions" />
+                  <div
+                    v-else
+                    class="flex h-full w-full items-center justify-center rounded-full bg-slate-200 text-xs text-slate-500"
+                  >
+                    없음
+                  </div>
+                </div>
+                <div class="flex flex-1 flex-col gap-1 text-xs text-slate-600 dark:text-slate-300">
+                  <div v-if="!assetTypeEntries.length">데이터 없음</div>
+                  <div
+                    v-for="entry in assetTypeEntries"
+                    :key="entry.label"
+                    class="flex items-center justify-between"
+                  >
+                    <span>{{ entry.label }}</span>
+                    <span class="text-slate-500 dark:text-slate-400">
+                      {{ formatPercent(entry.value, assetTypeTotal) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex flex-col gap-3 rounded border border-slate-200 p-3 dark:border-slate-700"
+            >
+              <div class="text-sm font-semibold">주식 스타일 비율</div>
+              <div class="flex items-center gap-4">
+                <div class="h-28 w-28">
+                  <Pie
+                    v-if="stockStyleEntries.length"
+                    :data="stockStyleChartData"
+                    :options="pieOptions"
+                  />
+                  <div
+                    v-else
+                    class="flex h-full w-full items-center justify-center rounded-full bg-slate-200 text-xs text-slate-500"
+                  >
+                    없음
+                  </div>
+                </div>
+                <div class="flex flex-1 flex-col gap-1 text-xs text-slate-600 dark:text-slate-300">
+                  <div v-if="!stockStyleEntries.length">데이터 없음</div>
+                  <div
+                    v-for="entry in stockStyleEntries"
+                    :key="entry.label"
+                    class="flex items-center justify-between"
+                  >
+                    <span>{{ entry.label }}</span>
+                    <span class="text-slate-500 dark:text-slate-400">
+                      {{ formatPercent(entry.value, stockStyleTotal) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -114,7 +192,9 @@
 
 <script setup lang="ts">
 /* ======================= 변수 ======================= */
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
+import { Pie } from 'vue-chartjs';
 
 import { useReports } from '@/composables/useReports';
 
@@ -140,10 +220,44 @@ type ReportSummary = {
   items: ReportItem[];
 };
 
-const reportResult = ref('');
+type ChartEntry = {
+  label: string;
+  value: number;
+};
+
 const reportSummary = ref<ReportSummary | null>(null);
 
 const { createReportFromImage } = useReports();
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+const assetTypeEntries = computed(() => buildAssetTypeEntries(reportSummary.value));
+const stockStyleEntries = computed(() => buildStockStyleEntries(reportSummary.value));
+const assetTypeTotal = computed(() => sumEntries(assetTypeEntries.value));
+const stockStyleTotal = computed(() => sumEntries(stockStyleEntries.value));
+const assetTypeChartData = computed(() =>
+  buildPieChartData(assetTypeEntries.value, ['#2563eb', '#14b8a6', '#f59e0b', '#94a3b8']),
+);
+const stockStyleChartData = computed(() =>
+  buildPieChartData(stockStyleEntries.value, ['#0ea5e9', '#a855f7', '#22c55e', '#94a3b8']),
+);
+const pieOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false,
+    },
+    tooltip: {
+      callbacks: {
+        label: (context: { label?: string; parsed?: number }) => {
+          const label = context.label ?? '';
+          const value = context.parsed ?? 0;
+          return `${label} ${formatKrw(value)}`;
+        },
+      },
+    },
+  },
+};
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -159,12 +273,17 @@ const onChangeUpload = (event: Event) => {
 
   selectedFile.value = file;
   selectedFileName.value = file?.name ?? '';
-  reportResult.value = '';
   reportSummary.value = null;
 };
 
 const onClickSelectFile = () => {
   fileInputRef.value?.click();
+};
+
+const onRequestCloseSubmitting = (event: Event) => {
+  if (isSubmitting.value) {
+    event.preventDefault();
+  }
 };
 
 const onClickAnalyze = () => {
@@ -176,7 +295,6 @@ const onClickAnalyze = () => {
 
   createReportFromImage(selectedFile.value)
     .then((response) => {
-      reportResult.value = `리포트 ID: ${response.reportId}`;
       if (response.items && typeof response.totalValue === 'number') {
         reportSummary.value = {
           totalValue: response.totalValue,
@@ -211,5 +329,94 @@ const buildMetaText = (item: ReportItem) => {
     item.isBondLike ? 'bond-like' : '',
   ].filter(Boolean);
   return tokens.join(' · ');
+};
+
+const formatPercent = (value: number, total: number) => {
+  if (total <= 0) {
+    return '0%';
+  }
+  return `${Math.round((value / total) * 100)}%`;
+};
+
+const sumEntries = (entries: ChartEntry[]) => {
+  return entries.reduce((sum, entry) => sum + entry.value, 0);
+};
+
+const buildAssetTypeEntries = (summary: ReportSummary | null) => {
+  if (!summary) {
+    return [];
+  }
+
+  const totals = new Map<string, number>();
+  summary.items.forEach((item) => {
+    const label = normalizeAssetType(item);
+    totals.set(label, (totals.get(label) ?? 0) + item.amountValue);
+  });
+
+  const orderedLabels = ['주식', 'ETF', '채권', '기타'];
+  return orderedLabels
+    .map((label) => ({ label, value: totals.get(label) ?? 0 }))
+    .filter((entry) => entry.value > 0);
+};
+
+const buildStockStyleEntries = (summary: ReportSummary | null) => {
+  if (!summary) {
+    return [];
+  }
+
+  const totals = new Map<string, number>();
+  summary.items.forEach((item) => {
+    if (normalizeAssetType(item) !== '주식') {
+      return;
+    }
+    const label = classifyStockStyle(item);
+    totals.set(label, (totals.get(label) ?? 0) + item.amountValue);
+  });
+
+  const orderedLabels = ['배당', '성장', '채권', '기타'];
+  return orderedLabels
+    .map((label) => ({ label, value: totals.get(label) ?? 0 }))
+    .filter((entry) => entry.value > 0);
+};
+
+const normalizeAssetType = (item: ReportItem) => {
+  const text = item.assetType?.toLowerCase?.() ?? '';
+  if (text.includes('etf')) {
+    return 'ETF';
+  }
+  if (item.isBondLike || text.includes('bond') || text.includes('채권')) {
+    return '채권';
+  }
+  if (text.includes('stock') || text.includes('equity') || text.includes('주식')) {
+    return '주식';
+  }
+  return '기타';
+};
+
+const classifyStockStyle = (item: ReportItem) => {
+  const style = item.style?.toLowerCase?.() ?? '';
+  if (style.includes('dividend') || style.includes('배당')) {
+    return '배당';
+  }
+  if (style.includes('growth') || style.includes('성장')) {
+    return '성장';
+  }
+  if (item.isBondLike || style.includes('bond') || style.includes('채권')) {
+    return '채권';
+  }
+  return '기타';
+};
+
+const buildPieChartData = (entries: ChartEntry[], colors: string[]) => {
+  return {
+    labels: entries.map((entry) => entry.label),
+    datasets: [
+      {
+        data: entries.map((entry) => entry.value),
+        backgroundColor: entries.map((_, index) => colors[index % colors.length] ?? '#94a3b8'),
+        borderWidth: 0,
+      },
+    ],
+  };
 };
 </script>
