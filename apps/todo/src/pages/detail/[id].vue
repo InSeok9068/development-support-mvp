@@ -222,7 +222,7 @@
 
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <h5 class="mb-3 font-semibold">기록</h5>
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
                 <sl-input
                   label="완료일시"
                   readonly
