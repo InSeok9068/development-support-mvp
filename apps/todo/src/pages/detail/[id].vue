@@ -57,7 +57,7 @@
                   마크다운 복사
                 </sl-button>
               </div>
-              <div role="group">
+              <div role="group" class="rounded-md border border-slate-200 bg-white p-2">
                 <DetailEditor v-model="work.content" />
               </div>
             </div>
