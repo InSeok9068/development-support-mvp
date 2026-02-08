@@ -31,11 +31,15 @@
                 <h5 class="font-semibold">진행 상태</h5>
                 <div class="ml-auto flex items-center gap-2 text-sm text-slate-600">
                   <span>완료</span>
-                  <sl-switch v-model="work.done" size="small" @sl-change="onChangeDone"></sl-switch>
+                  <sl-switch
+                    :checked="work.done"
+                    size="small"
+                    @sl-change="onChangeDone"
+                  ></sl-switch>
                 </div>
               </div>
               <div class="pb-1">
-                <sl-radio-group v-model="work.state" size="small">
+                <sl-radio-group :value="work.state" size="small" @sl-change="onChangeWorkState">
                   <div class="flex flex-wrap gap-2 text-xs">
                     <template v-for="state in getCodesByType('workState')" :key="state.value">
                       <sl-radio-button :value="state.value">
@@ -158,7 +162,12 @@
                 </sl-button>
               </div>
               <div class="grid gap-3">
-                <sl-select v-model="work.developer" label="개발자" placeholder="개발자 선택">
+                <sl-select
+                  :value="work.developer"
+                  label="개발자"
+                  placeholder="개발자 선택"
+                  @sl-change="onChangeDeveloper"
+                >
                   <template v-for="developer in developers" :key="developer.id">
                     <sl-option :value="developer.id" :selected="work.developer == developer.id">
                       <span>{{ developer.name }}</span>
@@ -366,7 +375,9 @@ const onChangeFileInput = (event: Event) => {
   selectedFileName.value = file?.name ?? '';
 };
 
-const onChangeDone = () => {
+const onChangeDone = (event: Event) => {
+  const target = event.target as { checked?: boolean } | null;
+  work.value.done = Boolean(target?.checked);
   if (work.value.done) {
     work.value.doneDate = new Date().toISOString();
     work.value.state = 'done';
@@ -374,6 +385,16 @@ const onChangeDone = () => {
     work.value.doneDate = '';
     work.value.state = 'wait';
   }
+};
+
+const onChangeWorkState = (event: Event) => {
+  const target = event.target as { value?: string } | null;
+  work.value.state = target?.value ?? '';
+};
+
+const onChangeDeveloper = (event: Event) => {
+  const target = event.target as { value?: string } | null;
+  work.value.developer = target?.value ?? '';
 };
 
 const onClickRedmine = (url: string) => {
