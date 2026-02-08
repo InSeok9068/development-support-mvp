@@ -12,11 +12,19 @@ export const useGlobal = () => {
   /* ======================= 메서드 ======================= */
   const toggleTheme = () => {
     global.value.theme = global.value.theme === 'white' ? 'dark' : 'white';
-    document.documentElement.setAttribute('data-theme', global.value.theme);
+    if (global.value.theme === 'dark') {
+      document.documentElement.classList.add('sl-theme-dark');
+    } else {
+      document.documentElement.classList.remove('sl-theme-dark');
+    }
   };
 
   const initTheme = () => {
-    document.documentElement.setAttribute('data-theme', global.value.theme);
+    if (global.value.theme === 'dark') {
+      document.documentElement.classList.add('sl-theme-dark');
+    } else {
+      document.documentElement.classList.remove('sl-theme-dark');
+    }
   };
   /* ======================= 메서드 ======================= */
 

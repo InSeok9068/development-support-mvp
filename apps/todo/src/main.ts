@@ -6,6 +6,7 @@ import '@/assets/custom.css';
 import { autoAnimatePlugin } from '@formkit/auto-animate/vue';
 import { setBasePath } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/themes/light.css';
+import '@shoelace-style/shoelace/dist/themes/dark.css';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { createPinia } from 'pinia';
