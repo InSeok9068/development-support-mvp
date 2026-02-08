@@ -52,10 +52,13 @@
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">내용</h5>
-                <sl-button class="ml-auto" size="small" variant="text" @click.stop.prevent="onClickMarkdownCopy">
-                  <i class="bi-copy mr-1"></i>
+                <sl-copy-button
+                  class="ml-auto"
+                  size="small"
+                  :value="markdownContent"
+                >
                   마크다운 복사
-                </sl-button>
+                </sl-copy-button>
               </div>
               <div class="rounded-md border border-slate-200 bg-white p-2">
                 <DetailEditor v-model="work.content" />
@@ -301,6 +304,13 @@ const redmineData = ref({
   notes: '',
   watchers: [],
 });
+const markdownContent = computed(() => {
+  if (!work.value.content) {
+    return '';
+  }
+  const turndownService = new TurndownService();
+  return turndownService.turndown(work.value.content);
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -396,12 +406,6 @@ const onClickDeleteScheduledNotification = async (scheduledNotificationId: strin
   await deleteScheduledNotification(scheduledNotificationId);
   await updateWorkByDeleteScheduledNotification(scheduledNotificationId);
   await refetchWorkDetail();
-};
-
-const onClickMarkdownCopy = () => {
-  const turndownService = new TurndownService();
-  navigator.clipboard.writeText(turndownService.turndown(work.value.content));
-  alert('복사완료');
 };
 
 const onClickRemoveDeveloper = () => {
