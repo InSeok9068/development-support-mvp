@@ -8,7 +8,6 @@ import { setBasePath } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/themes/dark.css';
 import '@shoelace-style/shoelace/dist/themes/light.css';
 import { VueQueryPlugin } from '@tanstack/vue-query';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
