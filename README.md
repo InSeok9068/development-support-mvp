@@ -61,7 +61,8 @@ firebase deploy
     "username": "*****************",
     "password": "*****************",
     "context": "apps/portfolio/dist",
-    "remotePath": "my-portfolio/pb_public"
+    "remotePath": "my-portfolio/pb_public",
+    "connectTimeout": 100000
   },
   {
     "name": "my-portfolio / pb_hooks",
@@ -71,7 +72,8 @@ firebase deploy
     "username": "*****************",
     "password": "*****************",
     "context": "apps/portfolio/pb_hooks",
-    "remotePath": "my-portfolio/pb_hooks"
+    "remotePath": "my-portfolio/pb_hooks",
+    "connectTimeout": 100000
   }
 ]
 ```
