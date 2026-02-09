@@ -5,8 +5,8 @@ import '@/assets/custom.css';
 
 import { autoAnimatePlugin } from '@formkit/auto-animate/vue';
 import { setBasePath } from '@shoelace-style/shoelace';
-import '@shoelace-style/shoelace/dist/themes/light.css';
 import '@shoelace-style/shoelace/dist/themes/dark.css';
+import '@shoelace-style/shoelace/dist/themes/light.css';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { createPinia } from 'pinia';
@@ -17,7 +17,7 @@ import { routes } from 'vue-router/auto-routes';
 import App from './App.vue';
 
 // Shoelace CDN 경로 설정
-setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
+setBasePath('');
 
 const app = createApp(App);
 
