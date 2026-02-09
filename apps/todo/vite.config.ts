@@ -4,7 +4,6 @@ import { fileURLToPath, URL } from 'node:url';
 import Components from 'unplugin-vue-components/vite';
 import VueRouter from 'unplugin-vue-router/vite';
 import { defineConfig } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vitejs.dev/config/
@@ -26,14 +25,14 @@ export default defineConfig({
       dts: true,
     }),
     Tailwindcss(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: '../../node_modules/@shoelace-style/shoelace/dist/assets/*',
-          dest: 'assets',
-        },
-      ],
-    }),
+    // viteStaticCopy({
+    //   targets: [
+    //     {
+    //       src: '../../node_modules/@shoelace-style/shoelace/dist/assets/*',
+    //       dest: 'assets',
+    //     },
+    //   ],
+    // }),
   ],
   resolve: {
     alias: {

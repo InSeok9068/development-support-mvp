@@ -16,7 +16,7 @@ import { routes } from 'vue-router/auto-routes';
 import App from './App.vue';
 
 // Shoelace CDN 경로 설정
-setBasePath('');
+setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/');
 
 const app = createApp(App);
 
