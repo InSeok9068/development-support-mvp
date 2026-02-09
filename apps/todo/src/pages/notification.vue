@@ -15,30 +15,49 @@
         <sl-tag size="small" variant="neutral">읽음</sl-tag>
       </div>
 
+      <sl-divider></sl-divider>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full table-fixed">
+          <colgroup>
+            <col />
+            <col class="w-48" />
+            <col class="w-24" />
+            <col class="w-24" />
+          </colgroup>
           <thead>
             <tr>
               <th>제목</th>
               <th>전송일시</th>
-              <th class="w-20 text-center">상태</th>
+              <th class="text-center">상태</th>
+              <th class="text-center">액션</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="notification in notifications" :key="notification.id">
-              <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
-                {{ notification.title }}
-              </td>
-              <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
-              <td class="text-center">
-                <sl-button v-show="!notification.read" size="small" variant="text" @click="onClickRead(notification)">
-                  읽기
-                </sl-button>
-                <span v-show="notification.read" class="text-xs text-slate-400">읽음</span>
-              </td>
-            </tr>
+            <template v-for="(notification, index) in notifications" :key="notification.id">
+              <tr>
+                <td class="max-w-80 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {{ notification.title }}
+                </td>
+                <td>{{ dayjs(notification.created).format('YYYY-MM-DD HH:mm:ss') }}</td>
+                <td class="text-center">
+                  <sl-badge v-if="notification.read" size="small" variant="success">읽음</sl-badge>
+                  <sl-badge v-else size="small" variant="warning">미읽음</sl-badge>
+                </td>
+                <td class="text-center">
+                  <sl-button v-show="!notification.read" size="small" variant="text" @click="onClickRead(notification)">
+                    읽기
+                  </sl-button>
+                  <span v-show="notification.read">-</span>
+                </td>
+              </tr>
+              <tr v-if="index < notifications.length - 1">
+                <td colspan="4">
+                  <sl-divider class="my-1"></sl-divider>
+                </td>
+              </tr>
+            </template>
             <tr v-if="notifications.length === 0">
-              <td colspan="3" class="py-6 text-center text-sm text-slate-400">알림이 없습니다</td>
+              <td colspan="4" class="py-6 text-center text-sm text-slate-400">알림이 없습니다</td>
             </tr>
           </tbody>
         </table>
