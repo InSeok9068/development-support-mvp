@@ -11,8 +11,8 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
-	Holdings = "holdings",
-	Instruments = "instruments",
+	AdminAssets = "admin_assets",
+	ExtractedAssets = "extracted_assets",
 	MatchLogs = "match_logs",
 	Reports = "reports",
 	Users = "users",
@@ -96,62 +96,110 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
-export enum HoldingsRegionOptions {
-	"KR" = "KR",
-	"US" = "US",
-	"ETC" = "ETC",
-}
-
-export enum HoldingsAssetTypeOptions {
+export enum AdminAssetsCategoryOptions {
+	"cash" = "cash",
+	"deposit" = "deposit",
 	"stock" = "stock",
 	"etf" = "etf",
-	"fund" = "fund",
 	"bond" = "bond",
-	"cash" = "cash",
+	"fund" = "fund",
+	"pension" = "pension",
+	"crypto" = "crypto",
+	"real_estate" = "real_estate",
+	"reits" = "reits",
+	"commodity_gold" = "commodity_gold",
+	"insurance" = "insurance",
+	"car" = "car",
 	"etc" = "etc",
 }
-export type HoldingsRecord = {
-	accountName?: string
-	assetType: HoldingsAssetTypeOptions
+
+export enum AdminAssetsGroupTypeOptions {
+	"liquid" = "liquid",
+	"risk" = "risk",
+	"defensive" = "defensive",
+	"real" = "real",
+}
+
+export enum AdminAssetsTagsOptions {
+	"growth" = "growth",
+	"income" = "income",
+	"blend" = "blend",
+	"low_vol" = "low_vol",
+	"high_risk" = "high_risk",
+	"stable" = "stable",
+	"theme" = "theme",
+	"inflation_hedge" = "inflation_hedge",
+	"retirement" = "retirement",
+	"tax_benefit" = "tax_benefit",
+}
+
+export enum AdminAssetsSectorsOptions {
+	"it_software" = "it_software",
+	"semiconductor" = "semiconductor",
+	"hardware_equipment" = "hardware_equipment",
+	"telecom" = "telecom",
+	"internet_platform" = "internet_platform",
+	"finance" = "finance",
+	"bank" = "bank",
+	"insurance" = "insurance",
+	"securities_asset_mgmt" = "securities_asset_mgmt",
+	"healthcare" = "healthcare",
+	"biotech_pharma" = "biotech_pharma",
+	"consumer_discretionary" = "consumer_discretionary",
+	"consumer_staples" = "consumer_staples",
+	"retail" = "retail",
+	"auto" = "auto",
+	"industrials" = "industrials",
+	"materials" = "materials",
+	"energy" = "energy",
+	"utilities" = "utilities",
+	"real_estate" = "real_estate",
+	"transportation_logistics" = "transportation_logistics",
+	"media_entertainment" = "media_entertainment",
+	"education" = "education",
+	"construction" = "construction",
+}
+export type AdminAssetsRecord = {
+	alias1?: string
+	alias2?: string
+	alias3?: string
+	category: AdminAssetsCategoryOptions
+	created: IsoAutoDateString
+	groupType: AdminAssetsGroupTypeOptions
+	id: string
+	name: string
+	sectors?: AdminAssetsSectorsOptions[]
+	tags?: AdminAssetsTagsOptions[]
+	updated: IsoAutoDateString
+}
+
+export enum ExtractedAssetsCategoryOptions {
+	"cash" = "cash",
+	"deposit" = "deposit",
+	"stock" = "stock",
+	"etf" = "etf",
+	"bond" = "bond",
+	"fund" = "fund",
+	"pension" = "pension",
+	"crypto" = "crypto",
+	"real_estate" = "real_estate",
+	"reits" = "reits",
+	"commodity_gold" = "commodity_gold",
+	"insurance" = "insurance",
+	"car" = "car",
+	"etc" = "etc",
+}
+export type ExtractedAssetsRecord = {
+	adminAssetId?: RecordIdString
+	amount: number
+	category: ExtractedAssetsCategoryOptions
 	created: IsoAutoDateString
 	id: string
-	instrumentId?: RecordIdString
 	profit?: number
 	profitRate?: number
 	quantity?: number
-	rawName?: string
-	region: HoldingsRegionOptions
+	rawName: string
 	reportId: RecordIdString
-	updated: IsoAutoDateString
-	value: number
-}
-
-export enum InstrumentsRegionOptions {
-	"KR" = "KR",
-	"US" = "US",
-	"ETC" = "ETC",
-}
-
-export enum InstrumentsAssetTypeOptions {
-	"stock" = "stock",
-	"etf" = "etf",
-	"fund" = "fund",
-	"bond" = "bond",
-	"cash" = "cash",
-	"etc" = "etc",
-}
-export type InstrumentsRecord = {
-	assetType: InstrumentsAssetTypeOptions
-	created: IsoAutoDateString
-	dividendProfile?: string
-	exchange?: string
-	id: string
-	isBondLike?: boolean
-	name: string
-	region: InstrumentsRegionOptions
-	sector?: string
-	style?: string
-	ticker?: string
 	updated: IsoAutoDateString
 }
 
@@ -160,14 +208,21 @@ export enum MatchLogsMatchedByOptions {
 	"alias" = "alias",
 	"ai" = "ai",
 }
+
+export enum MatchLogsStatusOptions {
+	"pending" = "pending",
+	"confirmed" = "confirmed",
+	"rejected" = "rejected",
+}
 export type MatchLogsRecord = {
+	adminAssetId?: RecordIdString
 	confidence?: number
 	created: IsoAutoDateString
 	id: string
-	instrumentId?: RecordIdString
 	matchedBy: MatchLogsMatchedByOptions
-	rawName?: string
+	rawName: string
 	reportId: RecordIdString
+	status: MatchLogsStatusOptions
 	updated: IsoAutoDateString
 }
 
@@ -181,13 +236,12 @@ export type ReportsRecord = {
 	baseCurrency: string
 	created: IsoAutoDateString
 	id: string
-	provider: string
 	sourceImageHash: string
 	sourceImageUrl: string
-	status: ReportsStatusOptions
+	status?: ReportsStatusOptions
 	totalProfit?: number
 	totalProfitRate?: number
-	totalValue?: number
+	totalValue: number
 	updated: IsoAutoDateString
 }
 
@@ -210,8 +264,8 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
-export type HoldingsResponse<Texpand = unknown> = Required<HoldingsRecord> & BaseSystemFields<Texpand>
-export type InstrumentsResponse<Texpand = unknown> = Required<InstrumentsRecord> & BaseSystemFields<Texpand>
+export type AdminAssetsResponse<Texpand = unknown> = Required<AdminAssetsRecord> & BaseSystemFields<Texpand>
+export type ExtractedAssetsResponse<Texpand = unknown> = Required<ExtractedAssetsRecord> & BaseSystemFields<Texpand>
 export type MatchLogsResponse<Texpand = unknown> = Required<MatchLogsRecord> & BaseSystemFields<Texpand>
 export type ReportsResponse<Texpand = unknown> = Required<ReportsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
@@ -224,8 +278,8 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
-	holdings: HoldingsRecord
-	instruments: InstrumentsRecord
+	admin_assets: AdminAssetsRecord
+	extracted_assets: ExtractedAssetsRecord
 	match_logs: MatchLogsRecord
 	reports: ReportsRecord
 	users: UsersRecord
@@ -237,8 +291,8 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
-	holdings: HoldingsResponse
-	instruments: InstrumentsResponse
+	admin_assets: AdminAssetsResponse
+	extracted_assets: ExtractedAssetsResponse
 	match_logs: MatchLogsResponse
 	reports: ReportsResponse
 	users: UsersResponse

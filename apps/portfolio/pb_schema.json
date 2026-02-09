@@ -125,9 +125,7 @@
     },
     "passwordAuth": {
       "enabled": true,
-      "identityFields": [
-        "email"
-      ]
+      "identityFields": ["email"]
     },
     "mfa": {
       "enabled": false,
@@ -270,13 +268,7 @@
         "id": "file376926767",
         "maxSelect": 1,
         "maxSize": 0,
-        "mimeTypes": [
-          "image/jpeg",
-          "image/png",
-          "image/svg+xml",
-          "image/gif",
-          "image/webp"
-        ],
+        "mimeTypes": ["image/jpeg", "image/png", "image/svg+xml", "image/gif", "image/webp"],
         "name": "avatar",
         "presentable": false,
         "protected": false,
@@ -331,9 +323,7 @@
     },
     "passwordAuth": {
       "enabled": true,
-      "identityFields": [
-        "email"
-      ]
+      "identityFields": ["email"]
     },
     "mfa": {
       "enabled": false,
@@ -663,9 +653,7 @@
         "type": "autodate"
       }
     ],
-    "indexes": [
-      "CREATE INDEX `idx_mfas_collectionRef_recordRef` ON `_mfas` (collectionRef,recordRef)"
-    ],
+    "indexes": ["CREATE INDEX `idx_mfas_collectionRef_recordRef` ON `_mfas` (collectionRef,recordRef)"],
     "system": true
   },
   {
@@ -768,202 +756,17 @@
         "type": "autodate"
       }
     ],
-    "indexes": [
-      "CREATE INDEX `idx_otps_collectionRef_recordRef` ON `_otps` (collectionRef, recordRef)"
-    ],
+    "indexes": ["CREATE INDEX `idx_otps_collectionRef_recordRef` ON `_otps` (collectionRef, recordRef)"],
     "system": true
   },
   {
-    "id": "pbc_2949619099",
+    "id": "pbc_1937836145",
     "listRule": null,
     "viewRule": null,
     "createRule": null,
     "updateRule": null,
     "deleteRule": null,
-    "name": "holdings",
-    "type": "base",
-    "fields": [
-      {
-        "autogeneratePattern": "[a-z0-9]{15}",
-        "hidden": false,
-        "id": "text3208210256",
-        "max": 15,
-        "min": 15,
-        "name": "id",
-        "pattern": "^[a-z0-9]+$",
-        "presentable": false,
-        "primaryKey": true,
-        "required": true,
-        "system": true,
-        "type": "text"
-      },
-      {
-        "cascadeDelete": false,
-        "collectionId": "pbc_1615648943",
-        "hidden": false,
-        "id": "relation3140697613",
-        "maxSelect": 1,
-        "minSelect": 0,
-        "name": "reportId",
-        "presentable": false,
-        "required": true,
-        "system": false,
-        "type": "relation"
-      },
-      {
-        "cascadeDelete": false,
-        "collectionId": "pbc_329383295",
-        "hidden": false,
-        "id": "relation709172707",
-        "maxSelect": 1,
-        "minSelect": 0,
-        "name": "instrumentId",
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "relation"
-      },
-      {
-        "autogeneratePattern": "",
-        "hidden": false,
-        "id": "text2979328120",
-        "max": 0,
-        "min": 0,
-        "name": "rawName",
-        "pattern": "",
-        "presentable": false,
-        "primaryKey": false,
-        "required": false,
-        "system": false,
-        "type": "text"
-      },
-      {
-        "hidden": false,
-        "id": "select258142582",
-        "maxSelect": 1,
-        "name": "region",
-        "presentable": false,
-        "required": true,
-        "system": false,
-        "type": "select",
-        "values": [
-          "KR",
-          "US",
-          "ETC"
-        ]
-      },
-      {
-        "hidden": false,
-        "id": "select193798753",
-        "maxSelect": 1,
-        "name": "assetType",
-        "presentable": false,
-        "required": true,
-        "system": false,
-        "type": "select",
-        "values": [
-          "stock",
-          "etf",
-          "fund",
-          "bond",
-          "cash",
-          "etc"
-        ]
-      },
-      {
-        "hidden": false,
-        "id": "number2683508278",
-        "max": null,
-        "min": null,
-        "name": "quantity",
-        "onlyInt": false,
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "number"
-      },
-      {
-        "hidden": false,
-        "id": "number494360628",
-        "max": null,
-        "min": null,
-        "name": "value",
-        "onlyInt": false,
-        "presentable": false,
-        "required": true,
-        "system": false,
-        "type": "number"
-      },
-      {
-        "hidden": false,
-        "id": "number4122618561",
-        "max": null,
-        "min": null,
-        "name": "profit",
-        "onlyInt": false,
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "number"
-      },
-      {
-        "hidden": false,
-        "id": "number1460181747",
-        "max": null,
-        "min": null,
-        "name": "profitRate",
-        "onlyInt": false,
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "number"
-      },
-      {
-        "autogeneratePattern": "",
-        "hidden": false,
-        "id": "text4085354908",
-        "max": 0,
-        "min": 0,
-        "name": "accountName",
-        "pattern": "",
-        "presentable": false,
-        "primaryKey": false,
-        "required": false,
-        "system": false,
-        "type": "text"
-      },
-      {
-        "hidden": false,
-        "id": "autodate2990389176",
-        "name": "created",
-        "onCreate": true,
-        "onUpdate": false,
-        "presentable": false,
-        "system": false,
-        "type": "autodate"
-      },
-      {
-        "hidden": false,
-        "id": "autodate3332085495",
-        "name": "updated",
-        "onCreate": true,
-        "onUpdate": true,
-        "presentable": false,
-        "system": false,
-        "type": "autodate"
-      }
-    ],
-    "indexes": [],
-    "system": false
-  },
-  {
-    "id": "pbc_329383295",
-    "listRule": "",
-    "viewRule": "",
-    "createRule": "",
-    "updateRule": "",
-    "deleteRule": "",
-    "name": "instruments",
+    "name": "admin_assets",
     "type": "base",
     "fields": [
       {
@@ -997,10 +800,10 @@
       {
         "autogeneratePattern": "",
         "hidden": false,
-        "id": "text2126710934",
+        "id": "text1952437377",
         "max": 0,
         "min": 0,
-        "name": "ticker",
+        "name": "alias1",
         "pattern": "",
         "presentable": false,
         "primaryKey": false,
@@ -1011,10 +814,24 @@
       {
         "autogeneratePattern": "",
         "hidden": false,
-        "id": "text3543904377",
+        "id": "text3981870395",
         "max": 0,
         "min": 0,
-        "name": "exchange",
+        "name": "alias2",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2589046189",
+        "max": 0,
+        "min": 0,
+        "name": "alias3",
         "pattern": "",
         "presentable": false,
         "primaryKey": false,
@@ -1024,87 +841,260 @@
       },
       {
         "hidden": false,
-        "id": "select258142582",
+        "id": "select105650625",
         "maxSelect": 1,
-        "name": "region",
+        "name": "category",
         "presentable": false,
         "required": true,
         "system": false,
         "type": "select",
         "values": [
-          "KR",
-          "US",
-          "ETC"
-        ]
-      },
-      {
-        "hidden": false,
-        "id": "select193798753",
-        "maxSelect": 1,
-        "name": "assetType",
-        "presentable": false,
-        "required": true,
-        "system": false,
-        "type": "select",
-        "values": [
+          "cash",
+          "deposit",
           "stock",
           "etf",
-          "fund",
           "bond",
-          "cash",
+          "fund",
+          "pension",
+          "crypto",
+          "real_estate",
+          "reits",
+          "commodity_gold",
+          "insurance",
+          "car",
           "etc"
         ]
       },
       {
-        "autogeneratePattern": "",
         "hidden": false,
-        "id": "text1269029352",
-        "max": 0,
-        "min": 0,
-        "name": "sector",
-        "pattern": "",
+        "id": "select3793029524",
+        "maxSelect": 1,
+        "name": "groupType",
         "presentable": false,
-        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "select",
+        "values": ["liquid", "risk", "defensive", "real"]
+      },
+      {
+        "hidden": false,
+        "id": "select1874629670",
+        "maxSelect": 2,
+        "name": "tags",
+        "presentable": false,
         "required": false,
         "system": false,
+        "type": "select",
+        "values": [
+          "growth",
+          "income",
+          "blend",
+          "low_vol",
+          "high_risk",
+          "stable",
+          "theme",
+          "inflation_hedge",
+          "retirement",
+          "tax_benefit"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "select3046377112",
+        "maxSelect": 2,
+        "name": "sectors",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "it_software",
+          "semiconductor",
+          "hardware_equipment",
+          "telecom",
+          "internet_platform",
+          "finance",
+          "bank",
+          "insurance",
+          "securities_asset_mgmt",
+          "healthcare",
+          "biotech_pharma",
+          "consumer_discretionary",
+          "consumer_staples",
+          "retail",
+          "auto",
+          "industrials",
+          "materials",
+          "energy",
+          "utilities",
+          "real_estate",
+          "transportation_logistics",
+          "media_entertainment",
+          "education",
+          "construction"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "autodate2990389176",
+        "name": "created",
+        "onCreate": true,
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "id": "autodate3332085495",
+        "name": "updated",
+        "onCreate": true,
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      }
+    ],
+    "indexes": [],
+    "system": false
+  },
+  {
+    "id": "pbc_2345311390",
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "name": "extracted_assets",
+    "type": "base",
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
         "type": "text"
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pbc_1615648943",
+        "hidden": false,
+        "id": "relation3140697613",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "reportId",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "relation"
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pbc_1937836145",
+        "hidden": false,
+        "id": "relation3695903753",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "adminAssetId",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
         "autogeneratePattern": "",
         "hidden": false,
-        "id": "text868071530",
+        "id": "text2979328120",
         "max": 0,
         "min": 0,
-        "name": "style",
+        "name": "rawName",
         "pattern": "",
         "presentable": false,
         "primaryKey": false,
-        "required": false,
-        "system": false,
-        "type": "text"
-      },
-      {
-        "autogeneratePattern": "",
-        "hidden": false,
-        "id": "text1454716122",
-        "max": 0,
-        "min": 0,
-        "name": "dividendProfile",
-        "pattern": "",
-        "presentable": false,
-        "primaryKey": false,
-        "required": false,
+        "required": true,
         "system": false,
         "type": "text"
       },
       {
         "hidden": false,
-        "id": "bool1649004150",
-        "name": "isBondLike",
+        "id": "select105650625",
+        "maxSelect": 1,
+        "name": "category",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "select",
+        "values": [
+          "cash",
+          "deposit",
+          "stock",
+          "etf",
+          "bond",
+          "fund",
+          "pension",
+          "crypto",
+          "real_estate",
+          "reits",
+          "commodity_gold",
+          "insurance",
+          "car",
+          "etc"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "number2392944706",
+        "max": null,
+        "min": null,
+        "name": "amount",
+        "onlyInt": false,
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "hidden": false,
+        "id": "number4122618561",
+        "max": null,
+        "min": null,
+        "name": "profit",
+        "onlyInt": false,
         "presentable": false,
         "required": false,
         "system": false,
-        "type": "bool"
+        "type": "number"
+      },
+      {
+        "hidden": false,
+        "id": "number1460181747",
+        "max": null,
+        "min": null,
+        "name": "profitRate",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "hidden": false,
+        "id": "number2683508278",
+        "max": null,
+        "min": null,
+        "name": "quantity",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
       },
       {
         "hidden": false,
@@ -1177,18 +1167,18 @@
         "pattern": "",
         "presentable": false,
         "primaryKey": false,
-        "required": false,
+        "required": true,
         "system": false,
         "type": "text"
       },
       {
         "cascadeDelete": false,
-        "collectionId": "pbc_329383295",
+        "collectionId": "pbc_1937836145",
         "hidden": false,
-        "id": "relation709172707",
+        "id": "relation3695903753",
         "maxSelect": 1,
         "minSelect": 0,
-        "name": "instrumentId",
+        "name": "adminAssetId",
         "presentable": false,
         "required": false,
         "system": false,
@@ -1215,11 +1205,18 @@
         "required": true,
         "system": false,
         "type": "select",
-        "values": [
-          "exact",
-          "alias",
-          "ai"
-        ]
+        "values": ["exact", "alias", "ai"]
+      },
+      {
+        "hidden": false,
+        "id": "select2063623452",
+        "maxSelect": 1,
+        "name": "status",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "select",
+        "values": ["pending", "confirmed", "rejected"]
       },
       {
         "hidden": false,
@@ -1247,11 +1244,11 @@
   },
   {
     "id": "pbc_1615648943",
-    "listRule": "",
-    "viewRule": "",
-    "createRule": "",
-    "updateRule": "",
-    "deleteRule": "",
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
     "name": "reports",
     "type": "base",
     "fields": [
@@ -1267,20 +1264,6 @@
         "primaryKey": true,
         "required": true,
         "system": true,
-        "type": "text"
-      },
-      {
-        "autogeneratePattern": "",
-        "hidden": false,
-        "id": "text2462348188",
-        "max": 0,
-        "min": 0,
-        "name": "provider",
-        "pattern": "",
-        "presentable": false,
-        "primaryKey": false,
-        "required": true,
-        "system": false,
         "type": "text"
       },
       {
@@ -1333,7 +1316,7 @@
         "name": "totalValue",
         "onlyInt": false,
         "presentable": false,
-        "required": false,
+        "required": true,
         "system": false,
         "type": "number"
       },
@@ -1367,15 +1350,10 @@
         "maxSelect": 1,
         "name": "status",
         "presentable": false,
-        "required": true,
+        "required": false,
         "system": false,
         "type": "select",
-        "values": [
-          "pending",
-          "processing",
-          "done",
-          "failed"
-        ]
+        "values": ["pending", "processing", "done", "failed"]
       },
       {
         "hidden": false,

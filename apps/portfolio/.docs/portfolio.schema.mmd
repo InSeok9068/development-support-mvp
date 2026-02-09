@@ -8,78 +8,6 @@ erDiagram
 
   reports {
       %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
-      string provider          %% !필수 데이터 출처 (예: "toss")
-      string sourceImageUrl    %% !필수 업로드 이미지 URL
-      string sourceImageHash   %% !필수 이미지 중복 방지용 해시
-      string baseCurrency      %% !필수 리포트 기준 통화 (예: "KRW")
-      float totalValue         %% !필수 전체 평가금액
-      float totalProfit        %% ?선택 전체 손익금액 (AI 추출 실패 시 null)
-      float totalProfitRate    %% ?선택 전체 손익률 (AI 추출 실패 시 null)
-      string status            %% !필수 처리 상태 (pending|processing|done|failed)
-  }
-
-  holdings {
-      %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
-      string reportId          %% !필수 reports 참조
-      string instrumentId      %% ?선택 instruments 참조 (매칭 실패 시 null)
-      string rawName           %% !필수 이미지에서 추출된 원문 종목명
-      string region            %% !필수 KR|US|ETC
-      string assetType         %% !필수 stock|etf|fund|bond|cash|etc
-      int quantity             %% ?선택 수량 (화면에 없으면 null)
-      float value              %% !필수 평가금액
-      float profit             %% ?선택 손익금액 (없으면 null)
-      float profitRate         %% ?선택 손익률 (없으면 null)
-      string accountName       %% ?선택 계좌 그룹명
-  }
-
-  instruments {
-      %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
-      string name              %% !필수 종목명(표준)
-      string ticker            %% ?선택 티커/코드 (없으면 null)
-      string exchange          %% ?선택 거래소 (없으면 null)
-      string region            %% !필수 KR|US|ETC
-      string assetType         %% !필수 stock|etf|fund|bond|cash|etc
-      string sector            %% ?선택 섹터 (자동차|반도체|금융|기타)
-      string style             %% ?선택 성향 (성장|배당|가치|혼합)
-      string dividendProfile   %% ?선택 배당 성향 (고배당|중배당|저배당|없음)
-      bool isBondLike          %% ?선택 채권 유사 성향 여부 (없으면 null)
-  }
-
-  match_logs {
-      %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
-      string reportId          %% !필수 reports 참조
-      string rawName           %% !필수 매칭 대상 원문명
-      string instrumentId      %% ?선택 instruments 참조 (매칭 실패 시 null)
-      float confidence         %% ?선택 매칭 신뢰도 (0~1, 없으면 null)
-      string matchedBy         %% !필수 매칭 방식 (exact|alias|ai)
-      string status            %% !필수 매칭 상태 (pending|confirmed|rejected)
-      string candidateName     %% ?선택 관리자 확정용 종목명 (없으면 null)
-      string region            %% ?선택 확정/수정용 KR|US|ETC
-      string assetType         %% ?선택 확정/수정용 stock|etf|fund|bond|cash|etc
-      string sector            %% ?선택 확정/수정용 섹터
-      string style             %% ?선택 확정/수정용 성향 (성장|배당|가치|혼합)
-      string dividendProfile   %% ?선택 확정/수정용 배당 성향
-      bool isBondLike          %% ?선택 확정/수정용 채권 유사 성향 여부
-      string ticker            %% ?선택 확정/수정용 티커
-      string exchange          %% ?선택 확정/수정용 거래소
-  }
-
-  reports ||--o{ holdings : has
-  instruments ||--o{ holdings : classified_by
-  reports ||--o{ match_logs : logs
-  instruments ||--o{ match_logs : matched_to
-
-%% ================================
-%% NEW - 직관적 용어 버전 (MVP)
-%% ================================
-erDiagram
-
-%% 표기 규칙
-%% !필수: null 불가
-%% ?선택: null 가능
-
-  reports_new {
-      %% PB 기본 필드: id, created, updated (schema에 따로 정의하지 않음)
       string sourceImageUrl     %% !필수 업로드 이미지 URL
       string sourceImageHash    %% !필수 이미지 중복 방지용 해시
       string baseCurrency       %% !필수 기준 통화 (예: "KRW")
@@ -91,7 +19,7 @@ erDiagram
 
   extracted_assets {
       %% 이미지에서 뽑아낸 원본 정보
-      string reportId           %% !필수 reports_new 참조
+      string reportId           %% !필수 reports 참조
       string adminAssetId       %% ?선택 admin_assets 참조 (매칭 실패 시 null)
       string rawName            %% !필수 이미지 원문 자산명
       string category           %% !필수 자산 카테고리
@@ -113,9 +41,9 @@ erDiagram
       string sectors            %% ?선택 자산 섹터 (복수)
   }
 
-  match_logs_new {
+  match_logs {
       %% 매칭 결과 기록
-      string reportId           %% !필수 reports_new 참조
+      string reportId           %% !필수 reports 참조
       string rawName            %% !필수 매칭 대상 원문명
       string adminAssetId       %% ?선택 admin_assets 참조 (매칭 실패 시 null)
       float confidence          %% ?선택 매칭 신뢰도 (0~1)
