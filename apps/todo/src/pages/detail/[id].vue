@@ -445,11 +445,6 @@ const onChangeWatcher = (event: Event) => {
   redmineData.value.watchers = watchers;
 };
 
-const onChangeRedmineNotes = (event: Event) => {
-  const target = event.target as { value?: string } | null;
-  redmineData.value.notes = target?.value ?? '';
-};
-
 const onClickRedmine = (url: string) => {
   window.open('about:blank')!.location.href = url;
 };
