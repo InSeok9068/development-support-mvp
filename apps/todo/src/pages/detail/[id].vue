@@ -41,7 +41,7 @@
                       <sl-radio-button :value="state.value">
                         {{ state.desc }}
                         <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-                        <sl-icon slot="suffix" :name="getWorkStateIcon(state.value)"></sl-icon>
+                        <sl-icon slot="suffix" :name="state.class"></sl-icon>
                       </sl-radio-button>
                     </template>
                   </div>
@@ -380,18 +380,6 @@ onUnmounted(() => {
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const getWorkStateIcon = (value: string) => {
-  const iconMap: Record<string, string> = {
-    wait: 'hourglass',
-    progress: 'play-circle',
-    done: 'check-circle',
-    hold: 'pause-circle',
-    cancel: 'x-circle',
-  };
-
-  return iconMap[value] ?? 'dot';
-};
-
 const onClickSelectFile = () => {
   fileInput.value?.click();
 };

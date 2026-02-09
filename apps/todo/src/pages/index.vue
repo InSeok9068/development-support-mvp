@@ -50,7 +50,10 @@
           </sl-button-group>
         </div>
 
-        <form id="workArgsForm" class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+        <form
+          id="workArgsForm"
+          class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900"
+        >
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <sl-input
               v-model="workArgs.title"
@@ -95,7 +98,9 @@
                     </a>
                   </h6>
                 </div>
-                <div class="mt-2 grid gap-y-2 text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
+                <div
+                  class="mt-2 grid gap-y-2 text-xs text-slate-600 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 dark:text-slate-300"
+                >
                   <div class="flex items-center justify-between gap-3">
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">개발자</span>
                     <span class="text-right">
@@ -105,7 +110,7 @@
                   <div class="flex items-center justify-between gap-3">
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">상태</span>
                     <span class="text-right">
-                      <i :class="getCodeClass('workState', work.state)"></i>
+                      <sl-icon :name="getCodeClass('workState', work.state)"> </sl-icon>
                       {{ getCodeDesc('workState', work.state) }}
                     </span>
                   </div>
