@@ -4,6 +4,7 @@
 
 routerAdd('POST', '/api/report', (e) => {
   console.log('[report] start');
+
   const encodeBase64 = (bytes) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     const output = new Array(Math.ceil(bytes.length / 3) * 4);
@@ -35,9 +36,9 @@ routerAdd('POST', '/api/report', (e) => {
     return e.error(400, '이미지 파일이 필요합니다.', {});
   }
 
-  const provider = request.formValue('provider') || 'toss';
   const baseCurrency = request.formValue('baseCurrency') || 'KRW';
-  console.log('[report] formValues', { provider, baseCurrency });
+  console.log('[report] formValues', { baseCurrency });
+
   const fileBytes = toBytes(file);
   const fileHash = $security.md5(toString(fileBytes));
   const fileName = fileHeader.filename || 'upload';
@@ -53,7 +54,6 @@ routerAdd('POST', '/api/report', (e) => {
 
   const reportCollection = $app.findCollectionByNameOrId('reports');
   const reportRecord = new Record(reportCollection);
-  reportRecord.set('provider', provider);
   reportRecord.set('sourceImageUrl', fileName);
   reportRecord.set('sourceImageHash', fileHash);
   reportRecord.set('baseCurrency', baseCurrency);
@@ -82,21 +82,22 @@ routerAdd('POST', '/api/report', (e) => {
         parts: [
           {
             text:
-              '이미지에서 종목명을 추출하고 아래 스키마로 JSON 배열만 반환해.\n' +
+              '이미지에서 자산 정보를 추출하고 아래 스키마로 JSON 배열만 반환해.\n' +
               '반드시 코드펜스 없이 순수 JSON만 반환.\n' +
+              '카테고리는 아래 enum 중 하나만 사용.\n' +
+              '\n' +
+              '카테고리 enum:\n' +
+              'cash, deposit, stock, etf, bond, fund, pension, crypto, real_estate, reits, commodity_gold, insurance, car, etc\n' +
               '\n' +
               '스키마:\n' +
               '[\n' +
               '  {\n' +
-              '    "name": "종목명",\n' +
-              '    "amount": "금액(문자열 가능)",\n' +
-              '    "region": "KR | US | ETC 중 하나",\n' +
-              '    "assetType": "stock | etf | fund | bond | cash | etc 중 하나",\n' +
-              '    "sector": "가능하면 산업 섹터",\n' +
-              '    "style": "가능하면 스타일(예: growth, value)",\n' +
-              '    "ticker": "가능하면 티커",\n' +
-              '    "exchange": "가능하면 거래소",\n' +
-              '    "isBondLike": true/false\n' +
+              '    "name": "자산명",\n' +
+              '    "category": "카테고리",\n' +
+              '    "amount": "금액(숫자 또는 문자열)",\n' +
+              '    "profit": "손익금액(없으면 null)",\n' +
+              '    "profitRate": "손익률(없으면 null)",\n' +
+              '    "quantity": "수량(없으면 null)"\n' +
               '  }\n' +
               ']\n',
           },
@@ -130,6 +131,16 @@ routerAdd('POST', '/api/report', (e) => {
   console.log('[report] gemini response', { statusCode: geminiResponse.statusCode });
   console.log('[report] gemini body', responseBody);
 
+  if (!isSuccess) {
+    reportRecord.set('status', 'failed');
+    $app.save(reportRecord);
+    console.log('[report] gemini request failed');
+    return e.error(500, 'Gemini 요청 실패', {
+      statusCode: geminiResponse.statusCode,
+      body: responseBody,
+    });
+  }
+
   const extractJsonText = (text) => {
     let value = (text ?? '').trim();
     value = value
@@ -148,112 +159,167 @@ routerAdd('POST', '/api/report', (e) => {
   const geminiText = geminiPayloadJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   const normalizedJsonText = extractJsonText(geminiText);
   const parsedItems = JSON.parse(normalizedJsonText);
-  const normalizeRegion = (value) => {
-    const upper = String(value ?? '').toUpperCase();
-    return upper === 'KR' || upper === 'US' || upper === 'ETC' ? upper : 'ETC';
-  };
-  const normalizeAssetType = (value) => {
+
+  const normalizeCategory = (value) => {
     const lower = String(value ?? '').toLowerCase();
-    const allowed = ['stock', 'etf', 'fund', 'bond', 'cash', 'etc'];
+    const allowed = [
+      'cash',
+      'deposit',
+      'stock',
+      'etf',
+      'bond',
+      'fund',
+      'pension',
+      'crypto',
+      'real_estate',
+      'reits',
+      'commodity_gold',
+      'insurance',
+      'car',
+      'etc',
+    ];
     return allowed.includes(lower) ? lower : 'etc';
+  };
+
+  const parseNumber = (value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    const normalized = String(value ?? '').replace(/[^0-9.-]/g, '');
+    if (!normalized) {
+      return null;
+    }
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    return parsed;
   };
 
   const items = Array.isArray(parsedItems)
     ? parsedItems.map((item) => {
-        const name = item.name ?? item['종목명'] ?? '';
-        const amountText = item.amount ?? item['금액'] ?? '';
-        const amountValue = Number(String(amountText).replace(/[^\d]/g, '')) || 0;
-        const region = normalizeRegion(item.region);
-        const assetType = normalizeAssetType(item.assetType);
-        const sector = item.sector ?? '';
-        const style = item.style ?? '';
-        const ticker = item.ticker ?? '';
-        const exchange = item.exchange ?? '';
-        const isBondLike = Boolean(item.isBondLike);
-        return { name, amountText, amountValue, region, assetType, sector, style, ticker, exchange, isBondLike };
+        const rawName = String(item.name ?? item['자산명'] ?? item['종목명'] ?? '').trim();
+        const category = normalizeCategory(item.category ?? item['카테고리'] ?? item['자산카테고리']);
+        const amount = parseNumber(item.amount ?? item['금액'] ?? item['자산금액']) ?? 0;
+        const profit = parseNumber(item.profit ?? item['손익'] ?? item['손익금액']);
+        const profitRate = parseNumber(item.profitRate ?? item['손익률']);
+        const quantity = parseNumber(item.quantity ?? item['수량']);
+        return { rawName, category, amount, profit, profitRate, quantity };
       })
     : [];
-  const validItems = items.filter((item) => item.name && item.amountValue > 0);
-  const totalValue = validItems.reduce(
-    (sum, item) => sum + (Number.isFinite(item.amountValue) ? item.amountValue : 0),
-    0,
-  );
+
+  const validItems = items.filter((item) => item.rawName && item.amount > 0);
+  const totalValue = validItems.reduce((sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0), 0);
+  const hasProfit = validItems.some((item) => Number.isFinite(item.profit));
+  const totalProfit = hasProfit
+    ? validItems.reduce((sum, item) => sum + (Number.isFinite(item.profit) ? item.profit : 0), 0)
+    : null;
+  const totalProfitRate =
+    totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
   console.log('[report] parsed items', { count: items.length, totalValue });
 
-  reportRecord.set('status', isSuccess ? 'done' : 'failed');
-  reportRecord.set('totalValue', totalValue);
-  $app.save(reportRecord);
-  console.log('[report] report updated', { reportId: reportRecord.id, status: reportRecord.get('status') });
+  const normalizeKey = (value) => String(value ?? '').trim().toLowerCase();
+  const adminAssets = $app.findAllRecords('admin_assets') || [];
+  const adminNameMap = new Map();
+  const adminAliasMap = new Map();
 
-  if (!isSuccess) {
-    console.log('[report] gemini request failed');
-    return e.error(500, 'Gemini 요청 실패', {
-      statusCode: geminiResponse.statusCode,
-      body: responseBody,
+  adminAssets.forEach((record) => {
+    const nameKey = normalizeKey(record.get('name'));
+    if (nameKey) {
+      adminNameMap.set(nameKey, record);
+    }
+
+    ['alias1', 'alias2', 'alias3'].forEach((field) => {
+      const aliasKey = normalizeKey(record.get(field));
+      if (aliasKey && !adminAliasMap.has(aliasKey)) {
+        adminAliasMap.set(aliasKey, record);
+      }
     });
-  }
+  });
 
-  console.log('[report] done');
-  const instrumentsCollection = $app.findCollectionByNameOrId('instruments');
-  const holdingsCollection = $app.findCollectionByNameOrId('holdings');
+  const extractedCollection = $app.findCollectionByNameOrId('extracted_assets');
   const matchLogsCollection = $app.findCollectionByNameOrId('match_logs');
-  const savedHoldings = [];
+  const responseItems = [];
 
   validItems.forEach((item) => {
-    let instrumentRecord = null;
-    let matchedBy = 'ai';
-    let confidence = 0.2;
-    if (item.name) {
-      const found = $app.findRecordsByFilter('instruments', 'name = {:name}', '', 1, 0, { name: item.name });
-      instrumentRecord = found?.[0] ?? null;
-      if (instrumentRecord) {
-        matchedBy = 'exact';
-        confidence = 1;
+    const key = normalizeKey(item.rawName);
+    let adminAssetRecord = key ? adminNameMap.get(key) : null;
+    let matchedBy = adminAssetRecord ? 'exact' : 'ai';
+    let confidence = adminAssetRecord ? 1 : 0;
+
+    if (!adminAssetRecord && key) {
+      adminAssetRecord = adminAliasMap.get(key) ?? null;
+      if (adminAssetRecord) {
+        matchedBy = 'alias';
+        confidence = 0.8;
       }
     }
-    if (!instrumentRecord) {
-      instrumentRecord = new Record(instrumentsCollection);
-      instrumentRecord.set('name', item.name);
-      instrumentRecord.set('region', item.region);
-      instrumentRecord.set('assetType', item.assetType);
-      if (item.sector) instrumentRecord.set('sector', item.sector);
-      if (item.style) instrumentRecord.set('style', item.style);
-      if (item.ticker) instrumentRecord.set('ticker', item.ticker);
-      if (item.exchange) instrumentRecord.set('exchange', item.exchange);
-      if (item.isBondLike) instrumentRecord.set('isBondLike', item.isBondLike);
-      $app.save(instrumentRecord);
-    }
 
-    const holdingRecord = new Record(holdingsCollection);
-    holdingRecord.set('reportId', reportRecord.id);
-    holdingRecord.set('instrumentId', instrumentRecord?.id);
-    holdingRecord.set('rawName', item.name);
-    holdingRecord.set('region', item.region);
-    holdingRecord.set('assetType', item.assetType);
-    holdingRecord.set('value', item.amountValue);
-    $app.save(holdingRecord);
+    const extractedRecord = new Record(extractedCollection);
+    extractedRecord.set('reportId', reportRecord.id);
+    extractedRecord.set('rawName', item.rawName);
+    extractedRecord.set('category', item.category);
+    extractedRecord.set('amount', item.amount);
+    if (item.profit !== null) extractedRecord.set('profit', item.profit);
+    if (item.profitRate !== null) extractedRecord.set('profitRate', item.profitRate);
+    if (item.quantity !== null) extractedRecord.set('quantity', item.quantity);
+    if (adminAssetRecord?.id) extractedRecord.set('adminAssetId', adminAssetRecord.id);
+    $app.save(extractedRecord);
 
     const matchLogRecord = new Record(matchLogsCollection);
     matchLogRecord.set('reportId', reportRecord.id);
-    matchLogRecord.set('rawName', item.name);
+    matchLogRecord.set('rawName', item.rawName);
     matchLogRecord.set('matchedBy', matchedBy);
     matchLogRecord.set('confidence', confidence);
-    if (instrumentRecord?.id) {
-      matchLogRecord.set('instrumentId', instrumentRecord.id);
+    matchLogRecord.set('status', adminAssetRecord ? 'confirmed' : 'pending');
+    if (adminAssetRecord?.id) {
+      matchLogRecord.set('adminAssetId', adminAssetRecord.id);
     }
     $app.save(matchLogRecord);
 
-    savedHoldings.push({ holdingId: holdingRecord.id, instrumentId: instrumentRecord?.id });
+    const adminAsset = adminAssetRecord
+      ? {
+          id: adminAssetRecord.id,
+          name: adminAssetRecord.get('name'),
+          category: adminAssetRecord.get('category'),
+          groupType: adminAssetRecord.get('groupType'),
+          tags: adminAssetRecord.get('tags') ?? [],
+          sectors: adminAssetRecord.get('sectors') ?? [],
+        }
+      : null;
+
+    responseItems.push({
+      extractedAssetId: extractedRecord.id,
+      rawName: item.rawName,
+      category: item.category,
+      amount: item.amount,
+      profit: item.profit,
+      profitRate: item.profitRate,
+      quantity: item.quantity,
+      matched: !!adminAssetRecord,
+      adminAsset,
+    });
   });
 
-  console.log('[report] holdings saved', { count: savedHoldings.length });
+  reportRecord.set('status', 'done');
+  reportRecord.set('totalValue', totalValue);
+  if (totalProfit !== null) {
+    reportRecord.set('totalProfit', totalProfit);
+  }
+  if (totalProfitRate !== null) {
+    reportRecord.set('totalProfitRate', totalProfitRate);
+  }
+  $app.save(reportRecord);
+  console.log('[report] report updated', { reportId: reportRecord.id, status: reportRecord.get('status') });
 
+  console.log('[report] done');
   return e.json(200, {
     reportId: reportRecord.id,
-    status: 'done',
-    gemini: responseBody,
-    items: validItems,
+    status: reportRecord.get('status'),
+    baseCurrency,
     totalValue,
-    savedHoldings,
+    totalProfit,
+    totalProfitRate,
+    items: responseItems,
   });
 });
