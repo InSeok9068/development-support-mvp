@@ -221,6 +221,7 @@
             <h3 class="text-sm font-semibold">{{ isTopAssetsExpanded ? '전체 자산' : '상위 자산 5' }}</h3>
             <div class="flex items-center gap-2">
               <span class="text-xs text-slate-500">평가액 순</span>
+              <sl-button size="small" variant="default" @click="onClickOpenCreateAssetDialog">수동 추가</sl-button>
               <sl-button v-if="hasMoreAssets" size="small" variant="default" @click="onClickToggleTopAssets">
                 {{ isTopAssetsExpanded ? '접기' : '전체보기' }}
               </sl-button>
@@ -253,9 +254,12 @@
                     }}</span>
                   </div>
                 </div>
-                <sl-badge :variant="asset.matched ? 'success' : 'warning'">
-                  {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
-                </sl-badge>
+                <div class="flex flex-col items-end gap-2">
+                  <sl-badge :variant="asset.matched ? 'success' : 'warning'">
+                    {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
+                  </sl-badge>
+                  <sl-button size="small" variant="default" @click="onClickOpenEditAssetDialog(asset)">분류 수정</sl-button>
+                </div>
               </div>
               <div class="mt-2 text-sm font-semibold">{{ formatCurrency(asset.amount, baseCurrency) }}</div>
               <div v-if="asset.adminAsset?.tags?.length" class="mt-1 text-xs text-slate-500">
@@ -273,6 +277,70 @@
           </div>
         </div>
       </sl-card>
+
+      <sl-dialog
+        :label="assetEditDialogTitle"
+        :open="isAssetEditDialogOpen"
+        @sl-request-close="onRequestCloseAssetEditDialog"
+        @sl-after-hide="onAfterHideAssetEditDialog"
+      >
+        <div class="flex flex-col gap-3">
+          <sl-input
+            v-model="assetEditForm.rawName"
+            label="자산명"
+            placeholder="예: 삼성전자 보통주"
+            :disabled="assetEditMode === 'edit'"
+          ></sl-input>
+          <sl-input
+            v-model="assetEditForm.amount"
+            type="number"
+            label="평가 금액"
+            placeholder="예: 1500000"
+            :disabled="assetEditMode === 'edit'"
+          ></sl-input>
+
+          <sl-select :value="assetEditForm.category" label="카테고리" @sl-change="onChangeAssetEditCategory">
+            <sl-option v-for="option in assetCategoryOptions" :key="`asset-edit-category-${option}`" :value="option">
+              {{ resolveLabel(option, categoryLabels) }}
+            </sl-option>
+          </sl-select>
+
+          <sl-select :value="assetEditForm.groupType" label="프로파일" @sl-change="onChangeAssetEditGroupType">
+            <sl-option v-for="option in assetGroupTypeOptions" :key="`asset-edit-group-${option}`" :value="option">
+              {{ resolveLabel(option, groupTypeLabels) }}
+            </sl-option>
+          </sl-select>
+
+          <sl-select :value="assetEditForm.tags" label="태그 (복수 선택)" multiple :max-options-visible="6" @sl-change="onChangeAssetEditTags">
+            <sl-option v-for="option in assetTagOptions" :key="`asset-edit-tag-${option}`" :value="option">
+              {{ resolveLabel(option, tagLabels) }}
+            </sl-option>
+          </sl-select>
+          <div class="text-xs text-slate-500">최대 3개 선택</div>
+
+          <sl-select
+            :value="assetEditForm.sectors"
+            label="섹터 (복수 선택)"
+            multiple
+            :max-options-visible="8"
+            @sl-change="onChangeAssetEditSectors"
+          >
+            <sl-option v-for="option in assetSectorOptions" :key="`asset-edit-sector-${option}`" :value="option">
+              {{ resolveLabel(option, sectorLabels) }}
+            </sl-option>
+          </sl-select>
+          <div class="text-xs text-slate-500">최대 2개 선택</div>
+
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-600">
+            이 수정은 현재 화면 데이터에만 반영되며 DB에는 저장되지 않습니다.
+          </div>
+        </div>
+
+        <div slot="footer" class="flex items-center justify-end gap-2">
+          <sl-button variant="default" @click="onClickCloseAssetEditDialog">닫기</sl-button>
+          <sl-button variant="primary" :disabled="isAssetEditSaveDisabled" @click="onClickSaveAssetEditDialog">적용</sl-button>
+        </div>
+      </sl-dialog>
     </div>
 
     <div class="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm">
@@ -296,12 +364,19 @@
 <script setup lang="ts">
 /* ======================= 변수 ======================= */
 import { ArcElement, Chart as ChartJS, Legend, Tooltip, type ChartData, type ChartOptions } from 'chart.js';
-import { computed, onMounted, ref } from 'vue';
+import {
+  AdminAssetsCategoryOptions,
+  AdminAssetsGroupTypeOptions,
+  AdminAssetsSectorsOptions,
+  AdminAssetsTagsOptions,
+  ExtractedAssetsCategoryOptions,
+} from '@/api/pocketbase-types';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Doughnut } from 'vue-chartjs';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
-import { useReports } from '@/composables/useReports';
+import { type CreateReportResponse, useReports } from '@/composables/useReports';
 import {
   categoryLabels,
   groupTypeLabels,
@@ -321,21 +396,63 @@ type BreakdownEntry = {
   ratio: number;
   ratioText: string;
 };
+type AssetEditMode = 'edit' | 'create';
+type EditableReportItem = NonNullable<CreateReportResponse['items']>[number];
+type AssetEditForm = {
+  rawName: string;
+  amount: string;
+  category: AdminAssetsCategoryOptions;
+  groupType: AdminAssetsGroupTypeOptions;
+  tags: AdminAssetsTagsOptions[];
+  sectors: AdminAssetsSectorsOptions[];
+};
+type SelectTarget = EventTarget & {
+  value?: string | string[];
+};
+
+const TAG_MAX_SELECT = 3;
+const SECTOR_MAX_SELECT = 2;
 
 const selectedFile = ref<File | null>(null);
 const selectedFileName = ref('');
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const activeBreakdownTabName = ref<BreakdownTabName>('category');
 const isTopAssetsExpanded = ref(false);
+const editableReportItems = ref<EditableReportItem[]>([]);
+const isAssetEditDialogOpen = ref(false);
+const assetEditMode = ref<AssetEditMode>('edit');
+const selectedEditableAssetId = ref('');
+const assetEditForm = ref<AssetEditForm>(buildEmptyAssetEditForm());
+const manualAssetSequence = ref(0);
+const assetCategoryOptions = Object.values(AdminAssetsCategoryOptions) as AdminAssetsCategoryOptions[];
+const assetGroupTypeOptions = Object.values(AdminAssetsGroupTypeOptions) as AdminAssetsGroupTypeOptions[];
+const assetTagOptions = Object.values(AdminAssetsTagsOptions) as AdminAssetsTagsOptions[];
+const assetSectorOptions = Object.values(AdminAssetsSectorsOptions) as AdminAssetsSectorsOptions[];
 
 const router = useRouter();
 const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
 const { reportResult, isCreatingReport, createReportError, createReportFromImage } = useReports();
 
 const reportSummary = computed(() => reportResult.value);
-const reportItems = computed(() => reportSummary.value?.items ?? []);
+const reportItems = computed(() => editableReportItems.value);
 const unmatchedCount = computed(() => reportItems.value.filter((item) => !item.matched).length);
 const baseCurrency = computed(() => reportSummary.value?.baseCurrency ?? 'KRW');
+const totalValue = computed(() => reportItems.value.reduce((sum, item) => sum + item.amount, 0));
+const totalProfit = computed(() => {
+  const hasProfit = reportItems.value.some((item) => item.profit !== null && item.profit !== undefined);
+  if (!hasProfit) {
+    return null;
+  }
+  return reportItems.value.reduce((sum, item) => {
+    return sum + (item.profit ?? 0);
+  }, 0);
+});
+const totalProfitRate = computed(() => {
+  if (totalProfit.value === null || totalValue.value <= 0) {
+    return null;
+  }
+  return (totalProfit.value / totalValue.value) * 100;
+});
 const errorMessage = computed(() => {
   const error = createReportError.value;
 
@@ -352,28 +469,28 @@ const errorMessage = computed(() => {
 });
 
 const totalValueText = computed(() => {
-  if (!reportSummary.value) {
+  if (!reportItems.value.length) {
     return '-';
   }
-  return formatCurrency(reportSummary.value.totalValue, reportSummary.value.baseCurrency);
+  return formatCurrency(totalValue.value, baseCurrency.value);
 });
 
 const profitValueText = computed(() => {
-  if (!reportSummary.value || reportSummary.value.totalProfit === null) {
+  if (totalProfit.value === null) {
     return '-';
   }
-  return formatCurrency(reportSummary.value.totalProfit, reportSummary.value.baseCurrency);
+  return formatCurrency(totalProfit.value, baseCurrency.value);
 });
 
 const profitRateText = computed(() => {
-  if (!reportSummary.value || reportSummary.value.totalProfitRate === null) {
+  if (totalProfitRate.value === null) {
     return '-';
   }
-  return formatRate(reportSummary.value.totalProfitRate);
+  return formatRate(totalProfitRate.value);
 });
 
 const profitBadgeVariant = computed(() => {
-  const value = reportSummary.value?.totalProfit;
+  const value = totalProfit.value;
 
   if (value === null || value === undefined) {
     return 'neutral';
@@ -388,7 +505,7 @@ const profitBadgeVariant = computed(() => {
 });
 
 const profitText = computed(() => {
-  const value = reportSummary.value?.totalProfit;
+  const value = totalProfit.value;
 
   if (value === null || value === undefined) {
     return '손익 정보 없음';
@@ -425,6 +542,19 @@ const statusDescription = computed(() => {
     return '최신 분석 결과가 반영되어 있습니다.';
   }
   return '스크린샷 업로드 후 분석을 시작하세요.';
+});
+
+const assetEditDialogTitle = computed(() => {
+  return assetEditMode.value === 'create' ? '자산 수동 추가' : '자산 분류 수정';
+});
+
+const isAssetEditSaveDisabled = computed(() => {
+  if (assetEditMode.value === 'create') {
+    const hasName = Boolean(assetEditForm.value.rawName.trim());
+    const parsedAmount = Number(assetEditForm.value.amount);
+    return !hasName || !Number.isFinite(parsedAmount) || parsedAmount <= 0;
+  }
+  return !selectedEditableAssetId.value;
 });
 
 const sortedAssets = computed(() => {
@@ -511,6 +641,14 @@ const breakdownChartOptions: ChartOptions<'doughnut'> = {
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
+watch(
+  () => reportSummary.value,
+  (summary) => {
+    editableReportItems.value = cloneEditableReportItems(summary?.items ?? []);
+    isTopAssetsExpanded.value = false;
+  },
+  { immediate: true },
+);
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -535,6 +673,132 @@ const onClickSignout = () => {
   deleteAuthSession();
 };
 
+const onClickOpenCreateAssetDialog = () => {
+  assetEditMode.value = 'create';
+  selectedEditableAssetId.value = '';
+  assetEditForm.value = buildEmptyAssetEditForm();
+  isAssetEditDialogOpen.value = true;
+};
+
+const onClickOpenEditAssetDialog = (asset: EditableReportItem) => {
+  assetEditMode.value = 'edit';
+  selectedEditableAssetId.value = asset.extractedAssetId;
+  assetEditForm.value = buildAssetEditFormFromItem(asset);
+  isAssetEditDialogOpen.value = true;
+};
+
+const onClickCloseAssetEditDialog = () => {
+  isAssetEditDialogOpen.value = false;
+};
+
+const onRequestCloseAssetEditDialog = () => {
+  isAssetEditDialogOpen.value = false;
+};
+
+const onAfterHideAssetEditDialog = (event: Event) => {
+  if (event.target !== event.currentTarget) {
+    return;
+  }
+  resetAssetEditDialogState();
+};
+
+const onChangeAssetEditCategory = (event: Event) => {
+  const category = readSingleSelectValue(event) as AdminAssetsCategoryOptions;
+  assetEditForm.value.category = category;
+  assetEditForm.value.groupType = resolveDefaultGroupType(category);
+};
+
+const onChangeAssetEditGroupType = (event: Event) => {
+  assetEditForm.value.groupType = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions;
+};
+
+const onChangeAssetEditTags = (event: Event) => {
+  assetEditForm.value.tags = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    TAG_MAX_SELECT,
+  );
+};
+
+const onChangeAssetEditSectors = (event: Event) => {
+  assetEditForm.value.sectors = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    SECTOR_MAX_SELECT,
+  );
+};
+
+const onClickSaveAssetEditDialog = () => {
+  if (isAssetEditSaveDisabled.value) {
+    return;
+  }
+
+  if (assetEditMode.value === 'create') {
+    manualAssetSequence.value += 1;
+    const uniqueId = `manual-${Date.now()}-${manualAssetSequence.value}`;
+    const amount = Number(assetEditForm.value.amount);
+    const rawName = assetEditForm.value.rawName.trim();
+    const category = assetEditForm.value.category;
+    const groupType = assetEditForm.value.groupType;
+    const tags = limitMultiSelectValues(assetEditForm.value.tags, TAG_MAX_SELECT);
+    const sectors = limitMultiSelectValues(assetEditForm.value.sectors, SECTOR_MAX_SELECT);
+
+    const newItem: EditableReportItem = {
+      extractedAssetId: uniqueId,
+      rawName,
+      category: category as unknown as ExtractedAssetsCategoryOptions,
+      amount,
+      profit: null,
+      profitRate: null,
+      quantity: null,
+      matched: true,
+      adminAsset: {
+        id: `local-admin-${uniqueId}`,
+        name: rawName,
+        category,
+        groupType,
+        tags,
+        sectors,
+      },
+    };
+
+    editableReportItems.value = [newItem, ...editableReportItems.value];
+    isAssetEditDialogOpen.value = false;
+    return;
+  }
+
+  const targetId = selectedEditableAssetId.value;
+  if (!targetId) {
+    return;
+  }
+
+  editableReportItems.value = editableReportItems.value.map((item) => {
+    if (item.extractedAssetId !== targetId) {
+      return item;
+    }
+
+    const category = assetEditForm.value.category;
+    const groupType = assetEditForm.value.groupType;
+    const tags = limitMultiSelectValues(assetEditForm.value.tags, TAG_MAX_SELECT);
+    const sectors = limitMultiSelectValues(assetEditForm.value.sectors, SECTOR_MAX_SELECT);
+    const existingAdminAsset = item.adminAsset;
+
+    return {
+      ...item,
+      category: category as unknown as ExtractedAssetsCategoryOptions,
+      matched: true,
+      adminAsset: {
+        id: existingAdminAsset?.id ?? `local-admin-${targetId}`,
+        name: existingAdminAsset?.name ?? item.rawName,
+        category,
+        groupType,
+        tags,
+        sectors,
+      },
+    };
+  });
+
+  isAssetEditDialogOpen.value = false;
+};
+
 const onClickToggleTopAssets = () => {
   isTopAssetsExpanded.value = !isTopAssetsExpanded.value;
 };
@@ -552,6 +816,7 @@ const onChangeUpload = (event: Event) => {
   selectedFileName.value = file?.name ?? '';
   reportResult.value = null;
   isTopAssetsExpanded.value = false;
+  resetAssetEditDialogState();
 };
 
 const onClickSelectFile = () => {
@@ -572,6 +837,100 @@ const onClickAnalyze = () => {
   createReportFromImage(selectedFile.value);
 };
 /* ======================= 메서드 ======================= */
+
+function buildEmptyAssetEditForm(): AssetEditForm {
+  return {
+    rawName: '',
+    amount: '',
+    category: AdminAssetsCategoryOptions.stock,
+    groupType: AdminAssetsGroupTypeOptions.risk,
+    tags: [],
+    sectors: [],
+  };
+}
+
+const buildAssetEditFormFromItem = (item: EditableReportItem): AssetEditForm => {
+  const category = (item.adminAsset?.category ?? item.category) as unknown as AdminAssetsCategoryOptions;
+  return {
+    rawName: item.rawName,
+    amount: String(item.amount),
+    category,
+    groupType: item.adminAsset?.groupType ?? resolveDefaultGroupType(category),
+    tags: limitMultiSelectValues(item.adminAsset?.tags ?? [], TAG_MAX_SELECT),
+    sectors: limitMultiSelectValues(item.adminAsset?.sectors ?? [], SECTOR_MAX_SELECT),
+  };
+};
+
+const resolveDefaultGroupType = (category: AdminAssetsCategoryOptions): AdminAssetsGroupTypeOptions => {
+  switch (category) {
+    case AdminAssetsCategoryOptions.cash:
+      return AdminAssetsGroupTypeOptions.liquid;
+    case AdminAssetsCategoryOptions.deposit:
+      return AdminAssetsGroupTypeOptions.defensive;
+    case AdminAssetsCategoryOptions.stock:
+    case AdminAssetsCategoryOptions.etf:
+    case AdminAssetsCategoryOptions.fund:
+    case AdminAssetsCategoryOptions.crypto:
+      return AdminAssetsGroupTypeOptions.risk;
+    case AdminAssetsCategoryOptions.bond:
+    case AdminAssetsCategoryOptions.pension:
+    case AdminAssetsCategoryOptions.insurance:
+      return AdminAssetsGroupTypeOptions.defensive;
+    case AdminAssetsCategoryOptions.real_estate:
+    case AdminAssetsCategoryOptions.reits:
+    case AdminAssetsCategoryOptions.commodity_gold:
+    case AdminAssetsCategoryOptions.car:
+    case AdminAssetsCategoryOptions.etc:
+      return AdminAssetsGroupTypeOptions.real;
+    default:
+      return AdminAssetsGroupTypeOptions.risk;
+  }
+};
+
+const resetAssetEditDialogState = () => {
+  assetEditMode.value = 'edit';
+  selectedEditableAssetId.value = '';
+  assetEditForm.value = buildEmptyAssetEditForm();
+};
+
+const readSingleSelectValue = (event: Event) => {
+  const target = event.target as SelectTarget | null;
+  const value = target?.value ?? '';
+  return Array.isArray(value) ? value[0] ?? '' : value;
+};
+
+const readMultiSelectValue = (event: Event) => {
+  const target = event.target as SelectTarget | null;
+  const value = target?.value ?? [];
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return value ? [value] : [];
+};
+
+const limitMultiSelectValues = <T extends string>(values: T[], maxSelect: number) => {
+  if (values.length <= maxSelect) {
+    return values;
+  }
+  return values.slice(0, maxSelect);
+};
+
+function cloneEditableReportItems(items: EditableReportItem[]) {
+  return items.map((item) => {
+    const adminAsset = item.adminAsset
+      ? {
+          ...item.adminAsset,
+          tags: [...(item.adminAsset.tags ?? [])],
+          sectors: [...(item.adminAsset.sectors ?? [])],
+        }
+      : null;
+
+    return {
+      ...item,
+      adminAsset,
+    };
+  });
+}
 
 const formatCurrency = (value: number, currency: string) => {
   return new Intl.NumberFormat('ko-KR', {
