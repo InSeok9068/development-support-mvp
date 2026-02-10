@@ -128,23 +128,76 @@
       <sl-card v-if="reportItems.length" class="w-full">
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-sm font-semibold">카테고리 비중</h3>
+            <h3 class="text-sm font-semibold">자산 분포 차트</h3>
             <span class="text-xs text-slate-500">평가액 기준</span>
           </div>
 
-          <div class="flex flex-col gap-2">
-            <div
-              v-for="entry in categoryBreakdown"
-              :key="entry.key"
-              class="rounded-lg border border-slate-200 p-3"
-            >
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <span class="text-sm font-medium">{{ entry.label }}</span>
-                <span class="text-xs text-slate-600">{{ entry.ratioText }}</span>
+          <sl-tab-group :active-tab="activeBreakdownTabName" @sl-tab-show="onShowBreakdownTab">
+            <sl-tab slot="nav" panel="category">Category</sl-tab>
+            <sl-tab slot="nav" panel="profiles">Profiles</sl-tab>
+            <sl-tab slot="nav" panel="tags">Tags</sl-tab>
+            <sl-tab slot="nav" panel="sectors">Sectors</sl-tab>
+
+            <sl-tab-panel name="category">
+              <div v-if="categoryBreakdown.length" class="flex flex-col gap-3">
+                <div class="h-56 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  <Doughnut :data="categoryBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div v-for="entry in categoryBreakdown" :key="`category-${entry.key}`" class="flex items-center justify-between text-xs">
+                    <span class="truncate">{{ entry.label }}</span>
+                    <span class="font-semibold">{{ entry.ratioText }}</span>
+                  </div>
+                </div>
               </div>
-              <sl-progress-bar :value="entry.ratio"></sl-progress-bar>
-            </div>
-          </div>
+              <div v-else class="text-sm text-slate-500">차트 데이터가 없습니다.</div>
+            </sl-tab-panel>
+
+            <sl-tab-panel name="profiles">
+              <div v-if="profileBreakdown.length" class="flex flex-col gap-3">
+                <div class="h-56 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  <Doughnut :data="profileBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div v-for="entry in profileBreakdown" :key="`profiles-${entry.key}`" class="flex items-center justify-between text-xs">
+                    <span class="truncate">{{ entry.label }}</span>
+                    <span class="font-semibold">{{ entry.ratioText }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-sm text-slate-500">차트 데이터가 없습니다.</div>
+            </sl-tab-panel>
+
+            <sl-tab-panel name="tags">
+              <div v-if="tagBreakdown.length" class="flex flex-col gap-3">
+                <div class="h-56 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  <Doughnut :data="tagBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div v-for="entry in tagBreakdown" :key="`tags-${entry.key}`" class="flex items-center justify-between text-xs">
+                    <span class="truncate">{{ entry.label }}</span>
+                    <span class="font-semibold">{{ entry.ratioText }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-sm text-slate-500">차트 데이터가 없습니다.</div>
+            </sl-tab-panel>
+
+            <sl-tab-panel name="sectors">
+              <div v-if="sectorBreakdown.length" class="flex flex-col gap-3">
+                <div class="h-56 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  <Doughnut :data="sectorBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div v-for="entry in sectorBreakdown" :key="`sectors-${entry.key}`" class="flex items-center justify-between text-xs">
+                    <span class="truncate">{{ entry.label }}</span>
+                    <span class="font-semibold">{{ entry.ratioText }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="text-sm text-slate-500">차트 데이터가 없습니다.</div>
+            </sl-tab-panel>
+          </sl-tab-group>
         </div>
       </sl-card>
 
@@ -214,7 +267,9 @@
 
 <script setup lang="ts">
 /* ======================= 변수 ======================= */
+import { ArcElement, Chart as ChartJS, Legend, Tooltip, type ChartData, type ChartOptions } from 'chart.js';
 import { computed, onMounted, ref } from 'vue';
+import { Doughnut } from 'vue-chartjs';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
@@ -228,9 +283,21 @@ import {
   tagLabels,
 } from '@/ui/asset-labels';
 
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+type BreakdownTabName = 'category' | 'profiles' | 'tags' | 'sectors';
+type BreakdownEntry = {
+  key: string;
+  label: string;
+  amount: number;
+  ratio: number;
+  ratioText: string;
+};
+
 const selectedFile = ref<File | null>(null);
 const selectedFileName = ref('');
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const activeBreakdownTabName = ref<BreakdownTabName>('category');
 
 const router = useRouter();
 const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
@@ -336,33 +403,73 @@ const topAssets = computed(() => {
 });
 
 const categoryBreakdown = computed(() => {
-  if (!reportItems.value.length || !reportSummary.value?.totalValue) {
-    return [];
-  }
-
   const amountByCategory = new Map<string, number>();
-
   reportItems.value.forEach((item) => {
     const previous = amountByCategory.get(item.category) ?? 0;
     amountByCategory.set(item.category, previous + item.amount);
   });
-
-  const totalValue = reportSummary.value.totalValue;
-
-  return [...amountByCategory.entries()]
-    .map(([key, amount]) => {
-      const ratio = Math.round((amount / totalValue) * 100);
-      return {
-        key,
-        amount,
-        label: resolveLabel(key, categoryLabels),
-        ratio,
-        ratioText: `${ratio}%`,
-      };
-    })
-    .sort((left, right) => right.amount - left.amount)
-    .slice(0, 6);
+  return buildBreakdownEntries(amountByCategory, categoryLabels);
 });
+
+const profileBreakdown = computed(() => {
+  const amountByProfile = new Map<string, number>();
+  reportItems.value.forEach((item) => {
+    if (!item.adminAsset) {
+      return;
+    }
+    const key = item.adminAsset.groupType;
+    const previous = amountByProfile.get(key) ?? 0;
+    amountByProfile.set(key, previous + item.amount);
+  });
+  return buildBreakdownEntries(amountByProfile, groupTypeLabels);
+});
+
+const tagBreakdown = computed(() => {
+  const amountByTag = new Map<string, number>();
+  reportItems.value.forEach((item) => {
+    const tags = item.adminAsset?.tags ?? [];
+    if (!tags.length) {
+      return;
+    }
+    const sharedAmount = item.amount / tags.length;
+    tags.forEach((tag) => {
+      const previous = amountByTag.get(tag) ?? 0;
+      amountByTag.set(tag, previous + sharedAmount);
+    });
+  });
+  return buildBreakdownEntries(amountByTag, tagLabels);
+});
+
+const sectorBreakdown = computed(() => {
+  const amountBySector = new Map<string, number>();
+  reportItems.value.forEach((item) => {
+    const sectors = item.adminAsset?.sectors ?? [];
+    if (!sectors.length) {
+      return;
+    }
+    const sharedAmount = item.amount / sectors.length;
+    sectors.forEach((sector) => {
+      const previous = amountBySector.get(sector) ?? 0;
+      amountBySector.set(sector, previous + sharedAmount);
+    });
+  });
+  return buildBreakdownEntries(amountBySector, sectorLabels);
+});
+
+const categoryBreakdownChartData = computed(() => buildDoughnutChartData(categoryBreakdown.value));
+const profileBreakdownChartData = computed(() => buildDoughnutChartData(profileBreakdown.value));
+const tagBreakdownChartData = computed(() => buildDoughnutChartData(tagBreakdown.value));
+const sectorBreakdownChartData = computed(() => buildDoughnutChartData(sectorBreakdown.value));
+
+const breakdownChartOptions: ChartOptions<'doughnut'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+    },
+  },
+};
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -388,6 +495,11 @@ const onClickGoAdmin = () => {
 
 const onClickSignout = () => {
   deleteAuthSession();
+};
+
+const onShowBreakdownTab = (event: Event) => {
+  const detail = (event as CustomEvent<{ name: BreakdownTabName }>).detail;
+  activeBreakdownTabName.value = detail.name;
 };
 
 const onChangeUpload = (event: Event) => {
@@ -436,4 +548,38 @@ const formatRate = (value: number | null | undefined) => {
 const formatLabelList = (values: string[]) => {
   return values.length ? values.join(', ') : '-';
 };
+
+const buildBreakdownEntries = (amountByKey: Map<string, number>, labelMap: Record<string, string>) => {
+  const totalAmount = [...amountByKey.values()].reduce((sum, amount) => sum + amount, 0);
+  if (totalAmount <= 0) {
+    return [] as BreakdownEntry[];
+  }
+
+  return [...amountByKey.entries()]
+    .map(([key, amount]) => {
+      const ratio = (amount / totalAmount) * 100;
+      return {
+        key,
+        label: resolveLabel(key, labelMap),
+        amount,
+        ratio,
+        ratioText: `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 1 }).format(ratio)}%`,
+      };
+    })
+    .sort((left, right) => right.amount - left.amount)
+    .slice(0, 8);
+};
+
+const chartColors = ['#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b', '#f97316', '#ef4444', '#a855f7'];
+
+const buildDoughnutChartData = (entries: BreakdownEntry[]): ChartData<'doughnut'> => ({
+  labels: entries.map((entry) => entry.label),
+  datasets: [
+    {
+      data: entries.map((entry) => Number(entry.amount.toFixed(2))),
+      backgroundColor: entries.map((_, index) => chartColors[index % chartColors.length]),
+      borderWidth: 0,
+    },
+  ],
+});
 </script>
