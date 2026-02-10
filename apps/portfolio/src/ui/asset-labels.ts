@@ -76,10 +76,7 @@ export const resolveLabel = (value: string | null | undefined, labels: Record<st
   return labels[value] ?? value;
 };
 
-export const resolveLabelList = (
-  values: string[] | null | undefined,
-  labels: Record<string, string>,
-) => {
+export const resolveLabelList = (values: string[] | null | undefined, labels: Record<string, string>) => {
   if (!values?.length) {
     return [];
   }

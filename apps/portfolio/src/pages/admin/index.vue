@@ -12,12 +12,8 @@
               <div>매칭 실패 항목을 확인하고 개선 목록을 정리합니다.</div>
             </div>
             <div class="flex items-center gap-2">
-              <sl-button variant="default" @click="onClickBack">
-                돌아가기
-              </sl-button>
-              <sl-button v-if="isAuth" variant="default" @click="onClickSignout">
-                로그아웃
-              </sl-button>
+              <sl-button variant="default" @click="onClickBack"> 돌아가기 </sl-button>
+              <sl-button v-if="isAuth" variant="default" @click="onClickSignout"> 로그아웃 </sl-button>
             </div>
           </div>
 
@@ -25,9 +21,7 @@
             <sl-alert v-if="!isSuperuser" variant="warning" open>
               관리자 계정으로 로그인해야 사용할 수 있습니다.
             </sl-alert>
-            <sl-alert v-else variant="success" open>
-              관리자 권한이 확인되었습니다.
-            </sl-alert>
+            <sl-alert v-else variant="success" open> 관리자 권한이 확인되었습니다. </sl-alert>
           </div>
         </div>
       </sl-card>
@@ -84,9 +78,7 @@
             </sl-button>
           </div>
 
-          <sl-alert v-if="!isSuperuser" variant="warning" open>
-            관리자 권한이 필요합니다.
-          </sl-alert>
+          <sl-alert v-if="!isSuperuser" variant="warning" open> 관리자 권한이 필요합니다. </sl-alert>
 
           <template v-else>
             <div v-if="isMatchFailureLoading">불러오는 중입니다.</div>
@@ -103,15 +95,11 @@
 
                 <div class="flex flex-wrap items-center gap-3">
                   <sl-tag size="small">금액 {{ formatNumber(item.amount) }}</sl-tag>
-                  <sl-tag v-if="item.profit !== null" size="small">
-                    손익 {{ formatNumber(item.profit) }}
-                  </sl-tag>
+                  <sl-tag v-if="item.profit !== null" size="small"> 손익 {{ formatNumber(item.profit) }} </sl-tag>
                   <sl-tag v-if="item.profitRate !== null" size="small">
                     손익률 {{ formatRate(item.profitRate) }}
                   </sl-tag>
-                  <sl-tag v-if="item.quantity !== null" size="small">
-                    수량 {{ formatNumber(item.quantity) }}
-                  </sl-tag>
+                  <sl-tag v-if="item.quantity !== null" size="small"> 수량 {{ formatNumber(item.quantity) }} </sl-tag>
                 </div>
 
                 <div>리포트 ID: {{ item.reportId }}</div>
@@ -137,13 +125,8 @@ import { categoryLabels, resolveLabel } from '@/ui/asset-labels';
 const router = useRouter();
 const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
 const matchFailureEnabled = computed(() => isSuperuser.value);
-const {
-  matchFailureList,
-  matchFailureCount,
-  isMatchFailureLoading,
-  isMatchFailureFetching,
-  fetchMatchFailureList,
-} = useMatchFailures(matchFailureEnabled);
+const { matchFailureList, matchFailureCount, isMatchFailureLoading, isMatchFailureFetching, fetchMatchFailureList } =
+  useMatchFailures(matchFailureEnabled);
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */

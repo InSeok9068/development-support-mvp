@@ -1,4 +1,5 @@
 .docs
+.install
 .history
 
 apps/**/src/api/pocketbase.ts

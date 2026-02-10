@@ -17,7 +17,7 @@ import { onUnmounted, ref, watch } from 'vue';
 
 /* ======================= 변수 ======================= */
 const { toast } = useToast();
-const toastRef = ref<HTMLElement & { toast: () => void } | null>(null);
+const toastRef = ref<(HTMLElement & { toast: () => void }) | null>(null);
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */

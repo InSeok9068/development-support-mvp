@@ -159,8 +159,16 @@ import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { selectDeveloper, developers, fetchDeveloperList } = useDeveloper();
-const { works, fetchWorkFullList, createWork, updateWork, deleteWork, updateWorkSortBatch, setWorksCache, subscribeWorksRealtime } =
-  useWork();
+const {
+  works,
+  fetchWorkFullList,
+  createWork,
+  updateWork,
+  deleteWork,
+  updateWorkSortBatch,
+  setWorksCache,
+  subscribeWorksRealtime,
+} = useWork();
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();

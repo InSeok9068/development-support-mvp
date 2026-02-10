@@ -1,9 +1,9 @@
 <template>
   <sl-dialog :open="modal.show" :label="modal.title" @sl-request-close="onRequestCloseModal">
     <div class="text-sm text-slate-700">{{ modal.message }}</div>
-      <sl-button v-if="modal.showCancel" slot="footer" class="mr-2" variant="default" @click="onClickCancel">
-        {{ modal.cancelText ?? '취소' }}
-      </sl-button>
+    <sl-button v-if="modal.showCancel" slot="footer" class="mr-2" variant="default" @click="onClickCancel">
+      {{ modal.cancelText ?? '취소' }}
+    </sl-button>
     <sl-button slot="footer" variant="primary" @click="onClickConfirm">
       {{ modal.confirmText ?? '확인' }}
     </sl-button>
@@ -37,4 +37,3 @@ const onRequestCloseModal = () => {
 };
 /* ======================= 메서드 ======================= */
 </script>
-

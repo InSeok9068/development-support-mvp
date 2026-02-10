@@ -13,7 +13,7 @@ export default defineConfig(
       ...tslint.configs.recommended,
       ...eslintPluginVue.configs['flat/recommended'],
     ],
-    files: ['apps/*/src/**/*.{js,ts,vue}'],
+    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -22,13 +22,11 @@ export default defineConfig(
         parser: tslint.parser,
       },
     },
-    // rules: {
-    //   'vue/require-v-for-key': 'off', // v-for
-    // },
   },
   {
-    files: ['apps/*/src/pages/**/*.vue'],
+    files: ['apps/*/src/pages/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
+      'vue/no-deprecated-slot-attribute': 'off', // shoelace
       'vue/multi-word-component-names': 'off', // unplugin-vue-router
     },
   },

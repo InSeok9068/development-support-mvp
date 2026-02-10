@@ -204,4 +204,3 @@ const onChangeEventTypeFilter = (key: keyof typeof eventTypeFilter.value, event:
 
 /* ======================= 메서드 ======================= */
 </script>
-

@@ -1,11 +1,7 @@
 <template>
   <main class="container mx-auto px-4 py-6">
     <div class="flex flex-col gap-6">
-      <sl-dialog
-        no-header
-        :open="isCreatingReport"
-        @sl-request-close="onRequestCloseSubmitting"
-      >
+      <sl-dialog no-header :open="isCreatingReport" @sl-request-close="onRequestCloseSubmitting">
         <div class="flex flex-col items-center gap-3">
           <sl-spinner></sl-spinner>
           <div>분석 진행 중입니다.</div>
@@ -20,12 +16,8 @@
               <h2 class="text-xl font-semibold md:text-2xl">포트폴리오 리포트</h2>
               <sl-badge variant="primary">간단</sl-badge>
             </div>
-            <div class="text-base font-medium md:text-lg">
-              스크린샷 한 장으로 자산 현황과 리포트를 만들어드립니다.
-            </div>
-            <div class="text-sm text-slate-600 md:text-base">
-              복잡한 설정 없이 누구나 바로 사용할 수 있습니다.
-            </div>
+            <div class="text-base font-medium md:text-lg">스크린샷 한 장으로 자산 현황과 리포트를 만들어드립니다.</div>
+            <div class="text-sm text-slate-600 md:text-base">복잡한 설정 없이 누구나 바로 사용할 수 있습니다.</div>
           </div>
 
           <div class="flex items-center justify-end">
@@ -33,15 +25,11 @@
               <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <sl-icon-button slot="trigger" name="list" label="메뉴"></sl-icon-button>
               <sl-menu>
-                <sl-menu-item v-if="!isAuth" @click="onClickGoSignin">
-                  로그인
-                </sl-menu-item>
+                <sl-menu-item v-if="!isAuth" @click="onClickGoSignin"> 로그인 </sl-menu-item>
                 <sl-menu-item v-if="isAuth" :disabled="!isSuperuser" @click="onClickGoAdmin">
                   관리자 페이지
                 </sl-menu-item>
-                <sl-menu-item v-if="isAuth" @click="onClickSignout">
-                  로그아웃
-                </sl-menu-item>
+                <sl-menu-item v-if="isAuth" @click="onClickSignout"> 로그아웃 </sl-menu-item>
               </sl-menu>
             </sl-dropdown>
           </div>
@@ -53,9 +41,7 @@
           <div class="flex items-center justify-between gap-3">
             <div class="flex flex-col gap-1">
               <h3 class="text-lg font-semibold">이미지 업로드</h3>
-              <div class="text-sm text-slate-600 md:text-base">
-                투자 화면 스크린샷을 업로드하면 바로 분석합니다.
-              </div>
+              <div class="text-sm text-slate-600 md:text-base">투자 화면 스크린샷을 업로드하면 바로 분석합니다.</div>
             </div>
             <sl-badge variant="neutral">필수</sl-badge>
           </div>
@@ -77,13 +63,7 @@
                 {{ selectedFileName || '선택된 파일 없음' }}
               </span>
             </div>
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="onChangeUpload"
-            />
+            <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onChangeUpload" />
             <div class="text-xs text-slate-500 md:text-sm">한 장만 업로드 가능합니다.</div>
           </div>
 
@@ -119,9 +99,7 @@
               <h3>리포트 요약</h3>
               <div class="flex flex-wrap items-center gap-2">
                 <sl-badge variant="success">추출 {{ reportItems.length }}개</sl-badge>
-                <sl-badge v-if="unmatchedCount" variant="warning">
-                  매칭 실패 {{ unmatchedCount }}개
-                </sl-badge>
+                <sl-badge v-if="unmatchedCount" variant="warning"> 매칭 실패 {{ unmatchedCount }}개 </sl-badge>
               </div>
             </div>
             <div class="flex flex-col items-end gap-1">
@@ -139,11 +117,7 @@
           <sl-divider></sl-divider>
 
           <div class="flex flex-col gap-3">
-            <div
-              v-for="item in reportItems"
-              :key="item.extractedAssetId"
-              class="flex flex-col gap-3"
-            >
+            <div v-for="item in reportItems" :key="item.extractedAssetId" class="flex flex-col gap-3">
               <div class="flex items-center justify-between gap-3">
                 <div class="flex flex-col gap-1">
                   <div>{{ item.rawName }}</div>
@@ -170,11 +144,7 @@
                 <div v-if="item.adminAsset.tags?.length" class="flex flex-col gap-1">
                   <div>성향 태그</div>
                   <div class="flex flex-wrap gap-1">
-                    <sl-tag
-                      v-for="tag in resolveLabelList(item.adminAsset.tags, tagLabels)"
-                      :key="tag"
-                      size="small"
-                    >
+                    <sl-tag v-for="tag in resolveLabelList(item.adminAsset.tags, tagLabels)" :key="tag" size="small">
                       {{ tag }}
                     </sl-tag>
                   </div>

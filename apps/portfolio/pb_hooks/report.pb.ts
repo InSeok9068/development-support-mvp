@@ -224,12 +224,14 @@ routerAdd('POST', '/api/report', (e) => {
   const totalProfit = hasProfit
     ? validItems.reduce((sum, item) => sum + (Number.isFinite(item.profit) ? item.profit : 0), 0)
     : null;
-  const totalProfitRate =
-    totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
+  const totalProfitRate = totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
   console.log('[report] parsed items', { count: items.length, totalValue });
 
   // 관리자 자산 매칭: 이름/별명(1~3) 기준으로 단순 매칭
-  const normalizeKey = (value) => String(value ?? '').trim().toLowerCase();
+  const normalizeKey = (value) =>
+    String(value ?? '')
+      .trim()
+      .toLowerCase();
   const adminAssets = $app.findAllRecords('admin_assets') || [];
   const adminNameMap = new Map();
   const adminAliasMap = new Map();

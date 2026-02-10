@@ -5,9 +5,7 @@
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-1">
             <h3>로그인</h3>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-              이 로그인은 관리자 페이지를 위한 절차입니다.
-            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">이 로그인은 관리자 페이지를 위한 절차입니다.</div>
           </div>
 
           <div class="flex items-center gap-2">
@@ -28,18 +26,12 @@
           </div>
 
           <div v-if="activeTab === 'signin'" class="flex flex-col gap-3">
-            <sl-alert variant="neutral" open>
-              일반 사용자는 이 메뉴를 사용할 필요가 없습니다.
-            </sl-alert>
+            <sl-alert variant="neutral" open> 일반 사용자는 이 메뉴를 사용할 필요가 없습니다. </sl-alert>
             <sl-input v-model="signinFormArgs.email" type="email" label="이메일" placeholder="admin@example.com" />
             <sl-input v-model="signinFormArgs.password" type="password" label="비밀번호" />
             <div class="flex items-center gap-2">
-              <sl-button variant="primary" :loading="isSubmitting" @click="onClickSignin">
-                로그인
-              </sl-button>
-              <sl-button variant="default" @click="onClickBack">
-                돌아가기
-              </sl-button>
+              <sl-button variant="primary" :loading="isSubmitting" @click="onClickSignin"> 로그인 </sl-button>
+              <sl-button variant="default" @click="onClickBack"> 돌아가기 </sl-button>
             </div>
           </div>
 
@@ -51,16 +43,10 @@
             <sl-input v-model="signupFormArgs.email" type="email" label="이메일" placeholder="you@example.com" />
             <sl-input v-model="signupFormArgs.password" type="password" label="비밀번호" />
             <sl-input v-model="signupFormArgs.passwordConfirm" type="password" label="비밀번호 확인" />
-            <sl-alert v-if="signupSuccess" variant="success" open>
-              회원가입이 완료되었습니다.
-            </sl-alert>
+            <sl-alert v-if="signupSuccess" variant="success" open> 회원가입이 완료되었습니다. </sl-alert>
             <div class="flex items-center gap-2">
-              <sl-button variant="primary" :loading="isSubmitting" @click="onClickSignup">
-                회원가입
-              </sl-button>
-              <sl-button variant="default" @click="onClickBack">
-                돌아가기
-              </sl-button>
+              <sl-button variant="primary" :loading="isSubmitting" @click="onClickSignup"> 회원가입 </sl-button>
+              <sl-button variant="default" @click="onClickBack"> 돌아가기 </sl-button>
             </div>
           </div>
         </div>
