@@ -152,7 +152,7 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
 - PocketBase 요청 실패 처리는 `initPocketbase`의 전역 핸들러를 기본으로 한다.
 - PocketBase 요청을 Page/Component/Composable에서 개별 try/catch로 가로채는 것을 기본 금지한다.
-- 단, 비-PocketBase 로컬 처리(파일/파싱/브라우저 API)에서 사용자 메시지 보완이 필요한 경우에 한해 제한적 try/catch를 허용한다.
+- 단, 비-PocketBase 로컬 처리 try/catch 허용은 UI 이벤트 핸들러 또는 Composable 내부의 로컬 처리에 한한다.
 - 제한적 try/catch 적용 시 사유/범위/대안/영향을 명시하고 사전 합의를 거친다.
 
 #### Realtime subscribe 규칙
