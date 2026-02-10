@@ -155,9 +155,11 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
 - pages, components에서는 비동기 흐름을 제어하지 않는다.
 - 예외규칙
-  - 인증/세션 관련 호출(authWithPassword, authStore)은 예외적으로 TanStack Query 없이 사용 가능하다.
-  - ~~ 서버 캐싱이 오히려 손해가되는 경우, TanStack Query 없이 사용 가능하다. 검토요청 필요.~~
-  - 단, 그 외 데이터 CRUD는 반드시 TanStack Query를 사용한다.
+  - 캐시/재사용 가치가 없는 호출(인증/세션·단발성 액션·즉시성 검증)은 TanStack Query를 쓰지 않는다.
+    - 인증/세션 예시: 회원가입, 로그인, 로그아웃, 세션 갱신
+    - 단발성 예시: 메일/알림 발송, 로그 기록
+    - 즉시성 예시: 아이디/닉네임 중복 체크
+  - 그 외 데이터 CRUD는 TanStack Query 필수.
 
 ---
 
