@@ -166,7 +166,13 @@
                   <sl-badge variant="neutral">{{ index + 1 }}</sl-badge>
                   <div class="flex min-w-0 flex-col">
                     <span class="truncate text-sm font-semibold">{{ asset.rawName }}</span>
-                    <span class="text-xs text-slate-500">{{ resolveLabel(asset.category, categoryLabels) }}</span>
+                    <div v-if="asset.adminAsset" class="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                      <span class="font-semibold text-slate-700">Category:</span>
+                      <span>{{ resolveLabel(asset.adminAsset.category, categoryLabels) }}</span>
+                      <span class="font-semibold text-slate-700">Profiles:</span>
+                      <span>{{ resolveLabel(asset.adminAsset.groupType, groupTypeLabels) }}</span>
+                    </div>
+                    <span v-else class="text-xs text-slate-500">{{ resolveLabel(asset.category, categoryLabels) }}</span>
                   </div>
                 </div>
                 <sl-badge :variant="asset.matched ? 'success' : 'warning'">
@@ -174,6 +180,14 @@
                 </sl-badge>
               </div>
               <div class="mt-2 text-sm font-semibold">{{ formatCurrency(asset.amount, baseCurrency) }}</div>
+              <div v-if="asset.adminAsset?.tags?.length" class="mt-1 text-xs text-slate-500">
+                <span class="font-semibold text-slate-700">Tags:</span>
+                {{ formatLabelList(resolveLabelList(asset.adminAsset.tags, tagLabels)) }}
+              </div>
+              <div v-if="asset.adminAsset?.sectors?.length" class="mt-1 text-xs text-slate-500">
+                <span class="font-semibold text-slate-700">Sectors:</span>
+                {{ formatLabelList(resolveLabelList(asset.adminAsset.sectors, sectorLabels)) }}
+              </div>
             </div>
           </div>
         </div>
@@ -205,7 +219,14 @@ import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
 import { useReports } from '@/composables/useReports';
-import { categoryLabels, resolveLabel } from '@/ui/asset-labels';
+import {
+  categoryLabels,
+  groupTypeLabels,
+  resolveLabel,
+  resolveLabelList,
+  sectorLabels,
+  tagLabels,
+} from '@/ui/asset-labels';
 
 const selectedFile = ref<File | null>(null);
 const selectedFileName = ref('');
@@ -410,5 +431,9 @@ const formatRate = (value: number | null | undefined) => {
     return '-';
   }
   return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(value)}%`;
+};
+
+const formatLabelList = (values: string[]) => {
+  return values.length ? values.join(', ') : '-';
 };
 </script>
