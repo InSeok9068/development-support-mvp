@@ -138,9 +138,27 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.
   - ❌ `Create<'works'>`
   - ✅ `Create<Collections.Works>`
-- Realtime subscribe는 PocketBase 규칙이며, 페이지 이탈/언마운트 시 반드시 unsubscribe 한다.
+- Realtime subscribe는 PocketBase 규칙이며 `#### Realtime subscribe 규칙` 섹션을 참고한다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
+
+#### Realtime subscribe 규칙
+
+- `pb.collection(...).subscribe()` 및 `useRealtime(Collections.X)` 직접 사용은 도메인 composable에서만 허용한다.
+- Page는 기본적으로 `subscribeXxxRealtime(handler?)`만 사용한다.
+  - 즉시 해제가 필요할 때만 `unsubscribeXxxRealtime()`를 호출한다.
+- Page의 `handler`는 **동기 로직만** 허용한다.
+  - ✅ 로컬 UI 상태(ref) 업데이트, 토스트/알림 트리거
+  - ❌ PocketBase 호출, TanStack Query 직접 사용, `await`/비동기 흐름 제어
+- 구독 시작은 Page의 `onMounted`에서 호출한다. 해제는 `tryOnScopeDispose` 자동 해제를 기본으로 한다.
+- Pinia store/전역 싱글톤에서 Realtime 구독을 만들지 않는다. (dispose 보장 불가)
+
+예시 (Page):
+
+```ts
+const { subscribeTodosRealtime } = useTodos();
+onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
+```
 
 ---
 
