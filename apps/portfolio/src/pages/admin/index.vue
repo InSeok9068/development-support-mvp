@@ -684,7 +684,10 @@ const onRequestCloseMatchActionDialog = (event: Event) => {
   }
 };
 
-const onAfterHideMatchActionDialog = () => {
+const onAfterHideMatchActionDialog = (event: Event) => {
+  if (event.target !== event.currentTarget) {
+    return;
+  }
   resetMatchActionDialogState();
 };
 
@@ -788,7 +791,10 @@ const onRequestCloseAdminAssetDialog = (event: Event) => {
   }
 };
 
-const onAfterHideAdminAssetDialog = () => {
+const onAfterHideAdminAssetDialog = (event: Event) => {
+  if (event.target !== event.currentTarget) {
+    return;
+  }
   resetAdminAssetDialogState();
 };
 
