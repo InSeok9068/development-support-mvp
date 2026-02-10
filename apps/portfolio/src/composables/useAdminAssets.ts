@@ -13,6 +13,10 @@ type UpdateAdminAssetPayload = {
   data: Update<Collections.AdminAssets>;
 };
 
+type DeleteAdminAssetPayload = {
+  adminAssetId: string;
+};
+
 type ConnectExtractedAssetPayload = {
   extractedAssetId: string;
   adminAssetId: string;
@@ -52,6 +56,41 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
       });
     },
   });
+  const deleteAdminAssetMutation = useMutation({
+    mutationFn: async ({ adminAssetId }: DeleteAdminAssetPayload) => {
+      const extractedAssets = await pb.collection(Collections.ExtractedAssets).getFullList({
+        filter: `adminAssetId = "${adminAssetId}"`,
+      });
+      if (extractedAssets.length) {
+        await Promise.all(
+          extractedAssets.map((item) => {
+            return pb.collection(Collections.ExtractedAssets).update(item.id, { adminAssetId: '' });
+          }),
+        );
+      }
+
+      const matchLogs = await pb.collection(Collections.MatchLogs).getFullList({
+        filter: `adminAssetId = "${adminAssetId}"`,
+      });
+      if (matchLogs.length) {
+        await Promise.all(
+          matchLogs.map((item) => {
+            return pb.collection(Collections.MatchLogs).update(item.id, { adminAssetId: '' });
+          }),
+        );
+      }
+
+      await pb.collection(Collections.AdminAssets).delete(adminAssetId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [Collections.AdminAssets, 'list'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [Collections.ExtractedAssets, 'unmatched'],
+      });
+    },
+  });
   const connectExtractedAssetMutation = useMutation({
     mutationFn: ({ extractedAssetId, adminAssetId }: ConnectExtractedAssetPayload) =>
       pb.collection(Collections.ExtractedAssets).update(extractedAssetId, { adminAssetId }),
@@ -68,10 +107,12 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
   const isAdminAssetFetching = computed(() => adminAssetQuery.isFetching.value);
   const isAdminAssetCreating = computed(() => createAdminAssetMutation.isPending.value);
   const isAdminAssetUpdating = computed(() => updateAdminAssetMutation.isPending.value);
+  const isAdminAssetDeleting = computed(() => deleteAdminAssetMutation.isPending.value);
   const isExtractedAssetConnecting = computed(() => connectExtractedAssetMutation.isPending.value);
 
   const createAdminAssetError = computed(() => createAdminAssetMutation.error.value);
   const updateAdminAssetError = computed(() => updateAdminAssetMutation.error.value);
+  const deleteAdminAssetError = computed(() => deleteAdminAssetMutation.error.value);
   const connectExtractedAssetError = computed(() => connectExtractedAssetMutation.error.value);
   /* ======================= 변수 ======================= */
 
@@ -99,6 +140,14 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
     updateAdminAssetMutation.mutate(payload, {
       onSuccess: (asset) => {
         onSuccess?.(asset);
+      },
+    });
+  };
+
+  const deleteAdminAsset = (payload: DeleteAdminAssetPayload, onSuccess?: () => void) => {
+    deleteAdminAssetMutation.mutate(payload, {
+      onSuccess: () => {
+        onSuccess?.();
       },
     });
   };
@@ -140,13 +189,16 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
     isAdminAssetFetching,
     isAdminAssetCreating,
     isAdminAssetUpdating,
+    isAdminAssetDeleting,
     isExtractedAssetConnecting,
     createAdminAssetError,
     updateAdminAssetError,
+    deleteAdminAssetError,
     connectExtractedAssetError,
     fetchAdminAssetList,
     createAdminAsset,
     updateAdminAsset,
+    deleteAdminAsset,
     connectExtractedAssetToAdminAsset,
     createAdminAssetFromExtractedAsset,
   };

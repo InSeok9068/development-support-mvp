@@ -221,14 +221,24 @@
                         <div class="truncate text-base font-semibold">{{ asset.name }}</div>
                         <div class="mt-1 text-xs text-slate-500">ID {{ asset.id }}</div>
                       </div>
-                      <sl-button
-                        variant="default"
-                        size="small"
-                        :disabled="isAdminAssetMutationProcessing"
-                        @click="onClickOpenEditAdminAssetDialog(asset)"
-                      >
-                        수정
-                      </sl-button>
+                      <div class="flex items-center gap-2">
+                        <sl-button
+                          variant="default"
+                          size="small"
+                          :disabled="isAdminAssetMutationProcessing"
+                          @click="onClickOpenEditAdminAssetDialog(asset)"
+                        >
+                          수정
+                        </sl-button>
+                        <sl-button
+                          variant="danger"
+                          size="small"
+                          :disabled="isAdminAssetMutationProcessing"
+                          @click="onClickDeleteAdminAsset(asset)"
+                        >
+                          삭제
+                        </sl-button>
+                      </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -552,13 +562,16 @@ const {
   isAdminAssetFetching,
   isAdminAssetCreating,
   isAdminAssetUpdating,
+  isAdminAssetDeleting,
   isExtractedAssetConnecting,
   createAdminAssetError,
   updateAdminAssetError,
+  deleteAdminAssetError,
   connectExtractedAssetError,
   fetchAdminAssetList,
   createAdminAsset,
   updateAdminAsset,
+  deleteAdminAsset,
   connectExtractedAssetToAdminAsset,
   createAdminAssetFromExtractedAsset,
 } = useAdminAssets(matchFailureEnabled);
@@ -644,7 +657,9 @@ const filteredLinkableAdminAssetList = computed(() => {
 });
 
 const isMatchActionProcessing = computed(() => isAdminAssetCreating.value || isExtractedAssetConnecting.value);
-const isAdminAssetMutationProcessing = computed(() => isAdminAssetCreating.value || isAdminAssetUpdating.value);
+const isAdminAssetMutationProcessing = computed(
+  () => isAdminAssetCreating.value || isAdminAssetUpdating.value || isAdminAssetDeleting.value,
+);
 
 const matchActionErrorMessage = computed(() => {
   if (matchFailureAiSuggestionError.value) {
@@ -660,6 +675,9 @@ const matchActionErrorMessage = computed(() => {
 });
 
 const adminAssetActionErrorMessage = computed(() => {
+  if (deleteAdminAssetError.value) {
+    return formatErrorMessage(deleteAdminAssetError.value);
+  }
   if (updateAdminAssetError.value) {
     return formatErrorMessage(updateAdminAssetError.value);
   }
@@ -901,6 +919,28 @@ const onClickOpenEditAdminAssetDialog = (asset: AdminAssetsResponse) => {
     sectors: limitMultiSelectValues(asset.sectors ?? [], SECTOR_MAX_SELECT),
   };
   isAdminAssetDialogOpen.value = true;
+};
+
+const onClickDeleteAdminAsset = (asset: AdminAssetsResponse) => {
+  if (!isSuperuser.value || isAdminAssetMutationProcessing.value) {
+    return;
+  }
+
+  const isConfirmed = window.confirm(
+    `${asset.name} 자산을 삭제하시겠습니까?\n연결된 매칭 데이터의 자산 연결은 해제됩니다.`,
+  );
+  if (!isConfirmed) {
+    return;
+  }
+
+  deleteAdminAsset(
+    {
+      adminAssetId: asset.id,
+    },
+    () => {
+      adminAssetActionSuccessMessage.value = `${asset.name} 자산이 삭제되었습니다.`;
+    },
+  );
 };
 
 const onClickCloseAdminAssetDialog = () => {
