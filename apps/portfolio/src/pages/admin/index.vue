@@ -1,5 +1,4 @@
-﻿
-<template>
+﻿<template>
   <main class="min-h-screen bg-slate-100 px-4 py-4 pb-6">
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <sl-card class="w-full">
@@ -35,7 +34,9 @@
         </article>
         <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div class="text-xs text-slate-500">동기화</div>
-          <div class="mt-1 text-base font-semibold">{{ isMatchFailureFetching || isAdminAssetFetching ? '갱신중' : '최신' }}</div>
+          <div class="mt-1 text-base font-semibold">
+            {{ isMatchFailureFetching || isAdminAssetFetching ? '갱신중' : '최신' }}
+          </div>
         </article>
       </section>
 
@@ -62,7 +63,11 @@
 
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <sl-input v-model="matchSearchKeyword" clearable placeholder="자산명/리포트 ID 검색"></sl-input>
-                  <sl-select :value="matchCategoryFilter" placeholder="카테고리 전체" @sl-change="onChangeMatchCategoryFilter">
+                  <sl-select
+                    :value="matchCategoryFilter"
+                    placeholder="카테고리 전체"
+                    @sl-change="onChangeMatchCategoryFilter"
+                  >
                     <sl-option value="">카테고리 전체</sl-option>
                     <sl-option v-for="option in categoryOptions" :key="`match-${option}`" :value="option">
                       {{ resolveLabel(option, categoryLabels) }}
@@ -71,18 +76,30 @@
                 </div>
 
                 <div class="flex flex-wrap items-end gap-2">
-                  <sl-input v-model="matchFromDate" class="min-w-[140px] flex-1" type="date" label="From"></sl-input>
-                  <sl-input v-model="matchToDate" class="min-w-[140px] flex-1" type="date" label="To"></sl-input>
-                  <sl-switch class="pb-2" :checked="isMatchDuplicateNameRemoved" @sl-change="onChangeMatchDuplicateNameRemoved">
+                  <sl-input v-model="matchFromDate" class="min-w-[140px] flex-1" type="date"></sl-input>
+                  <sl-input v-model="matchToDate" class="min-w-[140px] flex-1" type="date"></sl-input>
+                  <sl-switch
+                    class="pb-2"
+                    :checked="isMatchDuplicateNameRemoved"
+                    @sl-change="onChangeMatchDuplicateNameRemoved"
+                  >
                     종목명 중복 제거
                   </sl-switch>
                 </div>
 
-                <div class="text-xs text-slate-500">총 {{ matchFailureCount }}건 중 {{ filteredMatchFailureList.length }}건 표시</div>
+                <div class="text-xs text-slate-500">
+                  총 {{ matchFailureCount }}건 중 {{ filteredMatchFailureList.length }}건 표시
+                </div>
               </div>
             </sl-card>
 
-            <sl-alert v-if="matchActionSuccessMessage" variant="success" open closable @sl-after-hide="onHideMatchSuccessAlert">
+            <sl-alert
+              v-if="matchActionSuccessMessage"
+              variant="success"
+              open
+              closable
+              @sl-after-hide="onHideMatchSuccessAlert"
+            >
               {{ matchActionSuccessMessage }}
             </sl-alert>
             <sl-alert v-if="!isMatchActionDialogOpen && matchActionErrorMessage" variant="danger" open>
@@ -158,7 +175,12 @@
                     >
                       새로고침
                     </sl-button>
-                    <sl-button variant="primary" size="small" :disabled="!isSuperuser" @click="onClickOpenCreateAdminAssetDialog">
+                    <sl-button
+                      variant="primary"
+                      size="small"
+                      :disabled="!isSuperuser"
+                      @click="onClickOpenCreateAdminAssetDialog"
+                    >
                       신규 추가
                     </sl-button>
                   </div>
@@ -188,7 +210,9 @@
                   </sl-select>
                 </div>
 
-                <div class="text-xs text-slate-500">총 {{ adminAssetCount }}건 중 {{ filteredAdminAssetList.length }}건 표시</div>
+                <div class="text-xs text-slate-500">
+                  총 {{ adminAssetCount }}건 중 {{ filteredAdminAssetList.length }}건 표시
+                </div>
               </div>
             </sl-card>
 
@@ -253,9 +277,15 @@
                     </div>
 
                     <div class="flex flex-col gap-2">
-                      <div class="text-xs text-slate-500">별칭: {{ formatAliasList(asset.alias1, asset.alias2, asset.alias3) }}</div>
-                      <div class="text-xs text-slate-500">태그: {{ formatLabelList(resolveLabelList(asset.tags, tagLabels)) }}</div>
-                      <div class="text-xs text-slate-500">섹터: {{ formatLabelList(resolveLabelList(asset.sectors, sectorLabels)) }}</div>
+                      <div class="text-xs text-slate-500">
+                        별칭: {{ formatAliasList(asset.alias1, asset.alias2, asset.alias3) }}
+                      </div>
+                      <div class="text-xs text-slate-500">
+                        태그: {{ formatLabelList(resolveLabelList(asset.tags, tagLabels)) }}
+                      </div>
+                      <div class="text-xs text-slate-500">
+                        섹터: {{ formatLabelList(resolveLabelList(asset.sectors, sectorLabels)) }}
+                      </div>
                     </div>
                   </div>
                 </sl-card>
@@ -361,7 +391,12 @@
         </template>
 
         <template v-else>
-          <sl-input v-model="matchLinkSearchKeyword" clearable label="기존 자산 검색" placeholder="자산명/별칭 검색"></sl-input>
+          <sl-input
+            v-model="matchLinkSearchKeyword"
+            clearable
+            label="기존 자산 검색"
+            placeholder="자산명/별칭 검색"
+          ></sl-input>
 
           <sl-select
             :value="selectedAdminAssetIdForLink"
@@ -369,7 +404,11 @@
             placeholder="자산을 선택하세요"
             @sl-change="onChangeSelectedAdminAssetForLink"
           >
-            <sl-option v-for="asset in filteredLinkableAdminAssetList" :key="`match-link-${asset.id}`" :value="asset.id">
+            <sl-option
+              v-for="asset in filteredLinkableAdminAssetList"
+              :key="`match-link-${asset.id}`"
+              :value="asset.id"
+            >
               {{ asset.name }} · {{ resolveLabel(asset.category, categoryLabels) }}
             </sl-option>
           </sl-select>
@@ -379,7 +418,11 @@
       </div>
 
       <div slot="footer" class="flex items-center justify-end gap-2">
-        <sl-button variant="default" :disabled="isMatchActionProcessing || isMatchFailureAiSuggesting" @click="onClickCloseMatchActionDialog">
+        <sl-button
+          variant="default"
+          :disabled="isMatchActionProcessing || isMatchFailureAiSuggesting"
+          @click="onClickCloseMatchActionDialog"
+        >
           닫기
         </sl-button>
         <sl-button
@@ -450,7 +493,9 @@
       </div>
 
       <div slot="footer" class="flex items-center justify-end gap-2">
-        <sl-button variant="default" :disabled="isAdminAssetMutationProcessing" @click="onClickCloseAdminAssetDialog">닫기</sl-button>
+        <sl-button variant="default" :disabled="isAdminAssetMutationProcessing" @click="onClickCloseAdminAssetDialog"
+          >닫기</sl-button
+        >
         <sl-button
           variant="primary"
           :loading="isAdminAssetMutationProcessing"
@@ -702,7 +747,12 @@ const adminAssetDialogTitle = computed(() => {
 });
 
 const isMatchActionButtonDisabled = computed(() => {
-  if (!selectedMatchFailure.value || !isSuperuser.value || isMatchActionProcessing.value || isMatchFailureAiSuggesting.value) {
+  if (
+    !selectedMatchFailure.value ||
+    !isSuperuser.value ||
+    isMatchActionProcessing.value ||
+    isMatchFailureAiSuggesting.value
+  ) {
     return true;
   }
 
@@ -840,7 +890,12 @@ const onChangeMatchCreateSectors = (event: Event) => {
 };
 
 const onClickSuggestMatchCreateFormByAi = () => {
-  if (!selectedMatchFailure.value || !isSuperuser.value || isMatchFailureAiSuggesting.value || isMatchActionProcessing.value) {
+  if (
+    !selectedMatchFailure.value ||
+    !isSuperuser.value ||
+    isMatchFailureAiSuggesting.value ||
+    isMatchActionProcessing.value
+  ) {
     return;
   }
 
@@ -1123,7 +1178,7 @@ const resetAdminAssetDialogState = () => {
 const readSingleSelectValue = (event: Event) => {
   const target = event.target as SelectTarget | null;
   const value = target?.value ?? '';
-  return Array.isArray(value) ? value[0] ?? '' : value;
+  return Array.isArray(value) ? (value[0] ?? '') : value;
 };
 
 const readMultiSelectValue = (event: Event) => {
@@ -1178,3 +1233,4 @@ const formatErrorMessage = (error: unknown) => {
   return '요청 처리 중 오류가 발생했습니다.';
 };
 </script>
+
