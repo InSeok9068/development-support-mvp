@@ -46,7 +46,7 @@
         </article>
         <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div class="text-xs text-slate-500">매칭 성공률</div>
-          <div class="mt-2 text-lg leading-tight font-semibold">{{ matchingRateText }}</div>
+          <div class="mt-2 text-lg leading-tight font-semibold" :class="matchingRateTextClass">{{ matchingRateText }}</div>
         </article>
       </section>
 
@@ -104,7 +104,7 @@
             </div>
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div class="text-xs text-slate-500">매칭 실패</div>
-              <div class="mt-1 text-sm font-semibold">{{ unmatchedCount }}개</div>
+              <div class="mt-1 text-sm font-semibold" :class="unmatchedCountTextClass">{{ unmatchedCount }}개</div>
             </div>
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div class="text-xs text-slate-500">손익</div>
@@ -119,7 +119,7 @@
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between text-sm">
               <span>자산명 매칭 성공률</span>
-              <span class="font-semibold">{{ matchingRateText }}</span>
+              <span class="font-semibold" :class="matchingRateTextClass">{{ matchingRateText }}</span>
             </div>
             <sl-progress-bar :value="matchingRate"></sl-progress-bar>
           </div>
@@ -258,7 +258,7 @@
                   </div>
                 </div>
                 <div class="flex flex-col items-end gap-2">
-                  <sl-badge :variant="asset.matched ? 'success' : 'warning'">
+                  <sl-badge :variant="asset.matched ? 'success' : 'danger'">
                     {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
                   </sl-badge>
                   <sl-button size="small" variant="default" @click="onClickOpenEditAssetDialog(asset)"
@@ -545,6 +545,23 @@ const matchingRate = computed(() => {
 
 const matchingRateText = computed(() => {
   return `${matchingRate.value}%`;
+});
+
+const matchingRateTextClass = computed(() => {
+  if (matchingRate.value >= 80) {
+    return 'text-emerald-700';
+  }
+  if (matchingRate.value >= 50) {
+    return 'text-amber-700';
+  }
+  return 'text-rose-700';
+});
+
+const unmatchedCountTextClass = computed(() => {
+  if (unmatchedCount.value > 0) {
+    return 'text-rose-700';
+  }
+  return 'text-emerald-700';
 });
 
 const statusDescription = computed(() => {
