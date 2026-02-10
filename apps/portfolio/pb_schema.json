@@ -955,7 +955,12 @@
         "type": "autodate"
       }
     ],
-    "indexes": [],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_b2EjRImCH3` ON `admin_assets` (`name`)",
+      "CREATE UNIQUE INDEX `idx_eOSAUqFIgV` ON `admin_assets` (`alias1`)",
+      "CREATE INDEX `idx_03tfkT7ySy` ON `admin_assets` (`alias2`)",
+      "CREATE INDEX `idx_pGYyZXOkCx` ON `admin_assets` (`alias3`)"
+    ],
     "system": false
   },
   {
