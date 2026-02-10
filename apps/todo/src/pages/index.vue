@@ -145,7 +145,6 @@
 <script setup lang="ts">
 import { Collections, type Create, type DevelopersResponse, type WorksResponse } from '@/api/pocketbase-types';
 import { useCode } from '@/composables/code';
-import { useRealtime } from '@/composables/realtime';
 import { useSetting } from '@/composables/setting';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
@@ -160,8 +159,8 @@ import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { selectDeveloper, developers, fetchDeveloperList } = useDeveloper();
-const { works, fetchWorkFullList, createWork, updateWork, deleteWork, updateWorkSortBatch, setWorksCache } = useWork();
-const { subscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
+const { works, fetchWorkFullList, createWork, updateWork, deleteWork, updateWorkSortBatch, setWorksCache, subscribeWorksRealtime } =
+  useWork();
 const { getUserId } = useSign();
 const { getCodeDesc, getCodeClass } = useCode();
 const { setting } = useSetting();
@@ -283,7 +282,7 @@ const onClickWorkDetail = (id: string) => {
 };
 
 const subscribeWorks = async () => {
-  await subscribeRealtime((e) => {
+  await subscribeWorksRealtime((e) => {
     switch (e.action) {
       case 'create':
         setWorksCache((current) => [...current, e.record]);

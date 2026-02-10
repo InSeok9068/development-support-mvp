@@ -60,26 +60,25 @@ export const useNotification = () => {
     global.value.notificationDot = count > 0;
   };
 
-  const subscribeNotification = async (on: boolean = true) => {
-    if (on) {
-      await subscribeRealtime((e) => {
-        switch (e.action) {
-          case 'create':
-            // 브라우저 알림
-            new Notification(e.record.title, {
-              body: e.record.message,
-            });
+  const subscribeNotificationsRealtime = async () => {
+    await subscribeRealtime((e) => {
+      switch (e.action) {
+        case 'create':
+          // 브라우저 알림
+          new Notification(e.record.title, {
+            body: e.record.message,
+          });
 
-            // 토스트 알림
-            showMessageToast(`[${e.record.title}] ${e.record.message}`);
+          // 토스트 알림
+          showMessageToast(`[${e.record.title}] ${e.record.message}`);
 
-            // 알림 Dot 표기
-            global.value.notificationDot = true;
-        }
-      });
-      return;
-    }
+          // 알림 Dot 표기
+          global.value.notificationDot = true;
+      }
+    });
+  };
 
+  const unsubscribeNotificationsRealtime = async () => {
     await unsubscribeRealtime('*');
   };
 
@@ -107,15 +106,7 @@ export const useNotification = () => {
   const createNotification = (payload: Create<Collections.Notifications>) =>
     createNotificationMutation.mutateAsync(payload);
 
-  const subscribeScheduledNotifications = async (on: boolean = true) => {
-    if (!on) {
-      if (scheduledIntervalId) {
-        window.clearInterval(scheduledIntervalId);
-        scheduledIntervalId = null;
-      }
-      return;
-    }
-
+  const subscribeScheduledNotifications = async () => {
     if (scheduledIntervalId) {
       return;
     }
@@ -139,6 +130,13 @@ export const useNotification = () => {
     }, 1000 * 60);
   };
 
+  const unsubscribeScheduledNotifications = () => {
+    if (scheduledIntervalId) {
+      window.clearInterval(scheduledIntervalId);
+      scheduledIntervalId = null;
+    }
+  };
+
   const subscribeNotificationsByPermission = (
     permission: Ref<PermissionState | undefined> | PermissionState | undefined,
   ) => {
@@ -146,8 +144,13 @@ export const useNotification = () => {
       () => (isRef(permission) ? permission.value : permission),
       (value) => {
         const isGranted = value === 'granted';
-        void subscribeNotification(isGranted);
-        void subscribeScheduledNotifications(isGranted);
+        if (isGranted) {
+          void subscribeNotificationsRealtime();
+          void subscribeScheduledNotifications();
+          return;
+        }
+        void unsubscribeNotificationsRealtime();
+        unsubscribeScheduledNotifications();
       },
       { immediate: true },
     );
@@ -186,8 +189,10 @@ export const useNotification = () => {
 
   return {
     fetchUnreadCount,
-    subscribeNotification,
+    subscribeNotificationsRealtime,
+    unsubscribeNotificationsRealtime,
     subscribeScheduledNotifications,
+    unsubscribeScheduledNotifications,
     subscribeNotificationsByPermission,
     useNotificationsQuery,
     markRead,

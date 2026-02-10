@@ -1,5 +1,6 @@
 import pb from '@/api/pocketbase';
 import { Collections, type Create, type WorksResponse } from '@/api/pocketbase-types';
+import { useRealtime } from '@/composables/realtime';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type { RecordFullListOptions, RecordListOptions } from 'pocketbase';
 import { computed, ref } from 'vue';
@@ -22,6 +23,7 @@ type UpdateWorkOptions = {
 export const useWork = () => {
   /* ======================= 변수 ======================= */
   const queryClient = useQueryClient();
+  const { subscribeRealtime, unsubscribeRealtime } = useRealtime<WorksResponse>(Collections.Works);
   const queryParams = ref<WorkQueryParams>({
     mode: 'full',
     filter: 'done = false',
@@ -173,6 +175,18 @@ export const useWork = () => {
     queryClient.setQueryData<WorksResponse[]>(worksQueryKey.value, (current = []) => updater([...current]));
   };
 
+  const subscribeWorksRealtime = async (
+    handler?: (event: { action: 'create' | 'update' | 'delete'; record: WorksResponse }) => void,
+  ) => {
+    await subscribeRealtime((event) => {
+      handler?.(event);
+    });
+  };
+
+  const unsubscribeWorksRealtime = async () => {
+    await unsubscribeRealtime('*');
+  };
+
   /* ======================= 메서드 ======================= */
 
   return {
@@ -187,5 +201,7 @@ export const useWork = () => {
     deleteWork,
     updateWorkSortBatch,
     setWorksCache,
+    subscribeWorksRealtime,
+    unsubscribeWorksRealtime,
   };
 };
