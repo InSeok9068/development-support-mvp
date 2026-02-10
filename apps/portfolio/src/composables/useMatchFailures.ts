@@ -36,15 +36,15 @@ export const useMatchFailures = (
   const matchFailureQuery = useQuery({
     queryKey: matchFailureQueryKey,
     queryFn: () =>
-      pb.collection(Collections.ExtractedAssets).getList<ExtractedAssetsResponse>(1, 50, {
+      pb.collection(Collections.ExtractedAssets).getFullList<ExtractedAssetsResponse>({
         filter: pocketbaseFilter.value,
         sort: '-created',
       }),
     enabled,
   });
 
-  const matchFailureList = computed(() => matchFailureQuery.data.value?.items ?? []);
-  const matchFailureCount = computed(() => matchFailureQuery.data.value?.totalItems ?? 0);
+  const matchFailureList = computed(() => matchFailureQuery.data.value ?? []);
+  const matchFailureCount = computed(() => matchFailureList.value.length);
   const isMatchFailureLoading = computed(() => matchFailureQuery.isLoading.value);
   const isMatchFailureFetching = computed(() => matchFailureQuery.isFetching.value);
   /* ======================= 변수 ======================= */
