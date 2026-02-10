@@ -11,7 +11,7 @@
           </template>
         </div>
 
-        <input v-model="developerArgs.id" hidden />
+        <input v-model="developerArgs.id" type="text" hidden />
 
         <sl-input v-model="developerArgs.name" label="이름" placeholder="이름을 입력하세요"></sl-input>
         <sl-input v-model="developerArgs.sort" type="number" label="정렬" placeholder="정렬 순서"></sl-input>
