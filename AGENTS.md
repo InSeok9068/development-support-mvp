@@ -73,8 +73,9 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - Shoelace에 대응되는 컴포넌트가 존재하는 경우, 기본 HTML 태그(input, button, select, textarea 등)를 직접 사용하지 않는다.
 - Shoelace에 대응되는 컴포넌트가 존재하지 않는 경우에만 기본 HTML + Tailwind 조합을 예외적으로 허용한다.
 - 예외: 파일 업로드는 Shoelace에서 `<sl-input type="file">`를 지원하지 않으므로, `<input type="file">` 사용을 허용한다.
+- 예외: 히든 인풋은 Shoelace에서 `<sl-input hidden>`를 지원하지 않으므로, `<input type="text" hidden>` 사용을 허용한다.
 - Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에, 반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
-- `<sl-input>`과 `<sl-textarea>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트는
+- `<sl-input>`과 `<sl-textarea>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트
   `<sl-select>`, `<sl-radio>`, `<sl-checkbox>`, `<sl-switch>` 등은 `:value`와 `@sl-change`를 사용한다.
 
 #### 2. UI 동작 구현 판단 순서 (필수 준수)
@@ -327,7 +328,7 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
 > 단, 기본 원칙은 다음과 같다.
 
-- 기본 UI / 기능은 Pico CSS + 단순 구현을 우선한다.
+- 기본 UI / 기능은 단순 구현을 우선한다.
 - 위 라이브러리들은 기본값이 아니며, 필요성이 명확할 때만 사용한다.
 - 사용 전 반드시 아래 사항을 명시하고 검토를 거친다.
   - 왜 이 라이브러리가 필요한지
