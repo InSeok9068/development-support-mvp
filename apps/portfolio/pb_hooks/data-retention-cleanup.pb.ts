@@ -3,6 +3,7 @@
 /// <reference path="types.d.ts" />
 
 cronAdd('match-logs-cleanup-daily', '0 10 * * *', () => {
+  const logger = $app.logger().with('hook', 'data-retention-cleanup');
   const RETENTION_DAYS = 14;
   const BATCH_SIZE = 200;
   const formatDateTime = (date) => {
@@ -53,7 +54,15 @@ cronAdd('match-logs-cleanup-daily', '0 10 * * *', () => {
   const deletedMatchLogsCount = deleteRecordsBeforeCutoff('match_logs');
   const deletedExtractedAssetsCount = deleteRecordsBeforeCutoff('extracted_assets');
 
-  console.log(
-    `[match-logs-cleanup] done: match_logs=${deletedMatchLogsCount}, extracted_assets=${deletedExtractedAssetsCount}, cutoff=${cutoffDateTime}`,
+  logger.info(
+    'cleanup completed',
+    'job',
+    'match-logs-cleanup-daily',
+    'deletedMatchLogsCount',
+    deletedMatchLogsCount,
+    'deletedExtractedAssetsCount',
+    deletedExtractedAssetsCount,
+    'cutoffDateTime',
+    cutoffDateTime,
   );
 });

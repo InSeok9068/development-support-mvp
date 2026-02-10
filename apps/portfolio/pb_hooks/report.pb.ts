@@ -240,10 +240,7 @@ routerAdd('POST', '/api/report', (e) => {
       reportRecord.set('status', 'failed');
       $app.save(reportRecord);
       logger.error('gemini request failed', 'statusCode', geminiResponse.statusCode);
-      return e.error(500, 'Gemini 요청 실패', {
-        statusCode: geminiResponse.statusCode,
-        body: responseBody,
-      });
+      return e.error(500, '분석 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.', {});
     }
 
     // Gemini 응답에서 JSON 배열만 추출 (코드펜스/부가 텍스트 제거)
