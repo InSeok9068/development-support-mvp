@@ -732,7 +732,9 @@ const onClickCloseMatchActionDialog = () => {
 const onRequestCloseMatchActionDialog = (event: Event) => {
   if (isMatchActionProcessing.value) {
     event.preventDefault();
+    return;
   }
+  isMatchActionDialogOpen.value = false;
 };
 
 const onAfterHideMatchActionDialog = (event: Event) => {
@@ -839,7 +841,9 @@ const onClickCloseAdminAssetDialog = () => {
 const onRequestCloseAdminAssetDialog = (event: Event) => {
   if (isAdminAssetMutationProcessing.value) {
     event.preventDefault();
+    return;
   }
+  isAdminAssetDialogOpen.value = false;
 };
 
 const onAfterHideAdminAssetDialog = (event: Event) => {
