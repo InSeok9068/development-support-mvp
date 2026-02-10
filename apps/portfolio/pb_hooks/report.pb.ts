@@ -67,106 +67,6 @@ routerAdd('POST', '/api/report', (e) => {
   $app.save(reportRecord);
   console.log('[report] report created', { reportId: reportRecord.id });
 
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  console.log('[report] has GEMINI_API_KEY', !!geminiApiKey);
-  if (!geminiApiKey) {
-    console.log('[report] missing GEMINI_API_KEY');
-    reportRecord.set('status', 'failed');
-    $app.save(reportRecord);
-    return e.error(500, 'GEMINI_API_KEY가 설정되지 않았습니다.', {});
-  }
-
-  // 이미지 Base64 인코딩 후 Gemini 요청 payload 구성
-  console.log('[report] before encodeBase64', { byteLength: fileBytes.length });
-  const fileBase64 = encodeBase64(fileBytes);
-  console.log('[report] after encodeBase64', { base64Length: fileBase64.length });
-
-  const geminiPayload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          {
-            text:
-              '이미지에서 자산 정보를 추출하고 아래 스키마로 JSON 배열만 반환해.\n' +
-              '반드시 코드펜스 없이 순수 JSON만 반환.\n' +
-              '카테고리는 아래 enum 중 하나만 사용.\n' +
-              '\n' +
-              '카테고리 enum:\n' +
-              'cash, deposit, stock, etf, bond, fund, pension, crypto, real_estate, reits, commodity_gold, insurance, car, etc\n' +
-              '\n' +
-              '스키마:\n' +
-              '[\n' +
-              '  {\n' +
-              '    "name": "자산명",\n' +
-              '    "category": "카테고리",\n' +
-              '    "amount": "금액(숫자 또는 문자열)",\n' +
-              '    "profit": "손익금액(없으면 null)",\n' +
-              '    "profitRate": "손익률(없으면 null)",\n' +
-              '    "quantity": "수량(없으면 null)"\n' +
-              '  }\n' +
-              ']\n',
-          },
-          {
-            inline_data: {
-              mime_type: mimeType,
-              data: fileBase64,
-            },
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.2,
-    },
-  };
-
-  console.log('[report] before gemini send');
-  const geminiResponse = $http.send({
-    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
-    method: 'POST',
-    body: JSON.stringify(geminiPayload),
-    headers: {
-      'content-type': 'application/json',
-    },
-  });
-  console.log('[report] after gemini send');
-
-  const responseBody = toString(geminiResponse.body);
-  const isSuccess = geminiResponse.statusCode >= 200 && geminiResponse.statusCode < 300;
-  console.log('[report] gemini response', { statusCode: geminiResponse.statusCode });
-  console.log('[report] gemini body', responseBody);
-
-  if (!isSuccess) {
-    reportRecord.set('status', 'failed');
-    $app.save(reportRecord);
-    console.log('[report] gemini request failed');
-    return e.error(500, 'Gemini 요청 실패', {
-      statusCode: geminiResponse.statusCode,
-      body: responseBody,
-    });
-  }
-
-  // Gemini 응답에서 JSON 배열만 추출 (코드펜스/부가 텍스트 제거)
-  const extractJsonText = (text) => {
-    let value = (text ?? '').trim();
-    value = value
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/```$/i, '')
-      .trim();
-    const arrayStart = value.indexOf('[');
-    const arrayEnd = value.lastIndexOf(']');
-    if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-      value = value.slice(arrayStart, arrayEnd + 1).trim();
-    }
-    return value;
-  };
-
-  const geminiPayloadJson = JSON.parse(responseBody);
-  const geminiText = geminiPayloadJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-  const normalizedJsonText = extractJsonText(geminiText);
-  const parsedItems = JSON.parse(normalizedJsonText);
-
   // 카테고리는 허용된 enum 범위로만 정규화
   const normalizeCategory = (value) => {
     const lower = String(value ?? '').toLowerCase();
@@ -204,18 +104,181 @@ routerAdd('POST', '/api/report', (e) => {
     return parsed;
   };
 
-  // 스키마 유연성 확보: 한글 키도 허용하지만 결과는 표준 필드로 정리
-  const items = Array.isArray(parsedItems)
-    ? parsedItems.map((item) => {
-        const rawName = String(item.name ?? item['자산명'] ?? item['종목명'] ?? '').trim();
-        const category = normalizeCategory(item.category ?? item['카테고리'] ?? item['자산카테고리']);
-        const amount = parseNumber(item.amount ?? item['금액'] ?? item['자산금액']) ?? 0;
-        const profit = parseNumber(item.profit ?? item['손익'] ?? item['손익금액']);
-        const profitRate = parseNumber(item.profitRate ?? item['손익률']);
-        const quantity = parseNumber(item.quantity ?? item['수량']);
-        return { rawName, category, amount, profit, profitRate, quantity };
-      })
-    : [];
+  const findExtractedRecordsByReportId = (sourceReportId) => {
+    const BATCH_SIZE = 200;
+    let offset = 0;
+    const records = [];
+
+    while (true) {
+      const page = $app.findRecordsByFilter(
+        'extracted_assets',
+        'reportId = {:reportId}',
+        'created',
+        BATCH_SIZE,
+        offset,
+        { reportId: sourceReportId },
+      );
+
+      if (!page?.length) {
+        break;
+      }
+
+      page.forEach((record) => records.push(record));
+      if (page.length < BATCH_SIZE) {
+        break;
+      }
+      offset += BATCH_SIZE;
+    }
+
+    return records;
+  };
+
+  let items = [];
+  let reusedHashCache = false;
+
+  const cachedReports =
+    $app.findRecordsByFilter(
+      'reports',
+      'sourceImageHash = {:hash} && status = "done"',
+      '-created',
+      1,
+      0,
+      { hash: fileHash },
+    ) || [];
+  const cachedReport = cachedReports[0] ?? null;
+
+  if (cachedReport) {
+    const cachedExtractedRecords = findExtractedRecordsByReportId(cachedReport.id);
+    items = cachedExtractedRecords.map((record) => {
+      const rawName = String(record.get('rawName') ?? '').trim();
+      const category = normalizeCategory(record.get('category'));
+      const amount = parseNumber(record.get('amount')) ?? 0;
+      const profit = parseNumber(record.get('profit'));
+      const profitRate = parseNumber(record.get('profitRate'));
+      const quantity = parseNumber(record.get('quantity'));
+      return { rawName, category, amount, profit, profitRate, quantity };
+    });
+    reusedHashCache = true;
+    console.log('[report] hash cache hit', {
+      reportId: reportRecord.id,
+      cachedReportId: cachedReport.id,
+      itemCount: items.length,
+    });
+  } else {
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    console.log('[report] has GEMINI_API_KEY', !!geminiApiKey);
+    if (!geminiApiKey) {
+      console.log('[report] missing GEMINI_API_KEY');
+      reportRecord.set('status', 'failed');
+      $app.save(reportRecord);
+      return e.error(500, 'GEMINI_API_KEY가 설정되지 않았습니다.', {});
+    }
+
+    // 이미지 Base64 인코딩 후 Gemini 요청 payload 구성
+    console.log('[report] before encodeBase64', { byteLength: fileBytes.length });
+    const fileBase64 = encodeBase64(fileBytes);
+    console.log('[report] after encodeBase64', { base64Length: fileBase64.length });
+
+    const geminiPayload = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text:
+                '이미지에서 자산 정보를 추출하고 아래 스키마로 JSON 배열만 반환해.\n' +
+                '반드시 코드펜스 없이 순수 JSON만 반환.\n' +
+                '카테고리는 아래 enum 중 하나만 사용.\n' +
+                '\n' +
+                '카테고리 enum:\n' +
+                'cash, deposit, stock, etf, bond, fund, pension, crypto, real_estate, reits, commodity_gold, insurance, car, etc\n' +
+                '\n' +
+                '스키마:\n' +
+                '[\n' +
+                '  {\n' +
+                '    "name": "자산명",\n' +
+                '    "category": "카테고리",\n' +
+                '    "amount": "금액(숫자 또는 문자열)",\n' +
+                '    "profit": "손익금액(없으면 null)",\n' +
+                '    "profitRate": "손익률(없으면 null)",\n' +
+                '    "quantity": "수량(없으면 null)"\n' +
+                '  }\n' +
+                ']\n',
+            },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: fileBase64,
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.2,
+      },
+    };
+
+    console.log('[report] before gemini send');
+    const geminiResponse = $http.send({
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
+      method: 'POST',
+      body: JSON.stringify(geminiPayload),
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+    console.log('[report] after gemini send');
+
+    const responseBody = toString(geminiResponse.body);
+    const isSuccess = geminiResponse.statusCode >= 200 && geminiResponse.statusCode < 300;
+    console.log('[report] gemini response', { statusCode: geminiResponse.statusCode });
+    console.log('[report] gemini body', responseBody);
+
+    if (!isSuccess) {
+      reportRecord.set('status', 'failed');
+      $app.save(reportRecord);
+      console.log('[report] gemini request failed');
+      return e.error(500, 'Gemini 요청 실패', {
+        statusCode: geminiResponse.statusCode,
+        body: responseBody,
+      });
+    }
+
+    // Gemini 응답에서 JSON 배열만 추출 (코드펜스/부가 텍스트 제거)
+    const extractJsonText = (text) => {
+      let value = (text ?? '').trim();
+      value = value
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/```$/i, '')
+        .trim();
+      const arrayStart = value.indexOf('[');
+      const arrayEnd = value.lastIndexOf(']');
+      if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+        value = value.slice(arrayStart, arrayEnd + 1).trim();
+      }
+      return value;
+    };
+
+    const geminiPayloadJson = JSON.parse(responseBody);
+    const geminiText = geminiPayloadJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const normalizedJsonText = extractJsonText(geminiText);
+    const parsedItems = JSON.parse(normalizedJsonText);
+
+    // 스키마 유연성 확보: 한글 키도 허용하지만 결과는 표준 필드로 정리
+    items = Array.isArray(parsedItems)
+      ? parsedItems.map((item) => {
+          const rawName = String(item.name ?? item['자산명'] ?? item['종목명'] ?? '').trim();
+          const category = normalizeCategory(item.category ?? item['카테고리'] ?? item['자산카테고리']);
+          const amount = parseNumber(item.amount ?? item['금액'] ?? item['자산금액']) ?? 0;
+          const profit = parseNumber(item.profit ?? item['손익'] ?? item['손익금액']);
+          const profitRate = parseNumber(item.profitRate ?? item['손익률']);
+          const quantity = parseNumber(item.quantity ?? item['수량']);
+          return { rawName, category, amount, profit, profitRate, quantity };
+        })
+      : [];
+    console.log('[report] hash cache miss, parsed with ocr', { reportId: reportRecord.id, itemCount: items.length });
+  }
 
   // 최소 조건: 자산명 + 금액이 있는 항목만 유효 처리
   const validItems = items.filter((item) => item.rawName && item.amount > 0);
@@ -225,7 +288,11 @@ routerAdd('POST', '/api/report', (e) => {
     ? validItems.reduce((sum, item) => sum + (Number.isFinite(item.profit) ? item.profit : 0), 0)
     : null;
   const totalProfitRate = totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
-  console.log('[report] parsed items', { count: items.length, totalValue });
+  console.log('[report] parsed items', {
+    count: items.length,
+    totalValue,
+    source: reusedHashCache ? 'hash-cache' : 'ocr',
+  });
 
   // 관리자 자산 매칭: 이름/별명(1~3) 기준으로 단순 매칭
   const normalizeKey = (value) =>
