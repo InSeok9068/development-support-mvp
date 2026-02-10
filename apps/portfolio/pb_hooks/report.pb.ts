@@ -3,7 +3,8 @@
 /// <reference path="types.d.ts" />
 
 routerAdd('POST', '/api/report', (e) => {
-  console.log('[report] start');
+  const logger = $app.logger().with('hook', 'report');
+  logger.info('request started');
 
   // PocketBase 환경에서는 Buffer가 없어서 직접 Base64 인코딩을 구현한다.
   const encodeBase64 = (bytes) => {
@@ -32,22 +33,23 @@ routerAdd('POST', '/api/report', (e) => {
   const request = e.request;
   // 업로드 필수: image 필드만 허용
   const [file, fileHeader] = request.formFile('image');
-  console.log('[report] formFile image', { hasFile: !!file, hasHeader: !!fileHeader });
+  logger.debug('form file parsed', 'hasFile', !!file, 'hasHeader', !!fileHeader);
 
   if (!file || !fileHeader) {
+    logger.warn('missing image file in request');
     return e.error(400, '이미지 파일이 필요합니다.', {});
   }
 
   // 기본 통화는 요청값이 없으면 KRW
   const baseCurrency = request.formValue('baseCurrency') || 'KRW';
-  console.log('[report] formValues', { baseCurrency });
+  logger.debug('form values', 'baseCurrency', baseCurrency);
 
   const fileBytes = toBytes(file);
   const fileHash = $security.md5(toString(fileBytes));
   const fileName = fileHeader.filename || 'upload';
 
   file.close();
-  console.log('[report] file parsed', { fileName, fileHash, byteLength: fileBytes.length });
+  logger.info('file parsed', 'fileName', fileName, 'fileHash', fileHash, 'byteLength', fileBytes.length);
 
   // Content-Type은 헤더 방식이 다양해서 두 경로로 확인
   const contentTypeHeader = fileHeader.header?.get ? fileHeader.header.get('Content-Type') : null;
@@ -65,7 +67,7 @@ routerAdd('POST', '/api/report', (e) => {
   reportRecord.set('totalValue', 0);
   reportRecord.set('status', 'processing');
   $app.save(reportRecord);
-  console.log('[report] report created', { reportId: reportRecord.id });
+  logger.info('report created', 'reportId', reportRecord.id);
 
   // 카테고리는 허용된 enum 범위로만 정규화
   const normalizeCategory = (value) => {
@@ -137,14 +139,9 @@ routerAdd('POST', '/api/report', (e) => {
   let reusedHashCache = false;
 
   const cachedReports =
-    $app.findRecordsByFilter(
-      'reports',
-      'sourceImageHash = {:hash} && status = "done"',
-      '-created',
-      1,
-      0,
-      { hash: fileHash },
-    ) || [];
+    $app.findRecordsByFilter('reports', 'sourceImageHash = {:hash} && status = "done"', '-created', 1, 0, {
+      hash: fileHash,
+    }) || [];
   const cachedReport = cachedReports[0] ?? null;
 
   if (cachedReport) {
@@ -159,25 +156,29 @@ routerAdd('POST', '/api/report', (e) => {
       return { rawName, category, amount, profit, profitRate, quantity };
     });
     reusedHashCache = true;
-    console.log('[report] hash cache hit', {
-      reportId: reportRecord.id,
-      cachedReportId: cachedReport.id,
-      itemCount: items.length,
-    });
+    logger.info(
+      'hash cache hit',
+      'reportId',
+      reportRecord.id,
+      'cachedReportId',
+      cachedReport.id,
+      'itemCount',
+      items.length,
+    );
   } else {
     const geminiApiKey = process.env.GEMINI_API_KEY;
-    console.log('[report] has GEMINI_API_KEY', !!geminiApiKey);
+    logger.debug('gemini api key exists', 'hasGeminiApiKey', !!geminiApiKey);
     if (!geminiApiKey) {
-      console.log('[report] missing GEMINI_API_KEY');
+      logger.error('missing GEMINI_API_KEY');
       reportRecord.set('status', 'failed');
       $app.save(reportRecord);
       return e.error(500, 'GEMINI_API_KEY가 설정되지 않았습니다.', {});
     }
 
     // 이미지 Base64 인코딩 후 Gemini 요청 payload 구성
-    console.log('[report] before encodeBase64', { byteLength: fileBytes.length });
+    logger.debug('before base64 encoding', 'byteLength', fileBytes.length);
     const fileBase64 = encodeBase64(fileBytes);
-    console.log('[report] after encodeBase64', { base64Length: fileBase64.length });
+    logger.debug('after base64 encoding', 'base64Length', fileBase64.length);
 
     const geminiPayload = {
       contents: [
@@ -219,7 +220,7 @@ routerAdd('POST', '/api/report', (e) => {
       },
     };
 
-    console.log('[report] before gemini send');
+    logger.info('before gemini request');
     const geminiResponse = $http.send({
       url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
       method: 'POST',
@@ -228,17 +229,17 @@ routerAdd('POST', '/api/report', (e) => {
         'content-type': 'application/json',
       },
     });
-    console.log('[report] after gemini send');
+    logger.info('after gemini request');
 
     const responseBody = toString(geminiResponse.body);
     const isSuccess = geminiResponse.statusCode >= 200 && geminiResponse.statusCode < 300;
-    console.log('[report] gemini response', { statusCode: geminiResponse.statusCode });
-    console.log('[report] gemini body', responseBody);
+    logger.info('gemini response', 'statusCode', geminiResponse.statusCode);
+    logger.debug('gemini response body', 'body', responseBody);
 
     if (!isSuccess) {
       reportRecord.set('status', 'failed');
       $app.save(reportRecord);
-      console.log('[report] gemini request failed');
+      logger.error('gemini request failed', 'statusCode', geminiResponse.statusCode);
       return e.error(500, 'Gemini 요청 실패', {
         statusCode: geminiResponse.statusCode,
         body: responseBody,
@@ -277,7 +278,7 @@ routerAdd('POST', '/api/report', (e) => {
           return { rawName, category, amount, profit, profitRate, quantity };
         })
       : [];
-    console.log('[report] hash cache miss, parsed with ocr', { reportId: reportRecord.id, itemCount: items.length });
+    logger.info('hash cache miss parsed with ocr', 'reportId', reportRecord.id, 'itemCount', items.length);
   }
 
   // 최소 조건: 자산명 + 금액이 있는 항목만 유효 처리
@@ -288,11 +289,15 @@ routerAdd('POST', '/api/report', (e) => {
     ? validItems.reduce((sum, item) => sum + (Number.isFinite(item.profit) ? item.profit : 0), 0)
     : null;
   const totalProfitRate = totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
-  console.log('[report] parsed items', {
-    count: items.length,
+  logger.info(
+    'parsed items',
+    'count',
+    items.length,
+    'totalValue',
     totalValue,
-    source: reusedHashCache ? 'hash-cache' : 'ocr',
-  });
+    'source',
+    reusedHashCache ? 'hash-cache' : 'ocr',
+  );
 
   // 관리자 자산 매칭: 이름/별명(1~3) 기준으로 단순 매칭
   const normalizeKey = (value) =>
@@ -392,9 +397,9 @@ routerAdd('POST', '/api/report', (e) => {
     reportRecord.set('totalProfitRate', totalProfitRate);
   }
   $app.save(reportRecord);
-  console.log('[report] report updated', { reportId: reportRecord.id, status: reportRecord.get('status') });
+  logger.info('report updated', 'reportId', reportRecord.id, 'status', reportRecord.get('status'));
 
-  console.log('[report] done');
+  logger.info('request completed', 'reportId', reportRecord.id);
   return e.json(200, {
     reportId: reportRecord.id,
     status: reportRecord.get('status'),
