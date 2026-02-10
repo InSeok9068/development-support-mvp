@@ -85,7 +85,7 @@
             <sl-alert v-if="matchActionSuccessMessage" variant="success" open closable @sl-after-hide="onHideMatchSuccessAlert">
               {{ matchActionSuccessMessage }}
             </sl-alert>
-            <sl-alert v-if="matchActionErrorMessage" variant="danger" open>
+            <sl-alert v-if="!isMatchActionDialogOpen && matchActionErrorMessage" variant="danger" open>
               {{ matchActionErrorMessage }}
             </sl-alert>
             <sl-alert v-if="!isSuperuser" variant="warning" open>관리자 권한으로 로그인 후 사용하세요.</sl-alert>
@@ -273,6 +273,10 @@
       @sl-after-hide="onAfterHideMatchActionDialog"
     >
       <div v-if="selectedMatchFailure" class="flex flex-col gap-3">
+        <sl-alert v-if="matchActionDialogErrorMessage" variant="danger" open>
+          {{ matchActionDialogErrorMessage }}
+        </sl-alert>
+
         <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
           <div class="text-xs text-slate-500">원본 자산명</div>
           <div class="mt-1 text-sm font-semibold">{{ selectedMatchFailure.rawName }}</div>
@@ -672,6 +676,12 @@ const matchActionErrorMessage = computed(() => {
     return formatErrorMessage(createAdminAssetError.value);
   }
   return '';
+});
+const matchActionDialogErrorMessage = computed(() => {
+  if (!isMatchActionDialogOpen.value) {
+    return '';
+  }
+  return matchActionErrorMessage.value;
 });
 
 const adminAssetActionErrorMessage = computed(() => {

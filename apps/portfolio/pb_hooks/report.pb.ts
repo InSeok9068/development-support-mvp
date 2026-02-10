@@ -322,6 +322,18 @@ routerAdd('POST', '/api/report', (e) => {
   const extractedCollection = $app.findCollectionByNameOrId('extracted_assets');
   const matchLogsCollection = $app.findCollectionByNameOrId('match_logs');
   const responseItems = [];
+  const hasExistingMatchLogRawName = (rawName) => {
+    const existingRecords =
+      $app.findRecordsByFilter(
+        'match_logs',
+        'rawName = {:rawName}',
+        '-created',
+        1,
+        0,
+        { rawName },
+      ) || [];
+    return existingRecords.length > 0;
+  };
 
   // 매칭 실패 항목도 extracted_assets + match_logs에 저장하여 관리자 검토 가능
   validItems.forEach((item) => {
@@ -349,16 +361,20 @@ routerAdd('POST', '/api/report', (e) => {
     if (adminAssetRecord?.id) extractedRecord.set('adminAssetId', adminAssetRecord.id);
     $app.save(extractedRecord);
 
-    const matchLogRecord = new Record(matchLogsCollection);
-    matchLogRecord.set('reportId', reportRecord.id);
-    matchLogRecord.set('rawName', item.rawName);
-    matchLogRecord.set('matchedBy', matchedBy);
-    matchLogRecord.set('confidence', confidence);
-    matchLogRecord.set('status', adminAssetRecord ? 'confirmed' : 'pending');
-    if (adminAssetRecord?.id) {
-      matchLogRecord.set('adminAssetId', adminAssetRecord.id);
+    if (hasExistingMatchLogRawName(item.rawName)) {
+      logger.info('skip duplicated match log by db', 'reportId', reportRecord.id, 'rawName', item.rawName);
+    } else {
+      const matchLogRecord = new Record(matchLogsCollection);
+      matchLogRecord.set('reportId', reportRecord.id);
+      matchLogRecord.set('rawName', item.rawName);
+      matchLogRecord.set('matchedBy', matchedBy);
+      matchLogRecord.set('confidence', confidence);
+      matchLogRecord.set('status', adminAssetRecord ? 'confirmed' : 'pending');
+      if (adminAssetRecord?.id) {
+        matchLogRecord.set('adminAssetId', adminAssetRecord.id);
+      }
+      $app.save(matchLogRecord);
     }
-    $app.save(matchLogRecord);
 
     const adminAsset = adminAssetRecord
       ? {
