@@ -1,12 +1,6 @@
 <template>
-  <main class="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-    <div class="pointer-events-none absolute inset-0">
-      <div class="absolute -left-28 top-[-8rem] h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl"></div>
-      <div class="absolute right-[-8rem] top-20 h-96 w-96 rounded-full bg-emerald-400/20 blur-3xl"></div>
-      <div class="absolute bottom-[-10rem] left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl"></div>
-    </div>
-
-    <div class="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+  <main class="min-h-screen bg-slate-100 pb-28 text-slate-900">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4 sm:px-5">
       <sl-dialog no-header :open="isCreatingReport" @sl-request-close="onRequestCloseSubmitting">
         <div class="flex flex-col items-center gap-3 py-2">
           <sl-spinner></sl-spinner>
@@ -15,209 +9,191 @@
         </div>
       </sl-dialog>
 
-      <header class="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur md:p-7">
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div class="flex flex-col gap-3">
-            <div class="flex flex-wrap items-center gap-2">
-              <sl-tag size="small" variant="success">MVP</sl-tag>
-              <sl-tag size="small">단일 화면</sl-tag>
-              <sl-tag size="small" variant="warning">스크린샷 분석</sl-tag>
+      <header class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <sl-tag size="small" variant="primary">PORTFOLIO</sl-tag>
+              <sl-tag size="small" variant="success">{{ isCreatingReport ? '분석 중' : '준비 완료' }}</sl-tag>
             </div>
-
-            <div class="flex flex-col gap-2">
-              <h1 class="text-2xl font-semibold tracking-tight md:text-4xl">내 자산, 오늘 바로 요약</h1>
-              <p class="max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
-                증권 앱 화면을 한 장 올리면 자산 구성, 손익, 매칭 품질까지 한 번에 정리합니다.
-                투자 점검에 필요한 핵심만 빠르게 확인할 수 있습니다.
+            <div>
+              <h1 class="text-xl font-semibold leading-tight">모바일 자산 스냅샷 분석</h1>
+              <p class="mt-1 text-sm text-slate-600">
+                스크린샷 1장으로 총 자산, 손익, 매칭 품질을 빠르게 점검합니다.
               </p>
             </div>
           </div>
 
-          <div class="flex items-center justify-end">
-            <sl-dropdown>
-              <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-              <sl-icon-button slot="trigger" name="list" label="메뉴"></sl-icon-button>
-              <sl-menu>
-                <sl-menu-item v-if="!isAuth" @click="onClickGoSignin"> 로그인 </sl-menu-item>
-                <sl-menu-item v-if="isAuth" :disabled="!isSuperuser" @click="onClickGoAdmin">
-                  관리자 페이지
-                </sl-menu-item>
-                <sl-menu-item v-if="isAuth" @click="onClickSignout"> 로그아웃 </sl-menu-item>
-              </sl-menu>
-            </sl-dropdown>
-          </div>
+          <sl-dropdown>
+            <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+            <sl-icon-button slot="trigger" name="list" label="메뉴"></sl-icon-button>
+            <sl-menu>
+              <sl-menu-item v-if="!isAuth" @click="onClickGoSignin"> 로그인 </sl-menu-item>
+              <sl-menu-item v-if="isAuth" :disabled="!isSuperuser" @click="onClickGoAdmin">
+                관리자 페이지
+              </sl-menu-item>
+              <sl-menu-item v-if="isAuth" @click="onClickSignout"> 로그아웃 </sl-menu-item>
+            </sl-menu>
+          </sl-dropdown>
         </div>
       </header>
 
-      <section class="grid gap-4 lg:grid-cols-3">
-        <article class="rounded-2xl border border-white/10 bg-slate-900/85 p-4">
-          <div class="text-xs text-slate-400">처리 상태</div>
-          <div class="mt-2 text-2xl font-semibold">{{ isCreatingReport ? '분석 중' : '대기 중' }}</div>
-          <div class="mt-1 text-sm text-slate-300">{{ statusDescription }}</div>
+      <section class="grid grid-cols-2 gap-3">
+        <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div class="text-xs text-slate-500">총 평가액</div>
+          <div class="mt-2 text-lg font-semibold leading-tight">{{ totalValueText }}</div>
         </article>
-
-        <article class="rounded-2xl border border-white/10 bg-slate-900/85 p-4">
-          <div class="text-xs text-slate-400">총 평가액</div>
-          <div class="mt-2 text-2xl font-semibold">{{ totalValueText }}</div>
-          <div class="mt-1 text-sm text-slate-300">분석 완료 후 최신 값으로 갱신됩니다.</div>
-        </article>
-
-        <article class="rounded-2xl border border-white/10 bg-slate-900/85 p-4">
-          <div class="text-xs text-slate-400">매칭 품질</div>
-          <div class="mt-2 text-2xl font-semibold">{{ matchingRateText }}</div>
-          <div class="mt-1 text-sm text-slate-300">자산명 매칭 성공률 기준</div>
+        <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div class="text-xs text-slate-500">매칭 성공률</div>
+          <div class="mt-2 text-lg font-semibold leading-tight">{{ matchingRateText }}</div>
         </article>
       </section>
 
-      <section class="grid gap-5 xl:grid-cols-[1.1fr_1.9fr]">
-        <sl-card class="w-full">
-          <div class="flex flex-col gap-5">
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex flex-col gap-1">
-                <h2 class="text-lg font-semibold">분석 시작</h2>
-                <p class="text-sm text-slate-500">투자 화면 캡처 1장을 업로드하세요.</p>
-              </div>
-              <sl-badge variant="primary">필수</sl-badge>
+      <sl-card class="w-full">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold">이미지 업로드</h2>
+              <p class="mt-1 text-sm text-slate-600">투자 앱 캡처를 업로드해 분석을 시작하세요.</p>
             </div>
+            <sl-badge variant="primary">필수</sl-badge>
+          </div>
 
-            <sl-divider></sl-divider>
-
-            <div class="flex flex-col gap-2">
-              <div class="flex items-center gap-2 text-sm font-medium">
-                <sl-icon name="image"></sl-icon>
-                <span>투자 화면 스크린샷</span>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="truncate text-sm text-slate-700">
+                {{ selectedFileName || '선택된 파일 없음' }}
               </div>
-
-              <div class="rounded-xl border border-slate-200 p-3">
-                <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div class="text-sm text-slate-600">
-                    {{ selectedFileName || '선택된 파일 없음' }}
-                  </div>
-                  <sl-button variant="default" @click="onClickSelectFile">
-                    <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
-                    <sl-icon slot="prefix" name="upload"></sl-icon>
-                    파일 선택
-                  </sl-button>
-                </div>
-              </div>
-
-              <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onChangeUpload" />
-
-              <div class="text-xs text-slate-500">JPG/PNG 파일 1장 업로드 가능</div>
-            </div>
-
-            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <sl-button
-                variant="primary"
-                size="large"
-                :loading="isCreatingReport"
-                :disabled="!selectedFile || isCreatingReport"
-                @click="onClickAnalyze"
-              >
-                분석 시작
+              <sl-button variant="default" size="small" @click="onClickSelectFile">
+                <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
+                <sl-icon slot="prefix" name="upload"></sl-icon>
+                파일 선택
               </sl-button>
-              <div class="text-xs text-slate-500">평균 처리 시간 10~20초</div>
-            </div>
-
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              업로드된 이미지는 리포트 생성 목적으로만 사용되며 처리 후 자동 폐기됩니다.
             </div>
           </div>
-        </sl-card>
 
-        <div class="flex flex-col gap-5">
-          <sl-card class="w-full">
-            <div class="flex flex-col gap-4">
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex flex-col gap-1">
-                  <h2 class="text-lg font-semibold">핵심 요약</h2>
-                  <p class="text-sm text-slate-500">리포트가 생성되면 요약 인사이트가 표시됩니다.</p>
-                </div>
-                <sl-badge :variant="profitBadgeVariant">{{ profitText }}</sl-badge>
-              </div>
+          <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="onChangeUpload" />
 
-              <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-xs text-slate-500">추출 자산</div>
-                  <div class="mt-1 text-lg font-semibold">{{ reportItems.length }}개</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-xs text-slate-500">매칭 실패</div>
-                  <div class="mt-1 text-lg font-semibold">{{ unmatchedCount }}개</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-xs text-slate-500">손익</div>
-                  <div class="mt-1 text-lg font-semibold">{{ profitValueText }}</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-xs text-slate-500">손익률</div>
-                  <div class="mt-1 text-lg font-semibold">{{ profitRateText }}</div>
-                </div>
-              </div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+            업로드 파일은 리포트 생성 후 자동 폐기됩니다.
+          </div>
 
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between text-sm">
-                  <span>자산명 매칭 성공률</span>
-                  <span class="font-medium">{{ matchingRateText }}</span>
-                </div>
-                <sl-progress-bar :value="matchingRate"></sl-progress-bar>
-              </div>
+          <div class="text-xs text-slate-500">{{ statusDescription }}</div>
+        </div>
+      </sl-card>
+
+      <sl-alert v-if="errorMessage" variant="danger" open>
+        {{ errorMessage }}
+      </sl-alert>
+
+      <sl-card class="w-full">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold">핵심 요약</h2>
+              <p class="mt-1 text-sm text-slate-600">분석 결과 기반의 핵심 지표입니다.</p>
             </div>
-          </sl-card>
+            <sl-badge :variant="profitBadgeVariant">{{ profitText }}</sl-badge>
+          </div>
 
-          <sl-alert v-if="errorMessage" variant="danger" open>
-            {{ errorMessage }}
-          </sl-alert>
-
-          <sl-card v-if="reportItems.length" class="w-full">
-            <div class="flex flex-col gap-4">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-base font-semibold">카테고리 비중</h3>
-                <span class="text-xs text-slate-500">평가액 기준</span>
-              </div>
-
-              <div class="flex flex-col gap-3">
-                <div
-                  v-for="entry in categoryBreakdown"
-                  :key="entry.key"
-                  class="grid items-center gap-2 rounded-lg border border-slate-200 p-3 md:grid-cols-[8rem_1fr_auto]"
-                >
-                  <div class="text-sm font-medium">{{ entry.label }}</div>
-                  <sl-progress-bar :value="entry.ratio"></sl-progress-bar>
-                  <div class="text-sm text-slate-600">{{ entry.ratioText }}</div>
-                </div>
-              </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">추출 자산</div>
+              <div class="mt-1 text-sm font-semibold">{{ reportItems.length }}개</div>
             </div>
-          </sl-card>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">매칭 실패</div>
+              <div class="mt-1 text-sm font-semibold">{{ unmatchedCount }}개</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">손익</div>
+              <div class="mt-1 text-sm font-semibold">{{ profitValueText }}</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">손익률</div>
+              <div class="mt-1 text-sm font-semibold">{{ profitRateText }}</div>
+            </div>
+          </div>
 
-          <sl-card v-if="topAssets.length" class="w-full">
-            <div class="flex flex-col gap-4">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-base font-semibold">상위 자산 5</h3>
-                <span class="text-xs text-slate-500">평가액 순</span>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-sm">
+              <span>자산명 매칭 성공률</span>
+              <span class="font-semibold">{{ matchingRateText }}</span>
+            </div>
+            <sl-progress-bar :value="matchingRate"></sl-progress-bar>
+          </div>
+        </div>
+      </sl-card>
+
+      <sl-card v-if="reportItems.length" class="w-full">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-sm font-semibold">카테고리 비중</h3>
+            <span class="text-xs text-slate-500">평가액 기준</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <div
+              v-for="entry in categoryBreakdown"
+              :key="entry.key"
+              class="rounded-lg border border-slate-200 p-3"
+            >
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <span class="text-sm font-medium">{{ entry.label }}</span>
+                <span class="text-xs text-slate-600">{{ entry.ratioText }}</span>
               </div>
+              <sl-progress-bar :value="entry.ratio"></sl-progress-bar>
+            </div>
+          </div>
+        </div>
+      </sl-card>
 
-              <div class="flex flex-col gap-2">
-                <div
-                  v-for="(asset, index) in topAssets"
-                  :key="asset.extractedAssetId"
-                  class="grid items-center gap-3 rounded-lg border border-slate-200 p-3 md:grid-cols-[auto_1fr_auto_auto]"
-                >
+      <sl-card v-if="topAssets.length" class="w-full">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-sm font-semibold">상위 자산 5</h3>
+            <span class="text-xs text-slate-500">평가액 순</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <div
+              v-for="(asset, index) in topAssets"
+              :key="asset.extractedAssetId"
+              class="rounded-lg border border-slate-200 bg-slate-50 p-3"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-2">
                   <sl-badge variant="neutral">{{ index + 1 }}</sl-badge>
-                  <div class="flex flex-col gap-1">
-                    <span class="font-medium">{{ asset.rawName }}</span>
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-sm font-semibold">{{ asset.rawName }}</span>
                     <span class="text-xs text-slate-500">{{ resolveLabel(asset.category, categoryLabels) }}</span>
                   </div>
-                  <span class="text-sm font-medium">{{ formatCurrency(asset.amount, baseCurrency) }}</span>
-                  <sl-badge :variant="asset.matched ? 'success' : 'warning'">
-                    {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
-                  </sl-badge>
                 </div>
+                <sl-badge :variant="asset.matched ? 'success' : 'warning'">
+                  {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
+                </sl-badge>
               </div>
+              <div class="mt-2 text-sm font-semibold">{{ formatCurrency(asset.amount, baseCurrency) }}</div>
             </div>
-          </sl-card>
+          </div>
         </div>
-      </section>
+      </sl-card>
+    </div>
+
+    <div class="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm">
+      <div class="mx-auto w-full max-w-xl">
+        <sl-button
+          variant="primary"
+          size="large"
+          class="w-full"
+          :loading="isCreatingReport"
+          :disabled="!selectedFile || isCreatingReport"
+          @click="onClickAnalyze"
+        >
+          분석 시작
+        </sl-button>
+        <div class="mt-2 text-center text-xs text-slate-500">평균 처리 시간 10~20초</div>
+      </div>
     </div>
   </main>
 </template>
