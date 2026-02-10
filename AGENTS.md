@@ -44,7 +44,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     │
   │     ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
   │
-  ├─ packages/                        # 재사용 패키지 영역
+  ├─ package/                         # 재사용 패키지 영역
   |  ├─ src
   │  │  └─ ui/                        # 공용 UI
   │  │  └─ auth/                      # 공용 인증
@@ -142,6 +142,13 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
+#### PocketBase 에러 처리 및 try/catch 규칙
+
+- PocketBase 요청 실패 처리는 `initPocketbase`의 전역 핸들러를 기본으로 한다.
+- PocketBase 요청을 Page/Component/Composable에서 개별 try/catch로 가로채는 것을 기본 금지한다.
+- 단, 비-PocketBase 로컬 처리(파일/파싱/브라우저 API)에서 사용자 메시지 보완이 필요한 경우에 한해 제한적 try/catch를 허용한다.
+- 제한적 try/catch 적용 시 사유/범위/대안/영향을 명시하고 사전 합의를 거친다.
+
 #### Realtime subscribe 규칙
 
 - `pb.collection(...).subscribe()` 및 `useRealtime(Collections.X)` 직접 사용은 도메인 composable에서만 허용한다.
@@ -171,7 +178,8 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
-- pages, components에서는 비동기 흐름을 제어하지 않는다.
+- pages/components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
+- 단, composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
 - 예외규칙
   - 캐시/재사용 가치가 없는 호출(인증/세션·단발성 액션·즉시성 검증)은 TanStack Query를 쓰지 않는다.
     - 인증/세션 예시: 회원가입, 로그인, 로그아웃, 세션 갱신
@@ -387,8 +395,6 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 - 단일 요소에 Tailwind class가 과도하게 누적되는 경우가 없도록 한다. (예: 20개 이상)
 - class 구조 변경은 허용하되, '의미 없는 미관 개선'을 목적으로 한 대규모 class 재정렬/치환은 금지한다.
 - SFC `<style scoped>`는 Agent가 추가/수정/삭제하지 않는다.
-- try/catch로 가로채지 않는다. 이미 `initPocketbase`에 구현된 전역 핸들러를 신뢰한다.
-- try/catch 예외가 필요한 경우 사유/범위/대안/영향을 명시하고 사전 합의를 거친다.
 - 명시적 요청 없이 구조 개선 또는 리팩터링을 제안하거나 수행하지 않는다.
 - ※ 본 문서의 규칙 간 해석 충돌이 발생할 경우, MVP 속도와 단순성을 우선한다.
 
