@@ -1056,7 +1056,7 @@
         "name": "amount",
         "onlyInt": false,
         "presentable": false,
-        "required": true,
+        "required": false,
         "system": false,
         "type": "number"
       },
@@ -1316,7 +1316,7 @@
         "name": "totalValue",
         "onlyInt": false,
         "presentable": false,
-        "required": true,
+        "required": false,
         "system": false,
         "type": "number"
       },
