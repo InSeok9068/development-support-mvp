@@ -18,7 +18,7 @@
             </div>
             <div>
               <h1 class="flex items-center gap-2 text-xl leading-tight font-semibold">
-                <sl-icon name="camera-fill" label="사진"></sl-icon>
+                <sl-icon src="/favicon.svg" label="포토폴리오 아이콘" class="text-3xl"></sl-icon>
                 <span>포토폴리오</span>
               </h1>
               <p class="mt-1 text-sm text-slate-600">사진 한 장으로 포트폴리오를 확인하세요.</p>
