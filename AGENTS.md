@@ -178,8 +178,6 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
-- pages/components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
-- 단, composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
 - 예외규칙
   - 캐시/재사용 가치가 없는 호출(인증/세션·단발성 액션·즉시성 검증)은 TanStack Query를 쓰지 않는다.
     - 인증/세션 예시: 회원가입, 로그인, 로그아웃, 세션 갱신
@@ -218,8 +216,10 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
   - ✅ useModal, useToast, useGlobal, useValidation
 - TanStack Query는 도메인 composable 내부에서만 사용한다.
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
-- composable은 UI에 직접 의존하지 않는다.
+- Composable은 UI에 직접 의존하지 않는다.
 - Composable에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 tryOnScopeDispose로 정리한다.
+- pages, components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
+- 단, composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
 
 ---
 
