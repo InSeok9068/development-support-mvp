@@ -44,7 +44,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     │
   │     ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
   │
-  ├─ package/                         # 재사용 패키지 영역
+  ├─ packages/                        # 재사용 패키지 영역
   |  ├─ src
   │  │  └─ ui/                        # 공용 UI
   │  │  └─ auth/                      # 공용 인증
@@ -151,12 +151,13 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
 #### Realtime subscribe 규칙
 
-- `pb.collection(...).subscribe()` 및 `useRealtime(Collections.X)` 직접 사용은 도메인 composable에서만 허용한다.
+- `pb.collection(...).subscribe()` 및 `useRealtime(Collections.X)` 직접 사용은 도메인 Composable에서만 허용한다.
 - Page는 기본적으로 `subscribeXxxRealtime(handler?)`만 사용한다.
   - 즉시 해제가 필요할 때만 `unsubscribeXxxRealtime()`를 호출한다.
 - Page의 `handler`는 **동기 로직만** 허용한다.
   - ✅ 로컬 UI 상태(ref) 업데이트, 토스트/알림 트리거
   - ❌ PocketBase 호출, TanStack Query 직접 사용, `await`/비동기 흐름 제어
+- 위 규칙은 Realtime `handler` 내부에 한해 예외 없이 적용한다.
 - 구독 시작은 Page의 `onMounted`에서 호출한다. 해제는 `tryOnScopeDispose` 자동 해제를 기본으로 한다.
 - Pinia store/전역 싱글톤에서 Realtime 구독을 만들지 않는다. (dispose 보장 불가)
 
@@ -209,17 +210,18 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 ### Composables 가이드
 
-- composable은 기본적으로 도메인 단위로 만든다.
+- Composable은 기본적으로 도메인 단위로 만든다.
   - ✅ useTodos, useAuth, useUserSettings
-  - ❌ 도메인 로직을 잘게 쪼갠 기능 단위 composable 남발하지 않는다. (useToggle, useFetch)
-- 도메인에 속하지 않는 전역/횡단 관심사 composable은 예외로 허용한다.
+  - ❌ 도메인 로직을 잘게 쪼갠 기능 단위 Composable 남발하지 않는다. (useToggle, useFetch)
+- 도메인에 속하지 않는 전역/횡단 관심사 Composable은 예외로 허용한다.
   - ✅ useModal, useToast, useGlobal, useValidation
-- TanStack Query는 도메인 composable 내부에서만 사용한다.
+- TanStack Query는 도메인 Composable 내부에서만 사용한다.
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
 - Composable은 UI에 직접 의존하지 않는다.
 - Composable에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 tryOnScopeDispose로 정리한다.
-- pages, components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
-- 단, composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
+- pages/components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
+- 단, Composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
+- 단, Realtime `handler` 내부는 `await` 없이 동기 로직만 허용한다.
 
 ---
 
@@ -258,7 +260,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 ### Vue SFC / Composable 구분자 및 명명 가이드
 
-- 본 프로젝트의 Vue SFC 및 composable 파일은 가독성과 빠른 수정, AI 협업 안정성을 위해 선언 순서와 구분자 및 명명을 명확히 유지한다.
+- 본 프로젝트의 Vue SFC 및 Composable 파일은 가독성과 빠른 수정, AI 협업 안정성을 위해 선언 순서와 구분자 및 명명을 명확히 유지한다.
 
 #### Vue SFC 구분자 및 명명
 
@@ -272,7 +274,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
   - 단, 핸들러 내부에서 호출되는 순수 로직 함수나 API 호출 함수는 `on` 접두사를 사용하지 않는다 (동사+목적어).
   - 이벤트 핸들러(`onXxx`) 내부에는 복잡한 로직을 직접 작성하지 않는다. 복잡한 로직은 Composable의 액션 함수를 호출하는 형태로 위임한다.
   - '복잡한 로직'에는 비동기 흐름 제어(async/await 남발, try/catch, 요청 순서/재시도/캐시 갱신 설계)를 포함한다.
-  - 사용자 액션과 직접 연결되지 않는 로직은 composable 또는 ui 헬퍼로 이동한다.
+  - 사용자 액션과 직접 연결되지 않는 로직은 Composable 또는 ui 헬퍼로 이동한다.
 
 - 선언 순서 (예시)
   ```vue
@@ -303,7 +305,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 - Composable 메서드 명명 규칙
   - Composable 메서드는 도메인 액션 중심으로만 작성한다.
-  - UI 이벤트 느낌의 `onXxx` 네이밍은 composable에서 금지한다.
+  - UI 이벤트 느낌의 `onXxx` 네이밍은 Composable에서 금지한다.
   - 접두사는 도메인 표준 동사만 사용한다.
     - `fetch / create / update / delete / subscribe / unsubscribe`
   - 명명 순서는 반드시 `동사 + 도메인`으로 고정한다.
@@ -363,7 +365,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 - 기본 UI / 기능은 단순 구현을 우선한다.
 - 위 라이브러리들은 기본값이 아니며, 필요성이 명확할 때만 사용한다.
-- 사용 전 반드시 아래 사항을 명시하고 검토를 거친다.
+- 신규 의존성 추가 또는 해당 라이브러리의 최초 도입 시, 반드시 아래 사항을 명시하고 검토를 거친다.
   - 왜 이 라이브러리가 필요한지
   - 단순 구현으로 대체할 수 없는 이유
   - 해당 기능이 MVP 범위에 꼭 필요한지
@@ -388,10 +390,10 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 - 라우팅 변경은 pages/ 파일 구조 변경으로만 수행하며, 그 외 어떤 라우터 설정도 금지한다.
 - `pocketbase-types.ts`를 확인하여 데이터 구조를 파악한다. 타입 정의가 없는 필드는 절대 추측하여 사용하지 않는다.
-- composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
+- Composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.
 - Composable에서 Mutation 객체(`useMutation` 결과)를 그대로 반환하지 않는다. (반드시 함수로 래핑하여 반환)
 - Pinia를 CRUD 캐시 용도로 사용하지 않는다.
-- Tailwind는 레이아웃 중심으로만 사용하며, Shoelace로 가능한 UI를 Tailwind로 재구현하지 않는다.
+- Tailwind 사용 제한은 `UI(Shoelace) & Tailwind 사용 가이드` 4항을 따른다.
 - 단일 요소에 Tailwind class가 과도하게 누적되는 경우가 없도록 한다. (예: 20개 이상)
 - class 구조 변경은 허용하되, '의미 없는 미관 개선'을 목적으로 한 대규모 class 재정렬/치환은 금지한다.
 - SFC `<style scoped>`는 Agent가 추가/수정/삭제하지 않는다.
