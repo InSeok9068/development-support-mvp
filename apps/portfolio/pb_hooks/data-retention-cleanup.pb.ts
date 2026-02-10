@@ -21,30 +21,39 @@ cronAdd('match-logs-cleanup-daily', '0 10 * * *', () => {
   };
 
   const cutoffDateTime = buildCutoffDateTime();
-  let deletedCount = 0;
+  const deleteRecordsBeforeCutoff = (collectionName) => {
+    let deletedCount = 0;
 
-  while (true) {
-    const targets = $app.findRecordsByFilter(
-      'match_logs',
-      'created <= {:cutoff}',
-      'created',
-      BATCH_SIZE,
-      0,
-      { cutoff: cutoffDateTime },
-    );
+    while (true) {
+      const targets = $app.findRecordsByFilter(
+        collectionName,
+        'created <= {:cutoff}',
+        'created',
+        BATCH_SIZE,
+        0,
+        { cutoff: cutoffDateTime },
+      );
 
-    if (!targets?.length) {
-      break;
+      if (!targets?.length) {
+        break;
+      }
+
+      targets.forEach((record) => {
+        if (!record) {
+          return;
+        }
+        $app.delete(record);
+        deletedCount += 1;
+      });
     }
 
-    targets.forEach((record) => {
-      if (!record) {
-        return;
-      }
-      $app.delete(record);
-      deletedCount += 1;
-    });
-  }
+    return deletedCount;
+  };
 
-  console.log(`[match-logs-cleanup] done: deleted=${deletedCount}, cutoff=${cutoffDateTime}`);
+  const deletedMatchLogsCount = deleteRecordsBeforeCutoff('match_logs');
+  const deletedExtractedAssetsCount = deleteRecordsBeforeCutoff('extracted_assets');
+
+  console.log(
+    `[match-logs-cleanup] done: match_logs=${deletedMatchLogsCount}, extracted_assets=${deletedExtractedAssetsCount}, cutoff=${cutoffDateTime}`,
+  );
 });
