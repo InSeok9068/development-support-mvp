@@ -3,13 +3,41 @@ import { Collections, type ExtractedAssetsResponse } from '@/api/pocketbase-type
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
 
-export const useMatchFailures = (enabled: boolean | Ref<boolean> | ComputedRef<boolean> = true) => {
+type MatchFailureDateFilter = {
+  fromDate: Ref<string>;
+  toDate: Ref<string>;
+};
+
+const buildDateTimeBoundary = (date: string, boundary: 'start' | 'end') => {
+  return boundary === 'start' ? `${date} 00:00:00` : `${date} 23:59:59`;
+};
+
+const buildMatchFailureFilter = (fromDate: string, toDate: string) => {
+  const conditions = ['adminAssetId = ""'];
+  if (fromDate) {
+    conditions.push(`created >= '${buildDateTimeBoundary(fromDate, 'start')}'`);
+  }
+  if (toDate) {
+    conditions.push(`created <= '${buildDateTimeBoundary(toDate, 'end')}'`);
+  }
+  return conditions.join(' && ');
+};
+
+export const useMatchFailures = (
+  enabled: boolean | Ref<boolean> | ComputedRef<boolean> = true,
+  dateFilter?: MatchFailureDateFilter,
+) => {
   /* ======================= 변수 ======================= */
+  const fromDate = computed(() => dateFilter?.fromDate.value ?? '');
+  const toDate = computed(() => dateFilter?.toDate.value ?? '');
+  const matchFailureQueryKey = computed(() => [Collections.ExtractedAssets, 'unmatched', fromDate.value, toDate.value]);
+  const pocketbaseFilter = computed(() => buildMatchFailureFilter(fromDate.value, toDate.value));
+
   const matchFailureQuery = useQuery({
-    queryKey: [Collections.ExtractedAssets, 'unmatched'],
+    queryKey: matchFailureQueryKey,
     queryFn: () =>
       pb.collection(Collections.ExtractedAssets).getList<ExtractedAssetsResponse>(1, 50, {
-        filter: 'adminAssetId = ""',
+        filter: pocketbaseFilter.value,
         sort: '-created',
       }),
     enabled,

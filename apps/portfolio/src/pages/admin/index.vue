@@ -70,6 +70,14 @@
                   </sl-select>
                 </div>
 
+                <div class="flex flex-wrap items-end gap-2">
+                  <sl-input v-model="matchFromDate" class="min-w-[140px] flex-1" type="date" label="From"></sl-input>
+                  <sl-input v-model="matchToDate" class="min-w-[140px] flex-1" type="date" label="To"></sl-input>
+                  <sl-switch class="pb-2" :checked="isMatchDuplicateNameRemoved" @sl-change="onChangeMatchDuplicateNameRemoved">
+                    종목명 중복 제거
+                  </sl-switch>
+                </div>
+
                 <div class="text-xs text-slate-500">총 {{ matchFailureCount }}건 중 {{ filteredMatchFailureList.length }}건 표시</div>
               </div>
             </sl-card>
@@ -465,6 +473,9 @@ type AdminAssetForm = {
 type SelectTarget = EventTarget & {
   value?: string | string[];
 };
+type SwitchTarget = EventTarget & {
+  checked?: boolean;
+};
 
 function buildEmptyAdminAssetForm(): AdminAssetForm {
   return {
@@ -479,12 +490,32 @@ function buildEmptyAdminAssetForm(): AdminAssetForm {
   };
 }
 
+function formatDateInputValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function buildRecentWeekDateRange() {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 6);
+  return {
+    from: formatDateInputValue(from),
+    to: formatDateInputValue(to),
+  };
+}
+
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
 const matchFailureEnabled = computed(() => isSuperuser.value);
+const initialMatchDateRange = buildRecentWeekDateRange();
+const matchFromDate = ref(initialMatchDateRange.from);
+const matchToDate = ref(initialMatchDateRange.to);
 const { matchFailureList, matchFailureCount, isMatchFailureLoading, isMatchFailureFetching, fetchMatchFailureList } =
-  useMatchFailures(matchFailureEnabled);
+  useMatchFailures(matchFailureEnabled, { fromDate: matchFromDate, toDate: matchToDate });
 const {
   adminAssetList,
   adminAssetCount,
@@ -511,6 +542,7 @@ const sectorOptions = Object.values(AdminAssetsSectorsOptions) as AdminAssetsSec
 
 const matchSearchKeyword = ref('');
 const matchCategoryFilter = ref<ExtractedAssetsCategoryOptions | ''>('');
+const isMatchDuplicateNameRemoved = ref(true);
 
 const adminAssetSearchKeyword = ref('');
 const adminAssetCategoryFilter = ref<AdminAssetsCategoryOptions | ''>('');
@@ -533,11 +565,25 @@ const adminAssetActionSuccessMessage = ref('');
 
 const filteredMatchFailureList = computed(() => {
   const keyword = matchSearchKeyword.value.trim().toLowerCase();
-  return matchFailureList.value.filter((item) => {
+  const filteredByConditions = matchFailureList.value.filter((item) => {
     const byKeyword =
       !keyword || item.rawName.toLowerCase().includes(keyword) || item.reportId.toLowerCase().includes(keyword);
     const byCategory = !matchCategoryFilter.value || item.category === matchCategoryFilter.value;
     return byKeyword && byCategory;
+  });
+
+  if (!isMatchDuplicateNameRemoved.value) {
+    return filteredByConditions;
+  }
+
+  const seen = new Set<string>();
+  return filteredByConditions.filter((item) => {
+    const normalizedName = item.rawName.trim().toLowerCase();
+    if (seen.has(normalizedName)) {
+      return false;
+    }
+    seen.add(normalizedName);
+    return true;
   });
 });
 
@@ -663,6 +709,11 @@ const onChangeAdminAssetCategoryFilter = (event: Event) => {
 
 const onChangeAdminAssetGroupTypeFilter = (event: Event) => {
   adminAssetGroupTypeFilter.value = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions | '';
+};
+
+const onChangeMatchDuplicateNameRemoved = (event: Event) => {
+  const target = event.target as SwitchTarget | null;
+  isMatchDuplicateNameRemoved.value = Boolean(target?.checked);
 };
 
 const onClickOpenMatchActionDialog = (item: ExtractedAssetsResponse) => {
