@@ -279,6 +279,21 @@
 
         <template v-if="matchActionMode === 'create'">
           <sl-input v-model="matchCreateForm.name" label="자산명" placeholder="예: 삼성전자 보통주"></sl-input>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs text-slate-500">AI 추천으로 분류값 자동 입력</div>
+            <sl-button
+              variant="default"
+              size="small"
+              :loading="isMatchFailureAiSuggesting"
+              :disabled="isMatchFailureAiSuggesting || isMatchActionProcessing"
+              @click="onClickSuggestMatchCreateFormByAi"
+            >
+              AI 추천
+            </sl-button>
+          </div>
+          <div v-if="matchAiSuggestionMessage" class="text-xs text-emerald-700">
+            {{ matchAiSuggestionMessage }}
+          </div>
 
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <sl-select :value="matchCreateForm.category" label="카테고리" @sl-change="onChangeMatchCreateCategory">
@@ -348,7 +363,9 @@
       </div>
 
       <div slot="footer" class="flex items-center justify-end gap-2">
-        <sl-button variant="default" :disabled="isMatchActionProcessing" @click="onClickCloseMatchActionDialog">닫기</sl-button>
+        <sl-button variant="default" :disabled="isMatchActionProcessing || isMatchFailureAiSuggesting" @click="onClickCloseMatchActionDialog">
+          닫기
+        </sl-button>
         <sl-button
           variant="primary"
           :loading="isMatchActionProcessing"
@@ -514,8 +531,16 @@ const matchFailureEnabled = computed(() => isSuperuser.value);
 const initialMatchDateRange = buildRecentWeekDateRange();
 const matchFromDate = ref(initialMatchDateRange.from);
 const matchToDate = ref(initialMatchDateRange.to);
-const { matchFailureList, matchFailureCount, isMatchFailureLoading, isMatchFailureFetching, fetchMatchFailureList } =
-  useMatchFailures(matchFailureEnabled, { fromDate: matchFromDate, toDate: matchToDate });
+const {
+  matchFailureList,
+  matchFailureCount,
+  isMatchFailureLoading,
+  isMatchFailureFetching,
+  isMatchFailureAiSuggesting,
+  matchFailureAiSuggestionError,
+  fetchMatchFailureList,
+  fetchMatchFailureAiSuggestion,
+} = useMatchFailures(matchFailureEnabled, { fromDate: matchFromDate, toDate: matchToDate });
 const {
   adminAssetList,
   adminAssetCount,
@@ -561,6 +586,7 @@ const isAdminAssetDialogOpen = ref(false);
 const adminAssetForm = ref<AdminAssetForm>(buildEmptyAdminAssetForm());
 
 const matchActionSuccessMessage = ref('');
+const matchAiSuggestionMessage = ref('');
 const adminAssetActionSuccessMessage = ref('');
 
 const filteredMatchFailureList = computed(() => {
@@ -615,6 +641,9 @@ const isMatchActionProcessing = computed(() => isAdminAssetCreating.value || isE
 const isAdminAssetMutationProcessing = computed(() => isAdminAssetCreating.value || isAdminAssetUpdating.value);
 
 const matchActionErrorMessage = computed(() => {
+  if (matchFailureAiSuggestionError.value) {
+    return formatErrorMessage(matchFailureAiSuggestionError.value);
+  }
   if (connectExtractedAssetError.value) {
     return formatErrorMessage(connectExtractedAssetError.value);
   }
@@ -639,7 +668,7 @@ const adminAssetDialogTitle = computed(() => {
 });
 
 const isMatchActionButtonDisabled = computed(() => {
-  if (!selectedMatchFailure.value || !isSuperuser.value || isMatchActionProcessing.value) {
+  if (!selectedMatchFailure.value || !isSuperuser.value || isMatchActionProcessing.value || isMatchFailureAiSuggesting.value) {
     return true;
   }
 
@@ -722,6 +751,7 @@ const onClickOpenMatchActionDialog = (item: ExtractedAssetsResponse) => {
   matchLinkSearchKeyword.value = item.rawName;
   selectedAdminAssetIdForLink.value = '';
   matchCreateForm.value = buildAdminAssetFormFromMatchFailure(item);
+  matchAiSuggestionMessage.value = '';
   isMatchActionDialogOpen.value = true;
 };
 
@@ -730,7 +760,7 @@ const onClickCloseMatchActionDialog = () => {
 };
 
 const onRequestCloseMatchActionDialog = (event: Event) => {
-  if (isMatchActionProcessing.value) {
+  if (isMatchActionProcessing.value || isMatchFailureAiSuggesting.value) {
     event.preventDefault();
     return;
   }
@@ -767,6 +797,33 @@ const onChangeMatchCreateTags = (event: Event) => {
 
 const onChangeMatchCreateSectors = (event: Event) => {
   matchCreateForm.value.sectors = readMultiSelectValue(event) as AdminAssetsSectorsOptions[];
+};
+
+const onClickSuggestMatchCreateFormByAi = () => {
+  if (!selectedMatchFailure.value || !isSuperuser.value || isMatchFailureAiSuggesting.value || isMatchActionProcessing.value) {
+    return;
+  }
+
+  const selectedItem = selectedMatchFailure.value;
+  const selectedItemId = selectedItem.id;
+  matchAiSuggestionMessage.value = '';
+
+  fetchMatchFailureAiSuggestion(
+    {
+      rawName: selectedItem.rawName,
+      category: selectedItem.category,
+    },
+    (suggestion) => {
+      if (selectedMatchFailure.value?.id !== selectedItemId) {
+        return;
+      }
+      matchCreateForm.value.category = suggestion.category;
+      matchCreateForm.value.groupType = suggestion.groupType;
+      matchCreateForm.value.tags = suggestion.tags;
+      matchCreateForm.value.sectors = suggestion.sectors;
+      matchAiSuggestionMessage.value = 'AI 추천값을 반영했습니다. 최종 확인 후 등록하세요.';
+    },
+  );
 };
 
 const onChangeSelectedAdminAssetForLink = (event: Event) => {
@@ -986,6 +1043,7 @@ const resetMatchActionDialogState = () => {
   matchLinkSearchKeyword.value = '';
   selectedAdminAssetIdForLink.value = '';
   matchCreateForm.value = buildEmptyAdminAssetForm();
+  matchAiSuggestionMessage.value = '';
 };
 
 const resetAdminAssetDialogState = () => {

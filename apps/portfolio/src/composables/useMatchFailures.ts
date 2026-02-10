@@ -1,11 +1,31 @@
 import pb from '@/api/pocketbase';
-import { Collections, type ExtractedAssetsResponse } from '@/api/pocketbase-types';
-import { useQuery } from '@tanstack/vue-query';
+import {
+  AdminAssetsCategoryOptions,
+  AdminAssetsGroupTypeOptions,
+  AdminAssetsSectorsOptions,
+  AdminAssetsTagsOptions,
+  Collections,
+  ExtractedAssetsCategoryOptions,
+  type ExtractedAssetsResponse,
+} from '@/api/pocketbase-types';
+import { useMutation, useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
 
 type MatchFailureDateFilter = {
   fromDate: Ref<string>;
   toDate: Ref<string>;
+};
+
+type FetchMatchFailureAiSuggestionPayload = {
+  rawName: string;
+  category: ExtractedAssetsCategoryOptions;
+};
+
+type MatchFailureAiSuggestionResponse = {
+  category: AdminAssetsCategoryOptions;
+  groupType: AdminAssetsGroupTypeOptions;
+  tags: AdminAssetsTagsOptions[];
+  sectors: AdminAssetsSectorsOptions[];
 };
 
 const buildDateTimeBoundary = (date: string, boundary: 'start' | 'end') => {
@@ -42,11 +62,23 @@ export const useMatchFailures = (
       }),
     enabled,
   });
+  const matchFailureAiSuggestionMutation = useMutation({
+    mutationFn: (payload: FetchMatchFailureAiSuggestionPayload) =>
+      pb.send<MatchFailureAiSuggestionResponse>('/api/match-failure/suggest', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'content-type': 'application/json',
+        },
+      }),
+  });
 
   const matchFailureList = computed(() => matchFailureQuery.data.value ?? []);
   const matchFailureCount = computed(() => matchFailureList.value.length);
   const isMatchFailureLoading = computed(() => matchFailureQuery.isLoading.value);
   const isMatchFailureFetching = computed(() => matchFailureQuery.isFetching.value);
+  const isMatchFailureAiSuggesting = computed(() => matchFailureAiSuggestionMutation.isPending.value);
+  const matchFailureAiSuggestionError = computed(() => matchFailureAiSuggestionMutation.error.value);
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */
@@ -57,6 +89,16 @@ export const useMatchFailures = (
 
   /* ======================= 메서드 ======================= */
   const fetchMatchFailureList = () => matchFailureQuery.refetch();
+  const fetchMatchFailureAiSuggestion = (
+    payload: FetchMatchFailureAiSuggestionPayload,
+    onSuccess?: (data: MatchFailureAiSuggestionResponse) => void,
+  ) => {
+    matchFailureAiSuggestionMutation.mutate(payload, {
+      onSuccess: (data) => {
+        onSuccess?.(data);
+      },
+    });
+  };
   /* ======================= 메서드 ======================= */
 
   return {
@@ -64,6 +106,9 @@ export const useMatchFailures = (
     matchFailureCount,
     isMatchFailureLoading,
     isMatchFailureFetching,
+    isMatchFailureAiSuggesting,
+    matchFailureAiSuggestionError,
     fetchMatchFailureList,
+    fetchMatchFailureAiSuggestion,
   };
 };
