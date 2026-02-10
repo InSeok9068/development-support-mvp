@@ -35,8 +35,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     │  │   ├─ pocketbase-types.ts # PocketBase Types
   │     │  ├─ assets/                 # 정적 리소스
   │     │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
-  |     |  │   ├─ app                 # 전역 컴포넌트
-  │     │  ├─ composables/            # 도메인 단위 로직 (Vue composables)
+  │     │  │   ├─ app                 # 전역 컴포넌트
+  │     │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
   │     │  ├─ layouts/                # 공통 레이아웃
   │     │  ├─ pages/                  # 라우트 단위 페이지
   │     │  ├─ stores/                 # 전역 상태 관리
@@ -45,7 +45,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
   │     ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
   │
   ├─ packages/                        # 재사용 패키지 영역
-  |  ├─ src
+  │  ├─ src
   │  │  └─ ui/                        # 공용 UI
   │  │  └─ auth/                      # 공용 인증
   ```
@@ -219,9 +219,6 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
 - Composable은 UI에 직접 의존하지 않는다.
 - Composable에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 tryOnScopeDispose로 정리한다.
-- pages/components는 비즈니스 비동기 로직을 직접 구현하지 않는다.
-- 단, Composable 액션 호출 및 UI 후속 처리(로딩/닫기/이동)를 위한 최소한의 `await`은 허용한다.
-- 단, Realtime `handler` 내부는 `await` 없이 동기 로직만 허용한다.
 
 ---
 
