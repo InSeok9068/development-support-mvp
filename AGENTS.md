@@ -70,21 +70,20 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 #### 1. Shoelace 우선 원칙 (절대 기준)
 
 - UI 구현 시 Shoelace 컴포넌트 사용을 절대 우선한다.
-- Shoelace에 대응되는 컴포넌트가 존재하는 경우,
-  기본 HTML 태그(input, button, select, textarea 등)를 직접 사용하지 않는다.
-- Shoelace에 대응되는 컴포넌트가 존재하지 않는 경우에만
-  기본 HTML + Tailwind 조합을 예외적으로 허용한다.
-- Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에,
-  반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
+- Shoelace에 대응되는 컴포넌트가 존재하는 경우, 기본 HTML 태그(input, button, select, textarea 등)를 직접 사용하지 않는다.
+- Shoelace에 대응되는 컴포넌트가 존재하지 않는 경우에만 기본 HTML + Tailwind 조합을 예외적으로 허용한다.
+- 예외: 파일 업로드는 Shoelace에서 `<sl-input type="file">`를 지원하지 않으므로, `<input type="file">` 사용을 허용한다.
+- Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에, 반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
 - `<sl-input>`과 `<sl-textarea>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트는
-  `<sl-select>`, `<sl-radio>`, `<sl-checkbox>` 등은 `:value`와 `@sl-change`를 사용한다.
+  `<sl-select>`, `<sl-radio>`, `<sl-checkbox>`, `<sl-switch>` 등은 `:value`와 `@sl-change`를 사용한다.
 
 #### 2. UI 동작 구현 판단 순서 (필수 준수)
 
 UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
 1. Shoelace 공식 API
-   - props / attributes
+   - props
+   - attributes
    - slots
    - events
 
@@ -105,8 +104,8 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 #### 4. Tailwind 사용 범위 제한
 
 - Tailwind CSS는 레이아웃 / 간격 / 정렬 / 반응형 조정 용도로만 사용한다.
-- Shoelace 컴포넌트의 기능, 동작, 시각적 표현을 대체하거나 강화하기 위해
-  Tailwind를 사용하는 것을 금지한다.
+- 스타일(색, 폰트, 배경, 보더, 그림자, 라운드 등)은 기본적으로 금지하며, 명시적 지시가 있을 때만 제한적으로 사용한다.
+- Shoelace 컴포넌트의 기능, 동작, 시각적 표현을 대체하거나 강화하기 위해 Tailwind를 사용하는 것을 금지한다.
 - 더 예뻐 보이게 하기 위한 목적의 Tailwind 클래스 남발을 허용하지 않는다.
 
 #### 5. Shoelace Icon 사용 기준
