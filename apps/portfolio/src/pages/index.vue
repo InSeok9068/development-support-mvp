@@ -13,12 +13,12 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2">
-              <sl-tag size="small" variant="primary">PORTFOLIO</sl-tag>
+              <sl-tag size="small" variant="primary">Photofolio</sl-tag>
               <sl-tag size="small" variant="success">{{ isCreatingReport ? '분석 중' : '준비 완료' }}</sl-tag>
             </div>
             <div>
-              <h1 class="text-xl leading-tight font-semibold">자산 스냅샷 분석</h1>
-              <p class="mt-1 text-sm text-slate-600">스크린샷 1장만 올리면 자산 분석을 자동으로 정리해드립니다.</p>
+              <h1 class="text-xl leading-tight font-semibold">포토폴리오</h1>
+              <p class="mt-1 text-sm text-slate-600">사진 한 장으로 포트폴리오를 확인하세요.</p>
             </div>
           </div>
 
@@ -258,7 +258,9 @@
                   <sl-badge :variant="asset.matched ? 'success' : 'warning'">
                     {{ asset.matched ? '매칭 완료' : '매칭 실패' }}
                   </sl-badge>
-                  <sl-button size="small" variant="default" @click="onClickOpenEditAssetDialog(asset)">분류 수정</sl-button>
+                  <sl-button size="small" variant="default" @click="onClickOpenEditAssetDialog(asset)"
+                    >분류 수정</sl-button
+                  >
                 </div>
               </div>
               <div class="mt-2 text-sm font-semibold">{{ formatCurrency(asset.amount, baseCurrency) }}</div>
@@ -311,7 +313,13 @@
             </sl-option>
           </sl-select>
 
-          <sl-select :value="assetEditForm.tags" label="태그 (복수 선택)" multiple :max-options-visible="6" @sl-change="onChangeAssetEditTags">
+          <sl-select
+            :value="assetEditForm.tags"
+            label="태그 (복수 선택)"
+            multiple
+            :max-options-visible="6"
+            @sl-change="onChangeAssetEditTags"
+          >
             <sl-option v-for="option in assetTagOptions" :key="`asset-edit-tag-${option}`" :value="option">
               {{ resolveLabel(option, tagLabels) }}
             </sl-option>
@@ -338,7 +346,9 @@
 
         <div slot="footer" class="flex items-center justify-end gap-2">
           <sl-button variant="default" @click="onClickCloseAssetEditDialog">닫기</sl-button>
-          <sl-button variant="primary" :disabled="isAssetEditSaveDisabled" @click="onClickSaveAssetEditDialog">적용</sl-button>
+          <sl-button variant="primary" :disabled="isAssetEditSaveDisabled" @click="onClickSaveAssetEditDialog"
+            >적용</sl-button
+          >
         </div>
       </sl-dialog>
     </div>
@@ -363,7 +373,6 @@
 
 <script setup lang="ts">
 /* ======================= 변수 ======================= */
-import { ArcElement, Chart as ChartJS, Legend, Tooltip, type ChartData, type ChartOptions } from 'chart.js';
 import {
   AdminAssetsCategoryOptions,
   AdminAssetsGroupTypeOptions,
@@ -371,12 +380,13 @@ import {
   AdminAssetsTagsOptions,
   ExtractedAssetsCategoryOptions,
 } from '@/api/pocketbase-types';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip, type ChartData, type ChartOptions } from 'chart.js';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Doughnut } from 'vue-chartjs';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
-import { type CreateReportResponse, useReports } from '@/composables/useReports';
+import { useReports, type CreateReportResponse } from '@/composables/useReports';
 import {
   categoryLabels,
   groupTypeLabels,
@@ -896,7 +906,7 @@ const resetAssetEditDialogState = () => {
 const readSingleSelectValue = (event: Event) => {
   const target = event.target as SelectTarget | null;
   const value = target?.value ?? '';
-  return Array.isArray(value) ? value[0] ?? '' : value;
+  return Array.isArray(value) ? (value[0] ?? '') : value;
 };
 
 const readMultiSelectValue = (event: Event) => {
@@ -985,4 +995,3 @@ const buildDoughnutChartData = (entries: BreakdownEntry[]): ChartData<'doughnut'
   ],
 });
 </script>
-
