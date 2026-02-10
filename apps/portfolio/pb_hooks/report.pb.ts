@@ -5,6 +5,7 @@
 routerAdd('POST', '/api/report', (e) => {
   console.log('[report] start');
 
+  // PocketBase 환경에서는 Buffer가 없어서 직접 Base64 인코딩을 구현한다.
   const encodeBase64 = (bytes) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     const output = new Array(Math.ceil(bytes.length / 3) * 4);
@@ -29,6 +30,7 @@ routerAdd('POST', '/api/report', (e) => {
   };
 
   const request = e.request;
+  // 업로드 필수: image 필드만 허용
   const [file, fileHeader] = request.formFile('image');
   console.log('[report] formFile image', { hasFile: !!file, hasHeader: !!fileHeader });
 
@@ -36,6 +38,7 @@ routerAdd('POST', '/api/report', (e) => {
     return e.error(400, '이미지 파일이 필요합니다.', {});
   }
 
+  // 기본 통화는 요청값이 없으면 KRW
   const baseCurrency = request.formValue('baseCurrency') || 'KRW';
   console.log('[report] formValues', { baseCurrency });
 
@@ -46,12 +49,14 @@ routerAdd('POST', '/api/report', (e) => {
   file.close();
   console.log('[report] file parsed', { fileName, fileHash, byteLength: fileBytes.length });
 
+  // Content-Type은 헤더 방식이 다양해서 두 경로로 확인
   const contentTypeHeader = fileHeader.header?.get ? fileHeader.header.get('Content-Type') : null;
   const mimeType =
     contentTypeHeader ||
     (fileHeader.header && fileHeader.header['Content-Type'] ? fileHeader.header['Content-Type'][0] : '') ||
     'image/png';
 
+  // 보고서 기록을 먼저 생성하고 상태를 processing으로 시작
   const reportCollection = $app.findCollectionByNameOrId('reports');
   const reportRecord = new Record(reportCollection);
   reportRecord.set('sourceImageUrl', fileName);
@@ -71,6 +76,7 @@ routerAdd('POST', '/api/report', (e) => {
     return e.error(500, 'GEMINI_API_KEY가 설정되지 않았습니다.', {});
   }
 
+  // 이미지 Base64 인코딩 후 Gemini 요청 payload 구성
   console.log('[report] before encodeBase64', { byteLength: fileBytes.length });
   const fileBase64 = encodeBase64(fileBytes);
   console.log('[report] after encodeBase64', { base64Length: fileBase64.length });
@@ -141,6 +147,7 @@ routerAdd('POST', '/api/report', (e) => {
     });
   }
 
+  // Gemini 응답에서 JSON 배열만 추출 (코드펜스/부가 텍스트 제거)
   const extractJsonText = (text) => {
     let value = (text ?? '').trim();
     value = value
@@ -160,6 +167,7 @@ routerAdd('POST', '/api/report', (e) => {
   const normalizedJsonText = extractJsonText(geminiText);
   const parsedItems = JSON.parse(normalizedJsonText);
 
+  // 카테고리는 허용된 enum 범위로만 정규화
   const normalizeCategory = (value) => {
     const lower = String(value ?? '').toLowerCase();
     const allowed = [
@@ -196,6 +204,7 @@ routerAdd('POST', '/api/report', (e) => {
     return parsed;
   };
 
+  // 스키마 유연성 확보: 한글 키도 허용하지만 결과는 표준 필드로 정리
   const items = Array.isArray(parsedItems)
     ? parsedItems.map((item) => {
         const rawName = String(item.name ?? item['자산명'] ?? item['종목명'] ?? '').trim();
@@ -208,6 +217,7 @@ routerAdd('POST', '/api/report', (e) => {
       })
     : [];
 
+  // 최소 조건: 자산명 + 금액이 있는 항목만 유효 처리
   const validItems = items.filter((item) => item.rawName && item.amount > 0);
   const totalValue = validItems.reduce((sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0), 0);
   const hasProfit = validItems.some((item) => Number.isFinite(item.profit));
@@ -218,6 +228,7 @@ routerAdd('POST', '/api/report', (e) => {
     totalProfit !== null && totalValue > 0 ? (totalProfit / totalValue) * 100 : null;
   console.log('[report] parsed items', { count: items.length, totalValue });
 
+  // 관리자 자산 매칭: 이름/별명(1~3) 기준으로 단순 매칭
   const normalizeKey = (value) => String(value ?? '').trim().toLowerCase();
   const adminAssets = $app.findAllRecords('admin_assets') || [];
   const adminNameMap = new Map();
@@ -241,6 +252,7 @@ routerAdd('POST', '/api/report', (e) => {
   const matchLogsCollection = $app.findCollectionByNameOrId('match_logs');
   const responseItems = [];
 
+  // 매칭 실패 항목도 extracted_assets + match_logs에 저장하여 관리자 검토 가능
   validItems.forEach((item) => {
     const key = normalizeKey(item.rawName);
     let adminAssetRecord = key ? adminNameMap.get(key) : null;
@@ -301,6 +313,7 @@ routerAdd('POST', '/api/report', (e) => {
     });
   });
 
+  // 집계 결과 갱신 후 완료 처리
   reportRecord.set('status', 'done');
   reportRecord.set('totalValue', totalValue);
   if (totalProfit !== null) {
