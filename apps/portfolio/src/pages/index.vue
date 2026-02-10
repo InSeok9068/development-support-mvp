@@ -238,11 +238,15 @@
                   <sl-badge variant="neutral">{{ index + 1 }}</sl-badge>
                   <div class="flex min-w-0 flex-col">
                     <span class="truncate text-sm font-semibold">{{ asset.rawName }}</span>
-                    <div v-if="asset.adminAsset" class="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-                      <span class="font-semibold text-slate-700">Category:</span>
-                      <span>{{ resolveLabel(asset.adminAsset.category, categoryLabels) }}</span>
-                      <span class="font-semibold text-slate-700">Profiles:</span>
-                      <span>{{ resolveLabel(asset.adminAsset.groupType, groupTypeLabels) }}</span>
+                    <div v-if="asset.adminAsset" class="flex flex-col gap-1 text-xs text-slate-500">
+                      <div class="flex items-center gap-1">
+                        <span class="font-semibold text-slate-700">Category:</span>
+                        <span>{{ resolveLabel(asset.adminAsset.category, categoryLabels) }}</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <span class="font-semibold text-slate-700">Profiles:</span>
+                        <span>{{ resolveLabel(asset.adminAsset.groupType, groupTypeLabels) }}</span>
+                      </div>
                     </div>
                     <span v-else class="text-xs text-slate-500">{{
                       resolveLabel(asset.category, categoryLabels)
