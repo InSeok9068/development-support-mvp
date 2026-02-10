@@ -191,7 +191,7 @@ export enum ExtractedAssetsCategoryOptions {
 }
 export type ExtractedAssetsRecord = {
 	adminAssetId?: RecordIdString
-	amount: number
+	amount?: number
 	category: ExtractedAssetsCategoryOptions
 	created: IsoAutoDateString
 	id: string
@@ -241,7 +241,7 @@ export type ReportsRecord = {
 	status?: ReportsStatusOptions
 	totalProfit?: number
 	totalProfitRate?: number
-	totalValue: number
+	totalValue?: number
 	updated: IsoAutoDateString
 }
 

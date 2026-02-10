@@ -3,6 +3,9 @@
 /// <reference path="types.d.ts" />
 
 routerAdd('POST', '/api/match-failure/suggest', (e) => {
+  const TAG_MAX_SELECT = 3;
+  const SECTOR_MAX_SELECT = 2;
+
   if (!e.hasSuperuserAuth()) {
     return e.error(403, '관리자 권한이 필요합니다.', {});
   }
@@ -86,13 +89,16 @@ routerAdd('POST', '/api/match-failure/suggest', (e) => {
     return allowed.includes(normalized) ? normalized : fallback;
   };
 
-  const normalizeArrayEnum = (values, allowed) => {
+  const normalizeArrayEnum = (values, allowed, maxSelect) => {
     if (!Array.isArray(values)) {
       return [];
     }
     const seen = new Set();
     const normalized = [];
     values.forEach((value) => {
+      if (normalized.length >= maxSelect) {
+        return;
+      }
       const item = normalizeEnum(value, allowed, '');
       if (!item || seen.has(item)) {
         return;
@@ -149,6 +155,8 @@ routerAdd('POST', '/api/match-failure/suggest', (e) => {
     `groupType enum: ${allowedGroupTypes.join(', ')}\n` +
     `tags enum: ${allowedTags.join(', ')}\n` +
     `sectors enum: ${allowedSectors.join(', ')}\n` +
+    `tags 최대 개수: ${TAG_MAX_SELECT}\n` +
+    `sectors 최대 개수: ${SECTOR_MAX_SELECT}\n` +
     '\n' +
     '응답 스키마:\n' +
     '{\n' +
@@ -199,8 +207,8 @@ routerAdd('POST', '/api/match-failure/suggest', (e) => {
     allowedGroupTypes,
     defaultGroupTypeByCategory[category] ?? 'risk',
   );
-  const tags = normalizeArrayEnum(parsedSuggestion?.tags, allowedTags);
-  const sectors = normalizeArrayEnum(parsedSuggestion?.sectors, allowedSectors);
+  const tags = normalizeArrayEnum(parsedSuggestion?.tags, allowedTags, TAG_MAX_SELECT);
+  const sectors = normalizeArrayEnum(parsedSuggestion?.sectors, allowedSectors, SECTOR_MAX_SELECT);
 
   return e.json(200, {
     category,

@@ -879,7 +879,7 @@
       {
         "hidden": false,
         "id": "select1874629670",
-        "maxSelect": 2,
+        "maxSelect": 3,
         "name": "tags",
         "presentable": false,
         "required": false,

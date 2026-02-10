@@ -328,6 +328,7 @@
                   {{ resolveLabel(option, tagLabels) }}
                 </sl-option>
               </sl-select>
+              <div class="text-xs text-slate-500">최대 3개 선택</div>
 
               <sl-select
                 :value="matchCreateForm.sectors"
@@ -340,6 +341,7 @@
                   {{ resolveLabel(option, sectorLabels) }}
                 </sl-option>
               </sl-select>
+              <div class="text-xs text-slate-500">최대 2개 선택</div>
             </div>
           </sl-details>
         </template>
@@ -417,6 +419,7 @@
             {{ resolveLabel(option, tagLabels) }}
           </sl-option>
         </sl-select>
+        <div class="text-xs text-slate-500">최대 3개 선택</div>
 
         <sl-select
           :value="adminAssetForm.sectors"
@@ -429,6 +432,7 @@
             {{ resolveLabel(option, sectorLabels) }}
           </sl-option>
         </sl-select>
+        <div class="text-xs text-slate-500">최대 2개 선택</div>
       </div>
 
       <div slot="footer" class="flex items-center justify-end gap-2">
@@ -560,6 +564,8 @@ const {
 } = useAdminAssets(matchFailureEnabled);
 
 const activeTabName = ref('matching');
+const TAG_MAX_SELECT = 3;
+const SECTOR_MAX_SELECT = 2;
 const categoryOptions = Object.values(AdminAssetsCategoryOptions) as AdminAssetsCategoryOptions[];
 const groupTypeOptions = Object.values(AdminAssetsGroupTypeOptions) as AdminAssetsGroupTypeOptions[];
 const tagOptions = Object.values(AdminAssetsTagsOptions) as AdminAssetsTagsOptions[];
@@ -792,11 +798,17 @@ const onChangeMatchCreateGroupType = (event: Event) => {
 };
 
 const onChangeMatchCreateTags = (event: Event) => {
-  matchCreateForm.value.tags = readMultiSelectValue(event) as AdminAssetsTagsOptions[];
+  matchCreateForm.value.tags = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    TAG_MAX_SELECT,
+  );
 };
 
 const onChangeMatchCreateSectors = (event: Event) => {
-  matchCreateForm.value.sectors = readMultiSelectValue(event) as AdminAssetsSectorsOptions[];
+  matchCreateForm.value.sectors = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    SECTOR_MAX_SELECT,
+  );
 };
 
 const onClickSuggestMatchCreateFormByAi = () => {
@@ -819,8 +831,8 @@ const onClickSuggestMatchCreateFormByAi = () => {
       }
       matchCreateForm.value.category = suggestion.category;
       matchCreateForm.value.groupType = suggestion.groupType;
-      matchCreateForm.value.tags = suggestion.tags;
-      matchCreateForm.value.sectors = suggestion.sectors;
+      matchCreateForm.value.tags = limitMultiSelectValues(suggestion.tags, TAG_MAX_SELECT);
+      matchCreateForm.value.sectors = limitMultiSelectValues(suggestion.sectors, SECTOR_MAX_SELECT);
       matchAiSuggestionMessage.value = 'AI 추천값을 반영했습니다. 최종 확인 후 등록하세요.';
     },
   );
@@ -885,8 +897,8 @@ const onClickOpenEditAdminAssetDialog = (asset: AdminAssetsResponse) => {
     alias1: asset.alias1 ?? '',
     alias2: asset.alias2 ?? '',
     alias3: asset.alias3 ?? '',
-    tags: asset.tags ?? [],
-    sectors: asset.sectors ?? [],
+    tags: limitMultiSelectValues(asset.tags ?? [], TAG_MAX_SELECT),
+    sectors: limitMultiSelectValues(asset.sectors ?? [], SECTOR_MAX_SELECT),
   };
   isAdminAssetDialogOpen.value = true;
 };
@@ -921,11 +933,17 @@ const onChangeAdminAssetFormGroupType = (event: Event) => {
 };
 
 const onChangeAdminAssetFormTags = (event: Event) => {
-  adminAssetForm.value.tags = readMultiSelectValue(event) as AdminAssetsTagsOptions[];
+  adminAssetForm.value.tags = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    TAG_MAX_SELECT,
+  );
 };
 
 const onChangeAdminAssetFormSectors = (event: Event) => {
-  adminAssetForm.value.sectors = readMultiSelectValue(event) as AdminAssetsSectorsOptions[];
+  adminAssetForm.value.sectors = limitMultiSelectValues(
+    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    SECTOR_MAX_SELECT,
+  );
 };
 
 const onClickSubmitAdminAssetDialog = () => {
@@ -1011,8 +1029,8 @@ const buildCreateAdminAssetData = (form: AdminAssetForm): Create<Collections.Adm
     name: form.name.trim(),
     category: form.category,
     groupType: form.groupType,
-    tags: form.tags,
-    sectors: form.sectors,
+    tags: limitMultiSelectValues(form.tags, TAG_MAX_SELECT),
+    sectors: limitMultiSelectValues(form.sectors, SECTOR_MAX_SELECT),
   };
   if (form.alias1.trim()) {
     data.alias1 = form.alias1.trim();
@@ -1033,8 +1051,8 @@ const buildUpdateAdminAssetData = (form: AdminAssetForm): Update<Collections.Adm
   alias1: form.alias1.trim() || '',
   alias2: form.alias2.trim() || '',
   alias3: form.alias3.trim() || '',
-  tags: form.tags,
-  sectors: form.sectors,
+  tags: limitMultiSelectValues(form.tags, TAG_MAX_SELECT),
+  sectors: limitMultiSelectValues(form.sectors, SECTOR_MAX_SELECT),
 });
 
 const resetMatchActionDialogState = () => {
@@ -1065,6 +1083,13 @@ const readMultiSelectValue = (event: Event) => {
     return value;
   }
   return value ? [value] : [];
+};
+
+const limitMultiSelectValues = <T extends string>(values: T[], maxSelect: number) => {
+  if (values.length <= maxSelect) {
+    return values;
+  }
+  return values.slice(0, maxSelect);
 };
 
 const formatNumber = (value: number | null | undefined) => {
