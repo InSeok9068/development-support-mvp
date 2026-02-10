@@ -17,7 +17,10 @@
               <sl-tag size="small" variant="success">{{ isCreatingReport ? '분석 중' : '준비 완료' }}</sl-tag>
             </div>
             <div>
-              <h1 class="text-xl leading-tight font-semibold">포토폴리오</h1>
+              <h1 class="flex items-center gap-2 text-xl leading-tight font-semibold">
+                <sl-icon name="camera-fill" label="사진"></sl-icon>
+                <span>포토폴리오</span>
+              </h1>
               <p class="mt-1 text-sm text-slate-600">사진 한 장으로 포트폴리오를 확인하세요.</p>
             </div>
           </div>
