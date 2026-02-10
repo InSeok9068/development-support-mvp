@@ -17,10 +17,8 @@
               <sl-tag size="small" variant="success">{{ isCreatingReport ? '분석 중' : '준비 완료' }}</sl-tag>
             </div>
             <div>
-              <h1 class="text-xl font-semibold leading-tight">모바일 자산 스냅샷 분석</h1>
-              <p class="mt-1 text-sm text-slate-600">
-                스크린샷 1장으로 총 자산, 손익, 매칭 품질을 빠르게 점검합니다.
-              </p>
+              <h1 class="text-xl leading-tight font-semibold">자산 스냅샷 분석</h1>
+              <p class="mt-1 text-sm text-slate-600">스크린샷 1장만 올리면 자산 분석을 자동으로 정리해드립니다.</p>
             </div>
           </div>
 
@@ -41,11 +39,11 @@
       <section class="grid grid-cols-2 gap-3">
         <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div class="text-xs text-slate-500">총 평가액</div>
-          <div class="mt-2 text-lg font-semibold leading-tight">{{ totalValueText }}</div>
+          <div class="mt-2 text-lg leading-tight font-semibold">{{ totalValueText }}</div>
         </article>
         <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div class="text-xs text-slate-500">매칭 성공률</div>
-          <div class="mt-2 text-lg font-semibold leading-tight">{{ matchingRateText }}</div>
+          <div class="mt-2 text-lg leading-tight font-semibold">{{ matchingRateText }}</div>
         </article>
       </section>
 
@@ -144,7 +142,11 @@
                   <Doughnut :data="categoryBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div v-for="entry in categoryBreakdown" :key="`category-${entry.key}`" class="flex items-center justify-between text-xs">
+                  <div
+                    v-for="entry in categoryBreakdown"
+                    :key="`category-${entry.key}`"
+                    class="flex items-center justify-between text-xs"
+                  >
                     <span class="truncate">{{ entry.label }}</span>
                     <span class="font-semibold">{{ entry.ratioText }}</span>
                   </div>
@@ -159,7 +161,11 @@
                   <Doughnut :data="profileBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div v-for="entry in profileBreakdown" :key="`profiles-${entry.key}`" class="flex items-center justify-between text-xs">
+                  <div
+                    v-for="entry in profileBreakdown"
+                    :key="`profiles-${entry.key}`"
+                    class="flex items-center justify-between text-xs"
+                  >
                     <span class="truncate">{{ entry.label }}</span>
                     <span class="font-semibold">{{ entry.ratioText }}</span>
                   </div>
@@ -174,7 +180,11 @@
                   <Doughnut :data="tagBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div v-for="entry in tagBreakdown" :key="`tags-${entry.key}`" class="flex items-center justify-between text-xs">
+                  <div
+                    v-for="entry in tagBreakdown"
+                    :key="`tags-${entry.key}`"
+                    class="flex items-center justify-between text-xs"
+                  >
                     <span class="truncate">{{ entry.label }}</span>
                     <span class="font-semibold">{{ entry.ratioText }}</span>
                   </div>
@@ -189,7 +199,11 @@
                   <Doughnut :data="sectorBreakdownChartData" :options="breakdownChartOptions"></Doughnut>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div v-for="entry in sectorBreakdown" :key="`sectors-${entry.key}`" class="flex items-center justify-between text-xs">
+                  <div
+                    v-for="entry in sectorBreakdown"
+                    :key="`sectors-${entry.key}`"
+                    class="flex items-center justify-between text-xs"
+                  >
                     <span class="truncate">{{ entry.label }}</span>
                     <span class="font-semibold">{{ entry.ratioText }}</span>
                   </div>
@@ -201,16 +215,21 @@
         </div>
       </sl-card>
 
-      <sl-card v-if="topAssets.length" class="w-full">
+      <sl-card v-if="sortedAssets.length" class="w-full">
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-sm font-semibold">상위 자산 5</h3>
-            <span class="text-xs text-slate-500">평가액 순</span>
+            <h3 class="text-sm font-semibold">{{ isTopAssetsExpanded ? '전체 자산' : '상위 자산 5' }}</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500">평가액 순</span>
+              <sl-button v-if="hasMoreAssets" size="small" variant="default" @click="onClickToggleTopAssets">
+                {{ isTopAssetsExpanded ? '접기' : '전체보기' }}
+              </sl-button>
+            </div>
           </div>
 
           <div class="flex flex-col gap-2">
             <div
-              v-for="(asset, index) in topAssets"
+              v-for="(asset, index) in displayedAssets"
               :key="asset.extractedAssetId"
               class="rounded-lg border border-slate-200 bg-slate-50 p-3"
             >
@@ -225,7 +244,9 @@
                       <span class="font-semibold text-slate-700">Profiles:</span>
                       <span>{{ resolveLabel(asset.adminAsset.groupType, groupTypeLabels) }}</span>
                     </div>
-                    <span v-else class="text-xs text-slate-500">{{ resolveLabel(asset.category, categoryLabels) }}</span>
+                    <span v-else class="text-xs text-slate-500">{{
+                      resolveLabel(asset.category, categoryLabels)
+                    }}</span>
                   </div>
                 </div>
                 <sl-badge :variant="asset.matched ? 'success' : 'warning'">
@@ -242,6 +263,9 @@
                 {{ formatLabelList(resolveLabelList(asset.adminAsset.sectors, sectorLabels)) }}
               </div>
             </div>
+          </div>
+          <div v-if="hasMoreAssets" class="text-xs text-slate-500">
+            {{ isTopAssetsExpanded ? `${sortedAssets.length}개 전체 표시` : `${sortedAssets.length}개 중 5개 표시` }}
           </div>
         </div>
       </sl-card>
@@ -298,6 +322,7 @@ const selectedFile = ref<File | null>(null);
 const selectedFileName = ref('');
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const activeBreakdownTabName = ref<BreakdownTabName>('category');
+const isTopAssetsExpanded = ref(false);
 
 const router = useRouter();
 const { isAuth, isSuperuser, deleteAuthSession, fetchAuthState } = useAuth();
@@ -398,8 +423,17 @@ const statusDescription = computed(() => {
   return '스크린샷 업로드 후 분석을 시작하세요.';
 });
 
-const topAssets = computed(() => {
-  return [...reportItems.value].sort((left, right) => right.amount - left.amount).slice(0, 5);
+const sortedAssets = computed(() => {
+  return [...reportItems.value].sort((left, right) => right.amount - left.amount);
+});
+
+const hasMoreAssets = computed(() => sortedAssets.value.length > 5);
+
+const displayedAssets = computed(() => {
+  if (isTopAssetsExpanded.value) {
+    return sortedAssets.value;
+  }
+  return sortedAssets.value.slice(0, 5);
 });
 
 const categoryBreakdown = computed(() => {
@@ -497,6 +531,10 @@ const onClickSignout = () => {
   deleteAuthSession();
 };
 
+const onClickToggleTopAssets = () => {
+  isTopAssetsExpanded.value = !isTopAssetsExpanded.value;
+};
+
 const onShowBreakdownTab = (event: Event) => {
   const detail = (event as CustomEvent<{ name: BreakdownTabName }>).detail;
   activeBreakdownTabName.value = detail.name;
@@ -509,6 +547,7 @@ const onChangeUpload = (event: Event) => {
   selectedFile.value = file;
   selectedFileName.value = file?.name ?? '';
   reportResult.value = null;
+  isTopAssetsExpanded.value = false;
 };
 
 const onClickSelectFile = () => {
@@ -583,3 +622,4 @@ const buildDoughnutChartData = (entries: BreakdownEntry[]): ChartData<'doughnut'
   ],
 });
 </script>
+
