@@ -148,6 +148,17 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
 
+#### PocketBase JS Hook (`pb_hooks`) 작성 규칙
+
+- `pb_hooks/types.d.ts`는 Hook API 타입 힌트의 기준 파일이므로, Hook 개발 시 우선 참조하여 적극적으로 활용한다.
+- `pb_hooks`의 JavaScript 런타임은 Node.js/브라우저가 아니다. (`window`, `fetch`, `fs`, `buffer` 등 런타임 의존 API 전제 금지)
+- Hook/Route/Middleware 핸들러는 각각 격리된 컨텍스트에서 실행되므로, 핸들러 바깥 변수/함수 참조를 전제로 작성하지 않는다.
+- 핸들러 간 공통 로직 재사용은 로컬 모듈로 분리하고, **핸들러 내부**에서 `require()`로 로드한다.
+- `pb_hooks` 내부 파일 로드는 상대경로 대신 `__hooks` 절대경로를 기본으로 사용한다.
+  - 이유: PocketBase 상대경로 기준은 `pb_hooks`가 아니라 실행 CWD이다.
+- 모듈 로딩은 CommonJS(CJS)만 기본 지원하므로 `require`/`module.exports`를 사용한다.
+- 로드된 모듈은 shared registry를 사용하므로, 전역/모듈 상태 변경(mutation)을 최소화한다.
+
 #### PocketBase 에러 처리 및 try/catch 규칙
 
 - PocketBase 요청 실패 처리는 `initPocketbase`의 전역 핸들러를 기본으로 한다.
