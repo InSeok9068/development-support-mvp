@@ -1,0 +1,68 @@
+/* Shoelace 토큰 기반으로 Tailwind 색상 유틸을 테마 친화적으로 재정의 */
+:root,
+.sl-theme-light {
+  --todo-surface-base: var(--sl-color-neutral-0);
+  --todo-surface-muted: var(--sl-panel-background-color);
+  --todo-border-default: var(--sl-input-border-color);
+  --todo-text-default: var(--sl-color-neutral-900);
+  --todo-text-muted: var(--sl-color-neutral-700);
+  --todo-text-subtle: var(--sl-color-neutral-600);
+  --todo-text-faint: var(--sl-color-neutral-500);
+}
+
+.sl-theme-dark {
+  --todo-surface-base: var(--sl-color-neutral-0);
+  --todo-surface-muted: var(--sl-panel-background-color);
+  --todo-border-default: var(--sl-input-border-color);
+  --todo-text-default: var(--sl-color-neutral-900);
+  --todo-text-muted: var(--sl-color-neutral-700);
+  --todo-text-subtle: var(--sl-color-neutral-600);
+  --todo-text-faint: var(--sl-color-neutral-500);
+}
+
+html,
+body,
+#app {
+  background-color: var(--todo-surface-base);
+  color: var(--todo-text-default);
+}
+
+.bg-white {
+  background-color: var(--todo-surface-base);
+}
+
+.bg-slate-50,
+.bg-slate-900 {
+  background-color: var(--todo-surface-muted);
+}
+
+.border-slate-200,
+.border-slate-700 {
+  border-color: var(--todo-border-default);
+}
+
+.text-slate-600 {
+  color: var(--todo-text-muted);
+}
+
+.text-slate-500 {
+  color: var(--todo-text-subtle);
+}
+
+.text-slate-400,
+.text-slate-300 {
+  color: var(--todo-text-faint);
+}
+
+:where(.sl-theme-dark, .sl-theme-dark *) .dark\:bg-slate-900 {
+  background-color: var(--todo-surface-muted);
+}
+
+:where(.sl-theme-dark, .sl-theme-dark *) .dark\:border-slate-700 {
+  border-color: var(--todo-border-default);
+}
+
+:where(.sl-theme-dark, .sl-theme-dark *) .dark\:text-slate-400,
+:where(.sl-theme-dark, .sl-theme-dark *) .dark\:text-slate-300 {
+  color: var(--todo-text-faint);
+}
