@@ -46,7 +46,9 @@
         </article>
         <article class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div class="text-xs text-slate-500">매칭 성공률</div>
-          <div class="mt-2 text-lg leading-tight font-semibold" :class="matchingRateTextClass">{{ matchingRateText }}</div>
+          <div class="mt-2 text-lg leading-tight font-semibold" :class="matchingRateTextClass">
+            {{ matchingRateText }}
+          </div>
         </article>
       </section>
 

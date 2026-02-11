@@ -26,14 +26,9 @@ cronAdd('match-logs-cleanup-daily', '0 10 * * *', () => {
     let deletedCount = 0;
 
     while (true) {
-      const targets = $app.findRecordsByFilter(
-        collectionName,
-        'created <= {:cutoff}',
-        'created',
-        BATCH_SIZE,
-        0,
-        { cutoff: cutoffDateTime },
-      );
+      const targets = $app.findRecordsByFilter(collectionName, 'created <= {:cutoff}', 'created', BATCH_SIZE, 0, {
+        cutoff: cutoffDateTime,
+      });
 
       if (!targets?.length) {
         break;

@@ -1233,4 +1233,3 @@ const formatErrorMessage = (error: unknown) => {
   return '요청 처리 중 오류가 발생했습니다.';
 };
 </script>
-

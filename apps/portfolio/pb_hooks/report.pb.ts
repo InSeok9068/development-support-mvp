@@ -324,14 +324,7 @@ routerAdd('POST', '/api/report', (e) => {
   const responseItems = [];
   const hasExistingMatchLogRawName = (rawName) => {
     const existingRecords =
-      $app.findRecordsByFilter(
-        'match_logs',
-        'rawName = {:rawName}',
-        '-created',
-        1,
-        0,
-        { rawName },
-      ) || [];
+      $app.findRecordsByFilter('match_logs', 'rawName = {:rawName}', '-created', 1, 0, { rawName }) || [];
     return existingRecords.length > 0;
   };
 

@@ -1,10 +1,5 @@
 import pb from '@/api/pocketbase';
-import {
-  Collections,
-  type AdminAssetsResponse,
-  type Create,
-  type Update,
-} from '@/api/pocketbase-types';
+import { Collections, type AdminAssetsResponse, type Create, type Update } from '@/api/pocketbase-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
 
@@ -152,10 +147,7 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
     });
   };
 
-  const connectExtractedAssetToAdminAsset = (
-    payload: ConnectExtractedAssetPayload,
-    onSuccess?: () => void,
-  ) => {
+  const connectExtractedAssetToAdminAsset = (payload: ConnectExtractedAssetPayload, onSuccess?: () => void) => {
     connectExtractedAssetMutation.mutate(payload, {
       onSuccess: () => {
         onSuccess?.();
