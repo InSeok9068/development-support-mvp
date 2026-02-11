@@ -211,26 +211,24 @@
                   SAVE
                 </sl-button>
               </div>
-              <div v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3 overflow-x-auto">
-                <table>
-                  <thead>
-                    <th>알람시간</th>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="scheduledNotification in work.expand?.scheduledNotifications"
-                      :key="scheduledNotification.id"
-                    >
-                      <td>
-                        {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
-                        <i
-                          class="bi-trash ml-1 cursor-pointer"
-                          @click.stop.prevent="onClickDeleteScheduledNotification(scheduledNotification.id)"
-                        ></i>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3 grid gap-2">
+                <div
+                  v-for="scheduledNotification in work.expand?.scheduledNotifications"
+                  :key="scheduledNotification.id"
+                  class="flex items-center gap-2 p-2"
+                >
+                  <sl-tag size="small">알람시간</sl-tag>
+                  <span class="min-w-0 flex-1 text-sm font-semibold">
+                    {{ dayjs(scheduledNotification.time).subtract(9, 'h').format('YYYY-MM-DD HH:mm:ss') }}
+                  </span>
+                  <sl-button
+                    size="small"
+                    variant="text"
+                    @click="onClickDeleteScheduledNotification(scheduledNotification.id)"
+                  >
+                    삭제
+                  </sl-button>
+                </div>
               </div>
             </div>
 
