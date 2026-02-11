@@ -17,7 +17,7 @@
               <div slot="header">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <i class="text-base" :class="code.class"></i>
+                    <sl-icon class="text-base" :name="code.class.replace('bi-', '')"></sl-icon>
                     <span class="text-sm font-semibold">{{ code.desc }}</span>
                   </div>
                   <sl-badge pill>
@@ -93,7 +93,7 @@
               <div slot="header">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <i class="text-base" :class="code.class"></i>
+                    <sl-icon class="text-base" :name="code.class.replace('bi-', '')"></sl-icon>
                     <span class="text-sm font-semibold">{{ code.desc }}</span>
                   </div>
                   <sl-badge pill>

@@ -7,11 +7,11 @@
             <sl-tag size="small">업무 상세</sl-tag>
             <div class="ml-auto flex flex-wrap items-center gap-2">
               <sl-button size="small" variant="primary" @click="onClickUpdate()">
-                <i class="bi-floppy mr-2"></i>
+                <sl-icon name="floppy" class="mr-2"></sl-icon>
                 저장
               </sl-button>
               <sl-button size="small" variant="default" @click="onClickDelete()">
-                <i class="bi-trash mr-2 text-slate-500"></i>
+                <sl-icon name="trash" class="mr-2 text-slate-500"></sl-icon>
                 삭제
               </sl-button>
             </div>
@@ -177,7 +177,7 @@
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">담당 정보</h5>
                 <sl-button class="ml-auto" size="small" variant="text" @click.stop.prevent="onClickRemoveDeveloper">
-                  <i class="bi-person-fill-dash mr-1"></i>
+                  <sl-icon name="person-fill-dash" class="mr-1"></sl-icon>
                   해제
                 </sl-button>
               </div>
@@ -255,7 +255,7 @@
                 <a :href="getWorkFileUrl(work, work.file)" target="_blank">
                   {{ work.file }}
                 </a>
-                <i class="bi-trash cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
+                <sl-icon name="trash" class="cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></sl-icon>
               </div>
             </div>
 

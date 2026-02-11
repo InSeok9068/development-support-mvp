@@ -6,7 +6,7 @@
         <sl-dropdown placement="bottom-start">
           <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
           <sl-button slot="trigger" variant="text">
-            <i class="bi-list-ul"></i>
+            <sl-icon name="list-ul"></sl-icon>
           </sl-button>
           <sl-menu>
             <sl-menu-item @click="router.push('/')">Todo</sl-menu-item>
@@ -44,7 +44,7 @@
       <sl-dropdown placement="bottom-end">
         <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
         <sl-button slot="trigger" size="small" variant="text">
-          <i class="bi-gear-fill"></i>
+          <sl-icon name="gear-fill"></sl-icon>
         </sl-button>
         <sl-menu>
           <sl-menu-item v-if="!isAuth" @click="onClickGoSign">로그인</sl-menu-item>
@@ -56,12 +56,7 @@
 
       <div class="relative">
         <sl-button size="small" variant="text" @click.stop.prevent="onClickGoNotification">
-          <i
-            :class="{
-              'bi-bell': global.notificationPermission === 'granted',
-              'bi-bell-slash': global.notificationPermission !== 'granted',
-            }"
-          ></i>
+          <sl-icon :name="global.notificationPermission === 'granted' ? 'bell' : 'bell-slash'"></sl-icon>
         </sl-button>
         <span
           v-show="global.notificationDot"
@@ -70,12 +65,7 @@
       </div>
 
       <sl-button size="small" variant="text" @click="onClickToggleTheme">
-        <i
-          :class="{
-            'bi-brightness-high': global.theme === 'dark',
-            'bi-brightness-high-fill': global.theme === 'white',
-          }"
-        ></i>
+        <sl-icon :name="global.theme === 'dark' ? 'brightness-high' : 'brightness-high-fill'"></sl-icon>
       </sl-button>
     </div>
   </header>

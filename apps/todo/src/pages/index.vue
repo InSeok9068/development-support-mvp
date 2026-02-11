@@ -13,7 +13,7 @@
             </div>
           </div>
           <sl-button variant="default" size="small" @click="onClickSort">
-            <i class="bi-sort-up mr-2"></i>
+            <sl-icon name="sort-up" class="mr-2"></sl-icon>
             마감일자 순 재정렬
           </sl-button>
         </div>
@@ -132,7 +132,7 @@
                 </div>
               </div>
               <sl-button size="small" variant="text" @click="onClickDeleteWork(work)">
-                <i class="bi-trash text-slate-500 dark:text-slate-400"></i>
+                <sl-icon name="trash" class="text-slate-500 dark:text-slate-400"></sl-icon>
               </sl-button>
             </div>
           </li>
