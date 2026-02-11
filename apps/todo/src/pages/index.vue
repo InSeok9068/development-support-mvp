@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>

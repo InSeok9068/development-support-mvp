@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-6 flex flex-col gap-2">
         <div class="flex items-center gap-2">
           <sl-icon name="gear"></sl-icon>
@@ -10,7 +10,7 @@
       </div>
 
       <div class="flex flex-col gap-6">
-        <section class="rounded-lg border border-slate-200 bg-white p-4">
+        <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <sl-icon name="people"></sl-icon>
@@ -25,7 +25,7 @@
           />
         </section>
 
-        <section class="rounded-lg border border-slate-200 bg-white p-4">
+        <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div class="mb-4 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <sl-icon name="sliders"></sl-icon>

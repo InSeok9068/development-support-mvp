@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-4">
         <h4 class="font-semibold">검색 필터</h4>
         <div class="text-xs text-slate-500">기간/상태/담당 기준으로 빠르게 좁혀보세요</div>

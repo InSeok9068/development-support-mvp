@@ -1,7 +1,7 @@
 <template>
-  <main class="container mx-auto">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
     <div class="mx-auto w-full max-w-xl">
-      <sl-card class="w-full">
+      <sl-card class="w-full shadow-sm">
         <div class="mb-4">
           <h3 class="text-lg font-semibold">계정</h3>
           <div class="text-xs text-slate-500">로그인 또는 회원가입</div>

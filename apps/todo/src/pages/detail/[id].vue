@@ -1,10 +1,10 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-4">
           <div class="flex flex-wrap items-center gap-2">
-            <div class="text-xs font-semibold text-slate-500">업무 상세</div>
+            <sl-tag size="small">업무 상세</sl-tag>
             <div class="ml-auto flex flex-wrap items-center gap-2">
               <sl-button size="small" variant="primary" @click="onClickUpdate()">
                 <i class="bi-floppy mr-2"></i>
@@ -18,15 +18,15 @@
           </div>
           <sl-input
             v-model="work.title"
-            class="w-full max-w-none text-lg font-semibold sm:text-2xl"
+            class="w-full max-w-none text-xl font-semibold sm:text-2xl"
             size="large"
             placeholder="제목을 입력하세요"
           ></sl-input>
         </div>
 
-        <div class="flex flex-col gap-4 lg:flex-row">
+        <div class="flex flex-col gap-5 lg:flex-row">
           <div class="flex flex-col gap-4 lg:flex-1">
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">진행 상태</h5>
                 <div class="ml-auto flex items-center gap-2 text-sm text-slate-600">
@@ -49,7 +49,7 @@
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">내용</h5>
                 <sl-copy-button class="ml-auto" size="small" :value="markdownContent"> 마크다운 복사 </sl-copy-button>
@@ -59,7 +59,7 @@
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <div>
                   <h5 class="font-semibold">레드마인</h5>
@@ -74,7 +74,7 @@
                   variant="text"
                   @click="onClickRedmine(work.redmine)"
                 >
-                  OPEN
+                  열기
                 </sl-button>
               </div>
               <div class="grid gap-3">
@@ -155,7 +155,7 @@
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">조플린</h5>
                 <sl-button
@@ -165,15 +165,15 @@
                   variant="text"
                   @click="onClickJoplin(work.joplin)"
                 >
-                  OPEN
+                  열기
                 </sl-button>
               </div>
               <sl-input v-model="work.joplin" type="url" placeholder="조플린 URL"></sl-input>
             </div>
           </div>
 
-          <div class="flex flex-col gap-4 lg:w-80 lg:flex-shrink-0">
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+          <div class="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-fit lg:w-80 lg:flex-shrink-0">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">담당 정보</h5>
                 <sl-button class="ml-auto" size="small" variant="text" @click.stop.prevent="onClickRemoveDeveloper">
@@ -203,19 +203,25 @@
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
-              <h5 class="mb-3 font-semibold">미리알람</h5>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div class="mb-3">
+                <h5 class="font-semibold">미리알람</h5>
+                <p class="text-sm text-slate-500">업무 시작 전에 받을 알람 시간을 등록하세요.</p>
+              </div>
               <div class="flex items-center gap-2">
                 <sl-input v-model="scheduledNotificationTime" type="datetime-local" class="min-w-0 flex-1"></sl-input>
                 <sl-button class="shrink-0" variant="default" @click="onClickCreateScheduledNotification">
-                  SAVE
+                  추가
                 </sl-button>
+              </div>
+              <div v-show="(work.expand?.scheduledNotifications ?? []).length === 0" class="mt-3">
+                <sl-tag size="small">등록된 알람이 없습니다</sl-tag>
               </div>
               <div v-show="(work.expand?.scheduledNotifications ?? []).length > 0" class="mt-3 grid gap-2">
                 <div
                   v-for="scheduledNotification in work.expand?.scheduledNotifications"
                   :key="scheduledNotification.id"
-                  class="flex items-center gap-2 p-2"
+                  class="flex items-center gap-2 rounded-md border p-2"
                 >
                   <sl-tag size="small">알람시간</sl-tag>
                   <span class="min-w-0 flex-1 text-sm font-semibold">
@@ -232,7 +238,7 @@
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <h5 class="mb-3 font-semibold">첨부파일</h5>
               <div class="flex flex-wrap items-center gap-2">
                 <sl-button size="small" variant="default" @click="onClickSelectFile">
@@ -245,15 +251,15 @@
               <div v-show="selectedFileName" class="mt-3">
                 <sl-tag size="small">선택한 파일: {{ selectedFileName }}</sl-tag>
               </div>
-              <div v-show="work.file" class="mt-3">
+              <div v-show="work.file" class="mt-3 flex items-center gap-2">
                 <a :href="getWorkFileUrl(work, work.file)" target="_blank">
                   {{ work.file }}
                 </a>
-                <i class="bi-trash ml-3 cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
+                <i class="bi-trash cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></i>
               </div>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <h5 class="mb-3 font-semibold">기록</h5>
               <div class="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
                 <sl-input

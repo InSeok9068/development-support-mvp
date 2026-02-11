@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-4">
         <h4 class="font-semibold">대시보드</h4>
         <div class="text-xs text-slate-500">업무 현황 요약</div>
@@ -29,19 +29,19 @@
         </div>
       </div>
       <div class="grid gap-4">
-        <sl-card class="w-full">
+        <sl-card class="w-full shadow-sm">
           <div class="mb-2 text-sm font-semibold">개발자별 업무량</div>
           <div class="h-72">
             <Bar :data="developerWorkChartData" :options="barOptions" />
           </div>
         </sl-card>
-        <sl-card class="w-full">
+        <sl-card class="w-full shadow-sm">
           <div class="mb-2 text-sm font-semibold">업무 상태 분포</div>
           <div class="h-80">
             <Doughnut :data="stateChartData" :options="doughnutOptions" />
           </div>
         </sl-card>
-        <sl-card class="w-full">
+        <sl-card class="w-full shadow-sm">
           <div class="mb-2 text-sm font-semibold">마감일 추이 (14일)</div>
           <div class="h-72">
             <Line :data="dueChartData" :options="lineOptions" />

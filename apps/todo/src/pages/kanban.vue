@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-wrap items-center gap-2">
           <h3 class="text-lg font-semibold">칸반 보드</h3>

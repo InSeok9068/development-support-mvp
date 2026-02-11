@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-4">
         <h4 class="font-semibold">캘린더</h4>
         <div class="text-xs text-slate-500">마감 일정과 이벤트를 확인하세요</div>

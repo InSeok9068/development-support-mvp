@@ -1,6 +1,6 @@
 <template>
-  <main class="container mx-auto">
-    <sl-card class="w-full">
+  <main class="container mx-auto px-3 py-4 lg:px-4">
+    <sl-card class="w-full shadow-sm">
       <div class="mb-4">
         <h4 class="font-semibold">프로젝트 간트</h4>
         <div class="text-xs text-slate-500">일정 흐름을 한눈에 확인하세요</div>
