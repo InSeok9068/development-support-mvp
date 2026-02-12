@@ -120,57 +120,22 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
   /* ======================= 메서드 ======================= */
   const fetchAdminAssetList = () => adminAssetQuery.refetch();
 
-  const createAdminAsset = (
-    data: Create<Collections.AdminAssets>,
-    onSuccess?: (asset: AdminAssetsResponse) => void,
-  ) => {
-    createAdminAssetMutation.mutate(data, {
-      onSuccess: (asset) => {
-        onSuccess?.(asset);
-      },
-    });
-  };
+  const createAdminAsset = (data: Create<Collections.AdminAssets>) => createAdminAssetMutation.mutateAsync(data);
 
-  const updateAdminAsset = (payload: UpdateAdminAssetPayload, onSuccess?: (asset: AdminAssetsResponse) => void) => {
-    updateAdminAssetMutation.mutate(payload, {
-      onSuccess: (asset) => {
-        onSuccess?.(asset);
-      },
-    });
-  };
+  const updateAdminAsset = (payload: UpdateAdminAssetPayload) => updateAdminAssetMutation.mutateAsync(payload);
 
-  const deleteAdminAsset = (payload: DeleteAdminAssetPayload, onSuccess?: () => void) => {
-    deleteAdminAssetMutation.mutate(payload, {
-      onSuccess: () => {
-        onSuccess?.();
-      },
-    });
-  };
+  const deleteAdminAsset = (payload: DeleteAdminAssetPayload) => deleteAdminAssetMutation.mutateAsync(payload);
 
-  const connectExtractedAssetToAdminAsset = (payload: ConnectExtractedAssetPayload, onSuccess?: () => void) => {
-    connectExtractedAssetMutation.mutate(payload, {
-      onSuccess: () => {
-        onSuccess?.();
-      },
-    });
-  };
+  const connectExtractedAssetToAdminAsset = (payload: ConnectExtractedAssetPayload) =>
+    connectExtractedAssetMutation.mutateAsync(payload);
 
-  const createAdminAssetFromExtractedAsset = (
-    payload: CreateAdminAssetFromExtractedAssetPayload,
-    onSuccess?: (asset: AdminAssetsResponse) => void,
-  ) => {
-    createAdminAssetMutation.mutate(payload.data, {
-      onSuccess: (asset) => {
-        connectExtractedAssetMutation.mutate(
-          { extractedAssetId: payload.extractedAssetId, adminAssetId: asset.id },
-          {
-            onSuccess: () => {
-              onSuccess?.(asset);
-            },
-          },
-        );
-      },
+  const createAdminAssetFromExtractedAsset = async (payload: CreateAdminAssetFromExtractedAssetPayload) => {
+    const createdAsset = await createAdminAssetMutation.mutateAsync(payload.data);
+    await connectExtractedAssetMutation.mutateAsync({
+      extractedAssetId: payload.extractedAssetId,
+      adminAssetId: createdAsset.id,
     });
+    return createdAsset;
   };
   /* ======================= 메서드 ======================= */
 

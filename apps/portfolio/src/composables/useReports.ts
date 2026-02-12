@@ -69,9 +69,9 @@ export const useReports = () => {
   /* ======================= 생명주기 훅 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const createReportFromImage = (file: File) => {
+  const createReportFromImage = async (file: File) => {
     reportResult.value = null;
-    createReportMutation.mutate(file);
+    return createReportMutation.mutateAsync(file);
   };
   /* ======================= 메서드 ======================= */
 

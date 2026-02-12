@@ -889,7 +889,7 @@ const onChangeMatchCreateSectors = (event: Event) => {
   );
 };
 
-const onClickSuggestMatchCreateFormByAi = () => {
+const onClickSuggestMatchCreateFormByAi = async () => {
   if (
     !selectedMatchFailure.value ||
     !isSuperuser.value ||
@@ -903,29 +903,25 @@ const onClickSuggestMatchCreateFormByAi = () => {
   const selectedItemId = selectedItem.id;
   matchAiSuggestionMessage.value = '';
 
-  fetchMatchFailureAiSuggestion(
-    {
-      rawName: selectedItem.rawName,
-      category: selectedItem.category,
-    },
-    (suggestion) => {
-      if (selectedMatchFailure.value?.id !== selectedItemId) {
-        return;
-      }
-      matchCreateForm.value.category = suggestion.category;
-      matchCreateForm.value.groupType = suggestion.groupType;
-      matchCreateForm.value.tags = limitMultiSelectValues(suggestion.tags, TAG_MAX_SELECT);
-      matchCreateForm.value.sectors = limitMultiSelectValues(suggestion.sectors, SECTOR_MAX_SELECT);
-      matchAiSuggestionMessage.value = 'AI 추천값을 반영했습니다. 최종 확인 후 등록하세요.';
-    },
-  );
+  const suggestion = await fetchMatchFailureAiSuggestion({
+    rawName: selectedItem.rawName,
+    category: selectedItem.category,
+  });
+  if (selectedMatchFailure.value?.id !== selectedItemId) {
+    return;
+  }
+  matchCreateForm.value.category = suggestion.category;
+  matchCreateForm.value.groupType = suggestion.groupType;
+  matchCreateForm.value.tags = limitMultiSelectValues(suggestion.tags, TAG_MAX_SELECT);
+  matchCreateForm.value.sectors = limitMultiSelectValues(suggestion.sectors, SECTOR_MAX_SELECT);
+  matchAiSuggestionMessage.value = 'AI 추천값을 반영했습니다. 최종 확인 후 등록하세요.';
 };
 
 const onChangeSelectedAdminAssetForLink = (event: Event) => {
   selectedAdminAssetIdForLink.value = readSingleSelectValue(event);
 };
 
-const onClickSubmitMatchAction = () => {
+const onClickSubmitMatchAction = async () => {
   if (!selectedMatchFailure.value || !isSuperuser.value) {
     return;
   }
@@ -933,16 +929,12 @@ const onClickSubmitMatchAction = () => {
   const selectedItem = selectedMatchFailure.value;
 
   if (matchActionMode.value === 'create') {
-    createAdminAssetFromExtractedAsset(
-      {
-        extractedAssetId: selectedItem.id,
-        data: buildCreateAdminAssetData(matchCreateForm.value),
-      },
-      (asset) => {
-        matchActionSuccessMessage.value = `${selectedItem.rawName} 항목이 ${asset.name} 자산으로 등록 및 매칭되었습니다.`;
-        isMatchActionDialogOpen.value = false;
-      },
-    );
+    const asset = await createAdminAssetFromExtractedAsset({
+      extractedAssetId: selectedItem.id,
+      data: buildCreateAdminAssetData(matchCreateForm.value),
+    });
+    matchActionSuccessMessage.value = `${selectedItem.rawName} 항목이 ${asset.name} 자산으로 등록 및 매칭되었습니다.`;
+    isMatchActionDialogOpen.value = false;
     return;
   }
 
@@ -951,16 +943,12 @@ const onClickSubmitMatchAction = () => {
   }
 
   const selectedAsset = adminAssetList.value.find((item) => item.id === selectedAdminAssetIdForLink.value);
-  connectExtractedAssetToAdminAsset(
-    {
-      extractedAssetId: selectedItem.id,
-      adminAssetId: selectedAdminAssetIdForLink.value,
-    },
-    () => {
-      matchActionSuccessMessage.value = `${selectedItem.rawName} 항목이 ${selectedAsset?.name ?? '선택 자산'} 자산으로 매칭되었습니다.`;
-      isMatchActionDialogOpen.value = false;
-    },
-  );
+  await connectExtractedAssetToAdminAsset({
+    extractedAssetId: selectedItem.id,
+    adminAssetId: selectedAdminAssetIdForLink.value,
+  });
+  matchActionSuccessMessage.value = `${selectedItem.rawName} 항목이 ${selectedAsset?.name ?? '선택 자산'} 자산으로 매칭되었습니다.`;
+  isMatchActionDialogOpen.value = false;
 };
 
 const onClickOpenCreateAdminAssetDialog = () => {
@@ -986,7 +974,7 @@ const onClickOpenEditAdminAssetDialog = (asset: AdminAssetsResponse) => {
   isAdminAssetDialogOpen.value = true;
 };
 
-const onClickDeleteAdminAsset = (asset: AdminAssetsResponse) => {
+const onClickDeleteAdminAsset = async (asset: AdminAssetsResponse) => {
   if (!isSuperuser.value || isAdminAssetMutationProcessing.value) {
     return;
   }
@@ -998,14 +986,10 @@ const onClickDeleteAdminAsset = (asset: AdminAssetsResponse) => {
     return;
   }
 
-  deleteAdminAsset(
-    {
-      adminAssetId: asset.id,
-    },
-    () => {
-      adminAssetActionSuccessMessage.value = `${asset.name} 자산이 삭제되었습니다.`;
-    },
-  );
+  await deleteAdminAsset({
+    adminAssetId: asset.id,
+  });
+  adminAssetActionSuccessMessage.value = `${asset.name} 자산이 삭제되었습니다.`;
 };
 
 const onClickCloseAdminAssetDialog = () => {
@@ -1051,16 +1035,15 @@ const onChangeAdminAssetFormSectors = (event: Event) => {
   );
 };
 
-const onClickSubmitAdminAssetDialog = () => {
+const onClickSubmitAdminAssetDialog = async () => {
   if (!isSuperuser.value) {
     return;
   }
 
   if (adminAssetDialogMode.value === 'create') {
-    createAdminAsset(buildCreateAdminAssetData(adminAssetForm.value), (asset) => {
-      adminAssetActionSuccessMessage.value = `${asset.name} 자산이 추가되었습니다.`;
-      isAdminAssetDialogOpen.value = false;
-    });
+    const asset = await createAdminAsset(buildCreateAdminAssetData(adminAssetForm.value));
+    adminAssetActionSuccessMessage.value = `${asset.name} 자산이 추가되었습니다.`;
+    isAdminAssetDialogOpen.value = false;
     return;
   }
 
@@ -1068,16 +1051,12 @@ const onClickSubmitAdminAssetDialog = () => {
     return;
   }
 
-  updateAdminAsset(
-    {
-      adminAssetId: selectedAdminAssetIdForEdit.value,
-      data: buildUpdateAdminAssetData(adminAssetForm.value),
-    },
-    (asset) => {
-      adminAssetActionSuccessMessage.value = `${asset.name} 자산이 수정되었습니다.`;
-      isAdminAssetDialogOpen.value = false;
-    },
-  );
+  const asset = await updateAdminAsset({
+    adminAssetId: selectedAdminAssetIdForEdit.value,
+    data: buildUpdateAdminAssetData(adminAssetForm.value),
+  });
+  adminAssetActionSuccessMessage.value = `${asset.name} 자산이 수정되었습니다.`;
+  isAdminAssetDialogOpen.value = false;
 };
 
 const onHideMatchSuccessAlert = () => {

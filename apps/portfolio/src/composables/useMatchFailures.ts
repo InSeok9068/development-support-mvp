@@ -89,16 +89,8 @@ export const useMatchFailures = (
 
   /* ======================= 메서드 ======================= */
   const fetchMatchFailureList = () => matchFailureQuery.refetch();
-  const fetchMatchFailureAiSuggestion = (
-    payload: FetchMatchFailureAiSuggestionPayload,
-    onSuccess?: (data: MatchFailureAiSuggestionResponse) => void,
-  ) => {
-    matchFailureAiSuggestionMutation.mutate(payload, {
-      onSuccess: (data) => {
-        onSuccess?.(data);
-      },
-    });
-  };
+  const fetchMatchFailureAiSuggestion = (payload: FetchMatchFailureAiSuggestionPayload) =>
+    matchFailureAiSuggestionMutation.mutateAsync(payload);
   /* ======================= 메서드 ======================= */
 
   return {

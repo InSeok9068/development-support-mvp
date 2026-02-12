@@ -234,6 +234,8 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
   - ✅ useModal, useToast, useGlobal, useValidation
 - TanStack Query는 도메인 Composable 내부에서만 사용한다.
 - Composable은 useMutation 결과를 그대로 반환하지 않고, 도메인 액션 함수로 감싸서 반환한다.
+- Composable의 Mutation 도메인 액션 함수는 `mutateAsync` 기반 Promise 반환을 기본으로 한다.
+  - Page/Component는 필요 시 `await`로 성공 이후 흐름(모달 닫기, 성공 메시지 등)을 제어한다.
 - Composable은 UI에 직접 의존하지 않는다.
 - Composable에서 발생한 모든 side effect(Interval/Listener/Timeout 등)는 tryOnScopeDispose로 정리한다.
 
