@@ -206,6 +206,17 @@ const pageOnlyBoundaryRules = [
   ),
 ];
 
+const componentOnlyBoundaryRules = [
+  forbid(
+    "CallExpression[callee.name='useQueryClient']",
+    `${AGENTS_REF.queryOnlyInComposable} components에서 useQueryClient()를 직접 사용하지 마세요.`,
+  ),
+  forbid(
+    "Identifier[name='queryClient']",
+    `${AGENTS_REF.queryOnlyInComposable} components에서 queryClient를 직접 사용하지 마세요.`,
+  ),
+];
+
 const pageBoundaryRules = [
   ...boundaryBaseRules,
   ...pageOnlyBoundaryRules,
@@ -217,6 +228,7 @@ const pageBoundaryRules = [
 
 const componentBoundaryRules = [
   ...boundaryBaseRules,
+  ...componentOnlyBoundaryRules,
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
