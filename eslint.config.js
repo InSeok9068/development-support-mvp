@@ -1,4 +1,5 @@
 import eslint from '@eslint/js';
+import eslintCustomRuleConfig from './eslint.custom.rule.js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginVue from 'eslint-plugin-vue';
 import { defineConfig } from 'eslint/config';
@@ -23,6 +24,7 @@ export default defineConfig(
       },
     },
   },
+  ...eslintCustomRuleConfig,
   {
     files: ['apps/*/src/pages/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
