@@ -1,8 +1,10 @@
 <template>
   <RouterView />
+  <VueQueryDevtools />
 </template>
 
 <script setup lang="ts">
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 /* ======================= 변수 ======================= */
 /* ======================= 변수 ======================= */
 

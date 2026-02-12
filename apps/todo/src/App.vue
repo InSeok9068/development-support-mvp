@@ -4,6 +4,7 @@
   <TheLaytoutFooter />
   <AppModal />
   <AppToast />
+  <VueQueryDevtools />
 </template>
 
 <script setup lang="ts">
@@ -17,6 +18,7 @@ import TheLaytoutFooter from '@/layouts/TheLayoutFooter.vue';
 import TheLayoutNavi from '@/layouts/TheLayoutNavi.vue';
 import TheLaytout from '@/layouts/TheLaytout.vue';
 import { AppModal, useModal } from '@packages/ui';
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import { useMagicKeys } from '@vueuse/core';
 import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
