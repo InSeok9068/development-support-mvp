@@ -16,6 +16,7 @@ const AGENTS_REF = {
   queryKeyRule: 'AGENTS.md > TanStack Query 가이드 > Query Key는 일관된 규칙을 따른다.',
 };
 
+/* ======================= 공통 유틸 ======================= */
 const rule = (selector, message) => ({ selector, message });
 
 const syntaxBlock = (files, restrictedSyntaxRules, ignores = []) => ({
@@ -25,7 +26,9 @@ const syntaxBlock = (files, restrictedSyntaxRules, ignores = []) => ({
     'no-restricted-syntax': ['error', ...restrictedSyntaxRules],
   },
 });
+/* ======================= 공통 유틸 ======================= */
 
+/* ======================= Query 규칙 ======================= */
 const pbCollectionLiteralRule = rule(
   "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
   `${AGENTS_REF.pbCollectionLiteral} pb.collection("...") 대신 Collections Enum을 사용하세요.`,
@@ -42,6 +45,15 @@ const queryKeyRules = [
   ),
 ];
 
+const queryKeyRecommendationRules = [
+  rule(
+    "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
+    `${AGENTS_REF.queryKeyRule} useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.`,
+  ),
+];
+/* ======================= Query 규칙 ======================= */
+
+/* ======================= Realtime 규칙 ======================= */
 const realtimeSubscriptionRules = [
   rule(
     "CallExpression[callee.type='Identifier'][callee.name='subscribe']",
@@ -60,7 +72,9 @@ const realtimeSubscriptionRules = [
     `${AGENTS_REF.realtimePageRule} 객체의 unsubscribe() 직접 호출 대신 composable의 unsubscribeXxxRealtime을 사용하세요.`,
   ),
 ];
+/* ======================= Realtime 규칙 ======================= */
 
+/* ======================= Composable 규칙 ======================= */
 const composableMutationRules = [
   rule(
     "ReturnStatement > Identifier[name=/[Mm]utation/]",
@@ -83,7 +97,9 @@ const composableMutationRules = [
     `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
   ),
 ];
+/* ======================= Composable 규칙 ======================= */
 
+/* ======================= Shoelace 규칙 ======================= */
 const shoelaceFormVModelRules = [
   rule(
     "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
@@ -122,13 +138,6 @@ const shoelaceValueParsingRules = [
   ),
 ];
 
-const queryKeyRecommendationRules = [
-  rule(
-    "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
-    `${AGENTS_REF.queryKeyRule} useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.`,
-  ),
-];
-
 const shoelaceHelperRecommendationRules = [
   rule(
     "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
@@ -139,8 +148,10 @@ const shoelaceHelperRecommendationRules = [
     'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
   ),
 ];
+/* ======================= Shoelace 규칙 ======================= */
 
-const pageBoundaryRules = [
+/* ======================= 레이어 경계 규칙 ======================= */
+const boundaryBaseRules = [
   pbCollectionLiteralRule,
   rule(
     "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
@@ -158,6 +169,9 @@ const pageBoundaryRules = [
     "CallExpression[callee.name='useMutation']",
     `${AGENTS_REF.queryOnlyInComposable} pages/components에서는 composable 액션을 호출하세요.`,
   ),
+];
+
+const pageOnlyBoundaryRules = [
   rule(
     "CallExpression[callee.name='useQueryClient']",
     `${AGENTS_REF.queryOnlyInComposable} pages에서 useQueryClient()를 직접 사용하지 마세요.`,
@@ -166,6 +180,11 @@ const pageBoundaryRules = [
     "Identifier[name='queryClient']",
     `${AGENTS_REF.queryOnlyInComposable} pages에서 queryClient를 직접 사용하지 마세요.`,
   ),
+];
+
+const pageBoundaryRules = [
+  ...boundaryBaseRules,
+  ...pageOnlyBoundaryRules,
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
@@ -173,23 +192,7 @@ const pageBoundaryRules = [
 ];
 
 const componentBoundaryRules = [
-  pbCollectionLiteralRule,
-  rule(
-    "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
-    `${AGENTS_REF.noDirectPbCall} 도메인 composable 액션을 사용하세요.`,
-  ),
-  rule(
-    "CallExpression[callee.object.name='pb'][callee.property.name='send']",
-    `${AGENTS_REF.noDirectPbCall} 도메인 composable 액션을 사용하세요.`,
-  ),
-  rule(
-    "CallExpression[callee.name='useQuery']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서는 composable 액션을 호출하세요.`,
-  ),
-  rule(
-    "CallExpression[callee.name='useMutation']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서는 composable 액션을 호출하세요.`,
-  ),
+  ...boundaryBaseRules,
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
@@ -211,7 +214,9 @@ const composableRules = [
 ];
 
 const commonRules = [pbCollectionLiteralRule, ...queryKeyRules, ...shoelaceFormVModelRules];
+/* ======================= 레이어 경계 규칙 ======================= */
 
+/* ======================= 최종 적용 블록 ======================= */
 const eslintCustomRuleConfig = [
   // pages 적용 규칙
   syntaxBlock(['apps/*/src/pages/**/*.{js,ts,vue}'], pageBoundaryRules),
@@ -240,5 +245,6 @@ const eslintCustomRuleConfig = [
     },
   },
 ];
+/* ======================= 최종 적용 블록 ======================= */
 
 export default eslintCustomRuleConfig;
