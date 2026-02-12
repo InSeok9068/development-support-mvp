@@ -17,6 +17,10 @@ const eslintCustomRuleConfig = [
       'no-restricted-syntax': [
         'error',
         {
+          selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
+          message: 'pb.collection()의 문자열 리터럴 컬렉션명 사용 금지. Collections Enum을 사용하세요.',
+        },
+        {
           selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
           message: 'pages/components에서 pb.collection() 직접 호출 금지. 도메인 composable을 통해 호출하세요.',
         },
@@ -40,6 +44,10 @@ const eslintCustomRuleConfig = [
     rules: {
       'no-restricted-syntax': [
         'error',
+        {
+          selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
+          message: 'pb.collection()의 문자열 리터럴 컬렉션명 사용 금지. Collections Enum을 사용하세요.',
+        },
         {
           selector: "VariableDeclarator[id.name=/^on[A-Z].+/]",
           message: 'composable 메서드에서 onXxx 네이밍 금지. 도메인 액션 동사(fetch/create/update/delete/...)를 사용하세요.',
