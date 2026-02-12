@@ -63,15 +63,23 @@ const realtimeSubscriptionRules = [
 
 const composableMutationRules = [
   rule(
-    "ReturnStatement > Identifier[name=/Mutation$/]",
+    "ReturnStatement > Identifier[name=/[Mm]utation/]",
     `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
   ),
   rule(
-    "ReturnStatement ObjectExpression > Property[value.type='Identifier'][value.name=/Mutation$/]",
+    "ReturnStatement ObjectExpression > Property[value.type='Identifier'][value.name=/[Mm]utation/]",
     `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
   ),
   rule(
-    "CallExpression[callee.object.name=/Mutation$/][callee.property.name='mutate']",
+    "CallExpression[callee.object.name=/[Mm]utation/][callee.property.name='mutate']",
+    `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
+  ),
+  rule(
+    "VariableDeclarator[id.type='ObjectPattern'][init.type='CallExpression'][init.callee.name='useMutation']",
+    `${AGENTS_REF.noMutationReturn} useMutation 결과 구조분해를 금지합니다. mutation 객체는 내부에서만 사용하고 mutateAsync 기반 도메인 액션으로 노출하세요.`,
+  ),
+  rule(
+    "CallExpression[callee.type='Identifier'][callee.name='mutate']",
     `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
   ),
 ];
@@ -92,6 +100,32 @@ const shoelaceFormVModelRules = [
   rule(
     "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
     'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.',
+  ),
+];
+
+const shoelaceValueParsingRules = [
+  rule(
+    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.value 직접 접근을 피하세요.',
+  ),
+  rule(
+    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.checked 직접 접근을 피하세요.',
+  ),
+  rule(
+    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.value 직접 접근을 피하세요.',
+  ),
+  rule(
+    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.checked 직접 접근을 피하세요.',
+  ),
+];
+
+const queryKeyRecommendationRules = [
+  rule(
+    "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
+    `${AGENTS_REF.queryKeyRule} useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.`,
   ),
 ];
 
@@ -124,6 +158,7 @@ const pageBoundaryRules = [
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
+  ...shoelaceValueParsingRules,
 ];
 
 const componentBoundaryRules = [
@@ -147,6 +182,7 @@ const componentBoundaryRules = [
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
+  ...shoelaceValueParsingRules,
 ];
 
 const composableRules = [
@@ -183,6 +219,13 @@ const eslintCustomRuleConfig = [
     files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
       'vue/no-restricted-syntax': ['error', ...shoelaceFormVModelRules],
+    },
+  },
+  // useQuery queryKey 2nd segment 권장 규칙 (warning)
+  {
+    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
+    rules: {
+      '@/no-restricted-syntax': ['warn', ...queryKeyRecommendationRules],
     },
   },
 ];
