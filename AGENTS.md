@@ -28,22 +28,23 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - 프로젝트 구조 : Monorepo (pnpm)
   ```text
   ├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
-  │  └─ todo/                         # todo 서비스
-  │     ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
-  │     │  ├─ __tests__/              # 프론트엔드 테스트
-  │     │  ├─ api/                    # API / 네트워크 레이어
-  │     │  │   ├─ pocketbase-types.ts # PocketBase Types
-  │     │  ├─ assets/                 # 정적 리소스
-  │     │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
-  │     │  │   ├─ app                 # 전역 컴포넌트
-  │     │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
-  │     │  ├─ layouts/                # 공통 레이아웃
-  │     │  ├─ pages/                  # 라우트 단위 페이지
-  │     │  ├─ stores/                 # 전역 상태 관리
-  │     │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
-  │     │
-  │     ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
-  │
+  │  ├─ todo/                         # todo 서비스
+  │  │   ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
+  │  │   │  ├─ __tests__/              # 프론트엔드 테스트
+  │  │   │  ├─ api/                    # API / 네트워크 레이어
+  │  │   │  │   ├─ pocketbase-types.ts # PocketBase Types
+  │  │   │  ├─ assets/                 # 정적 리소스
+  │  │   │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
+  │  │   │  │   ├─ app                 # 전역 컴포넌트
+  │  │   │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
+  │  │   │  ├─ layouts/                # 공통 레이아웃
+  │  │   │  ├─ pages/                  # 라우트 단위 페이지
+  │  │   │  ├─ stores/                 # 전역 상태 관리
+  │  │   │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
+  │  │   │
+  │  │   ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
+  │  └─ portfolio/                     # portfolio 서비스
+  │      ├─ ....
   ├─ packages/                        # 재사용 패키지 영역
   │  ├─ src
   │  │  └─ ui/                        # 공용 UI
@@ -155,7 +156,7 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - `pb_hooks/types.d.ts`는 Hook API 타입 힌트의 기준 파일이므로, Hook 개발 시 우선 참조하여 적극적으로 활용한다.
 - `pb_hooks`의 JavaScript 런타임은 Node.js/브라우저가 아니다. (`window`, `fetch`, `fs`, `buffer` 등 런타임 의존 API 전제 금지)
 - Hook/Route/Middleware 핸들러는 각각 격리된 컨텍스트에서 실행되므로, 핸들러 바깥 변수/함수 참조를 전제로 작성하지 않는다.
-- 핸들러 간 공통 로직 재사용은 로컬 모듈로 분리하고, **핸들러 내부**에서 `require()`로 로드한다.
+- 핸들러 간 공통 로직 재사용은 로컬 모듈로 분리하고, 핸들러 내부에서 `require()`로 로드한다.
 - `pb_hooks` 내부 파일 로드는 상대경로 대신 `__hooks` 절대경로를 기본으로 사용한다.
   - 이유: PocketBase 상대경로 기준은 `pb_hooks`가 아니라 실행 CWD이다.
 - 모듈 로딩은 CommonJS(CJS)만 기본 지원하므로 `require`/`module.exports`를 사용한다.
