@@ -50,7 +50,17 @@ export const useMatchFailures = (
   /* ======================= 변수 ======================= */
   const fromDate = computed(() => dateFilter?.fromDate.value ?? '');
   const toDate = computed(() => dateFilter?.toDate.value ?? '');
-  const matchFailureQueryKey = computed(() => [Collections.ExtractedAssets, 'unmatched', fromDate.value, toDate.value]);
+  const matchFailureQueryKey = computed(
+    () =>
+      [
+        'extracted-assets',
+        'unmatched',
+        {
+          fromDate: fromDate.value,
+          toDate: toDate.value,
+        },
+      ] as const,
+  );
   const pocketbaseFilter = computed(() => buildMatchFailureFilter(fromDate.value, toDate.value));
 
   const matchFailureQuery = useQuery({

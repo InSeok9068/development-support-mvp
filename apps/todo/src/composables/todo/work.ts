@@ -40,8 +40,9 @@ export const useWork = () => {
   /* ======================= 메서드 ======================= */
   const buildQueryKey = (params: WorkQueryParams) => [
     'works',
-    params.mode,
+    'list',
     {
+      mode: params.mode,
       filter: params.filter,
       sort: params.sort,
       page: params.page,
@@ -139,7 +140,7 @@ export const useWork = () => {
         queryClient.invalidateQueries({ queryKey: ['works'] });
       }
       if (invalidateWork) {
-        queryClient.invalidateQueries({ queryKey: ['work', vars.id] });
+        queryClient.invalidateQueries({ queryKey: ['works', 'detail', vars.id] });
       }
     },
   });
@@ -148,7 +149,7 @@ export const useWork = () => {
     mutationFn: (id: string) => pb.collection(Collections.Works).delete(id),
     onSuccess: (_result, id) => {
       queryClient.invalidateQueries({ queryKey: ['works'] });
-      queryClient.removeQueries({ queryKey: ['work', id] });
+      queryClient.removeQueries({ queryKey: ['works', 'detail', id] });
     },
   });
 

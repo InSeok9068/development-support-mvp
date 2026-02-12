@@ -25,8 +25,10 @@ type CreateAdminAssetFromExtractedAssetPayload = {
 export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boolean> = true) => {
   /* ======================= 변수 ======================= */
   const queryClient = useQueryClient();
+  const adminAssetsQueryKey = ['admin-assets', 'list'] as const;
+  const extractedAssetsUnmatchedQueryKey = ['extracted-assets', 'unmatched'] as const;
   const adminAssetQuery = useQuery({
-    queryKey: [Collections.AdminAssets, 'list'],
+    queryKey: adminAssetsQueryKey,
     queryFn: () =>
       pb.collection(Collections.AdminAssets).getFullList<AdminAssetsResponse>({
         sort: 'name',
@@ -38,7 +40,7 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
       pb.collection(Collections.AdminAssets).create<AdminAssetsResponse>(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [Collections.AdminAssets, 'list'],
+        queryKey: adminAssetsQueryKey,
       });
     },
   });
@@ -47,7 +49,7 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
       pb.collection(Collections.AdminAssets).update<AdminAssetsResponse>(adminAssetId, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [Collections.AdminAssets, 'list'],
+        queryKey: adminAssetsQueryKey,
       });
     },
   });
@@ -79,10 +81,10 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [Collections.AdminAssets, 'list'],
+        queryKey: adminAssetsQueryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: [Collections.ExtractedAssets, 'unmatched'],
+        queryKey: extractedAssetsUnmatchedQueryKey,
       });
     },
   });
@@ -91,7 +93,7 @@ export const useAdminAssets = (enabled: boolean | Ref<boolean> | ComputedRef<boo
       pb.collection(Collections.ExtractedAssets).update(extractedAssetId, { adminAssetId }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [Collections.ExtractedAssets, 'unmatched'],
+        queryKey: extractedAssetsUnmatchedQueryKey,
       });
     },
   });

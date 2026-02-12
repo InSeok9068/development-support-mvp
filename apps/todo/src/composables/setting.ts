@@ -14,6 +14,7 @@ export const useSetting = () => {
   const { showMessageModal } = useModal();
   const queryClient = useQueryClient();
   const settingRecordId = ref<string | null>(null);
+  const settingsCurrentQueryKey = ['settings', 'current'] as const;
 
   const loadSettingRecord = async () => {
     const userId = getUserId();
@@ -35,7 +36,7 @@ export const useSetting = () => {
   };
 
   const settingQuery = useQuery({
-    queryKey: ['settings'],
+    queryKey: settingsCurrentQueryKey,
     queryFn: loadSettingRecord,
     enabled: false,
   });
@@ -61,7 +62,7 @@ export const useSetting = () => {
 
   const fetchSetting = async () => {
     const record = await queryClient.fetchQuery({
-      queryKey: ['settings'],
+      queryKey: settingsCurrentQueryKey,
       queryFn: loadSettingRecord,
     });
     setting.value = record.data;
@@ -74,14 +75,14 @@ export const useSetting = () => {
         settingRecordId.value ??
         (
           await queryClient.fetchQuery({
-            queryKey: ['settings'],
+            queryKey: settingsCurrentQueryKey,
             queryFn: loadSettingRecord,
           })
         ).id;
       return pb.collection(Collections.Settings).update(recordId, { data: setting.value });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings'] });
+      await queryClient.invalidateQueries({ queryKey: settingsCurrentQueryKey });
       showMessageModal('수정완료');
     },
   });

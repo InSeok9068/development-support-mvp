@@ -193,7 +193,11 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 - 데이터 CRUD는 반드시 TanStack Query로 수행한다.
 - Query Key는 일관된 규칙을 따른다.
-  - 예: `['todos']`, `['todos', 'list', params]`, `['todos', 'detail', id]`
+  - Query Key 1st segment는 도메인 문자열(소문자 복수형)을 사용한다. (`works`, `admin-assets`, `notifications`)
+  - Query Key 1st segment에 `Collections` Enum을 사용하지 않는다. (`Collections.Works` 금지)
+  - 리스트/상세/파생 데이터는 2nd segment로 목적을 명시한다. (`list`, `detail`, `unread-count` 등)
+  - 파라미터는 마지막 segment에 객체로 넣고, 같은 의미의 파라미터 구조를 유지한다.
+  - 예: `['todos']`, `['todos', 'list', params]`, `['todos', 'detail', id]`, `['notifications', 'unread-count']`
 - Mutation 이후에는 표준 invalidation 규칙으로 캐시를 갱신한다.
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)

@@ -14,6 +14,8 @@ export const useNotification = () => {
   const { showMessageToast } = useToast();
   const { subscribeRealtime, unsubscribeRealtime } = useRealtime<NotificationsResponse>(Collections.Notifications);
   const queryClient = useQueryClient();
+  const notificationsUnreadCountQueryKey = ['notifications', 'unread-count'] as const;
+  const scheduledNotificationsDueQueryKey = ['scheduled-notifications', 'due'] as const;
   let scheduledIntervalId: number | null = null;
   let isCheckingScheduledNotifications = false;
 
@@ -25,7 +27,7 @@ export const useNotification = () => {
     ).length;
 
   const unreadQuery = useQuery({
-    queryKey: ['notifications', 'unread-count'],
+    queryKey: notificationsUnreadCountQueryKey,
     queryFn: loadUnreadCount,
   });
   /* ======================= 변수 ======================= */
@@ -54,7 +56,7 @@ export const useNotification = () => {
   /* ======================= 메서드 ======================= */
   const fetchUnreadCount = async () => {
     const count = await queryClient.fetchQuery({
-      queryKey: ['notifications', 'unread-count'],
+      queryKey: notificationsUnreadCountQueryKey,
       queryFn: loadUnreadCount,
     });
     global.value.notificationDot = count > 0;
@@ -84,7 +86,7 @@ export const useNotification = () => {
 
   const fetchDueScheduledNotifications = async () => {
     return await queryClient.fetchQuery({
-      queryKey: ['scheduled-notifications', 'due'],
+      queryKey: scheduledNotificationsDueQueryKey,
       queryFn: async () =>
         await pb.collection(Collections.ScheduledNotifications).getFullList({
           filter: `time <= '${dayjs().format('YYYY-MM-DD HH:mm')}'`,
@@ -161,7 +163,7 @@ export const useNotification = () => {
   ) => {
     const p = computed(() => unref(params));
     return useQuery({
-      queryKey: computed(() => ['notifications', p.value]),
+      queryKey: computed(() => ['notifications', 'list', p.value] as const),
       queryFn: async () =>
         (
           await pb.collection(Collections.Notifications).getList(p.value.page, p.value.perPage, {
@@ -179,7 +181,7 @@ export const useNotification = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['notifications'] });
       await queryClient.invalidateQueries({
-        queryKey: ['notifications', 'unread-count'],
+        queryKey: notificationsUnreadCountQueryKey,
       });
     },
   });

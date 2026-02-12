@@ -23,6 +23,7 @@ export const useDeveloper = () => {
   /* ======================= 메서드 ======================= */
   const developersQueryKey = computed(() => [
     'developers',
+    'list',
     {
       filter: queryParams.value.filter,
       sort: queryParams.value.sort,

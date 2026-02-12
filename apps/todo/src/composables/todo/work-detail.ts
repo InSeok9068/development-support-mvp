@@ -18,7 +18,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
 
   /* ======================= 메서드 ======================= */
   const workQuery = useQuery({
-    queryKey: computed(() => ['work', id.value]),
+    queryKey: computed(() => ['works', 'detail', id.value] as const),
     queryFn: () =>
       pb.collection(Collections.Works).getOne<
         WorksResponse<{

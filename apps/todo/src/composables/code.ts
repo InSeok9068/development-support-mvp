@@ -6,8 +6,9 @@ import { computed } from 'vue';
 export const useCode = () => {
   /* ======================= 변수 ======================= */
   const queryClient = useQueryClient();
+  const codesListQueryKey = ['codes', 'list'] as const;
   const codesQuery = useQuery({
-    queryKey: ['codes'],
+    queryKey: codesListQueryKey,
     queryFn: async () => {
       const result = await pb.collection(Collections.Codes).getFullList({
         sort: 'type,sort',
@@ -30,7 +31,7 @@ export const useCode = () => {
 
   /* ======================= 메서드 ======================= */
   const fetchCodeList = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['codes'] });
+    await queryClient.invalidateQueries({ queryKey: codesListQueryKey });
   };
 
   const getCodesByType = (type: string) => {
