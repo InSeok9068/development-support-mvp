@@ -6,7 +6,13 @@ import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { tryOnScopeDispose } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { computed, isRef, unref, watch, type Ref } from 'vue';
+import { computed, isRef, ref, unref, watch, type Ref } from 'vue';
+
+type NotificationListQueryParams = {
+  page: number;
+  perPage: number;
+  sort: string;
+};
 
 export const useNotification = () => {
   /* ======================= 변수 ======================= */
@@ -16,6 +22,21 @@ export const useNotification = () => {
   const queryClient = useQueryClient();
   const notificationsUnreadCountQueryKey = ['notifications', 'unread-count'] as const;
   const scheduledNotificationsDueQueryKey = ['scheduled-notifications', 'due'] as const;
+  const notificationsListQueryParams = ref<NotificationListQueryParams>({
+    page: 1,
+    perPage: 20,
+    sort: '-created',
+  });
+  const isNotificationsListEnabled = ref(false);
+  const notificationsListQueryKey = computed(() => [
+    'notifications',
+    'list',
+    {
+      page: notificationsListQueryParams.value.page,
+      perPage: notificationsListQueryParams.value.perPage,
+      sort: notificationsListQueryParams.value.sort,
+    },
+  ]);
   let scheduledIntervalId: number | null = null;
   let isCheckingScheduledNotifications = false;
 
@@ -26,10 +47,24 @@ export const useNotification = () => {
       })
     ).length;
 
+  const loadNotificationList = async (params: NotificationListQueryParams) =>
+    (
+      await pb.collection(Collections.Notifications).getList(params.page, params.perPage, {
+        sort: params.sort,
+      })
+    ).items;
+
   const unreadQuery = useQuery({
     queryKey: notificationsUnreadCountQueryKey,
     queryFn: loadUnreadCount,
   });
+
+  const notificationsListQuery = useQuery({
+    queryKey: notificationsListQueryKey,
+    queryFn: () => loadNotificationList(notificationsListQueryParams.value),
+    enabled: computed(() => isNotificationsListEnabled.value),
+  });
+  const notifications = computed(() => notificationsListQuery.data.value ?? []);
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */
@@ -158,18 +193,15 @@ export const useNotification = () => {
     );
   };
 
-  const useNotificationsQuery = (
-    params: Ref<{ page: number; perPage: number; sort: string }> | { page: number; perPage: number; sort: string },
+  const fetchNotificationList = async (
+    params?: Ref<NotificationListQueryParams> | NotificationListQueryParams | undefined,
   ) => {
-    const p = computed(() => unref(params));
-    return useQuery({
-      queryKey: computed(() => ['notifications', 'list', p.value] as const),
-      queryFn: async () =>
-        (
-          await pb.collection(Collections.Notifications).getList(p.value.page, p.value.perPage, {
-            sort: p.value.sort,
-          })
-        ).items,
+    const nextParams = params ? unref(params) : notificationsListQueryParams.value;
+    notificationsListQueryParams.value = { ...nextParams };
+    isNotificationsListEnabled.value = true;
+    await queryClient.fetchQuery({
+      queryKey: notificationsListQueryKey.value,
+      queryFn: () => loadNotificationList(notificationsListQueryParams.value),
     });
   };
 
@@ -190,13 +222,15 @@ export const useNotification = () => {
   /* ======================= 메서드 ======================= */
 
   return {
+    notifications,
+
     fetchUnreadCount,
+    fetchNotificationList,
     subscribeNotificationsRealtime,
     unsubscribeNotificationsRealtime,
     subscribeScheduledNotifications,
     unsubscribeScheduledNotifications,
     subscribeNotificationsByPermission,
-    useNotificationsQuery,
     markRead,
   };
 };

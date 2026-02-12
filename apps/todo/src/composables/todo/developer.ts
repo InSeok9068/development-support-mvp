@@ -82,7 +82,6 @@ export const useDeveloper = () => {
   return {
     developers,
     selectDeveloper,
-    isLoading: developersQuery.isLoading,
 
     fetchDeveloperList,
     createDeveloper,

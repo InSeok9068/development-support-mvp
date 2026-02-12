@@ -192,8 +192,6 @@ export const useWork = () => {
 
   return {
     works,
-    worksQueryKey,
-    isFetchingWorks: worksQuery.isFetching,
 
     fetchWorkFullList,
     fetchWorkList,

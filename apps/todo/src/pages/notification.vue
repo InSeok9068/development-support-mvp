@@ -70,13 +70,17 @@
 import type { NotificationsResponse } from '@/api/pocketbase-types';
 import { useNotification } from '@/composables/notification';
 import dayjs from 'dayjs';
-import { computed, ref } from 'vue';
+import { onMounted } from 'vue';
 
 /* ======================= 변수 ======================= */
-const { useNotificationsQuery, markRead } = useNotification();
-const notificationsQuery = useNotificationsQuery(ref({ page: 1, perPage: 20, sort: '-created' }));
-const notifications = computed(() => notificationsQuery.data.value ?? []);
+const { notifications, fetchNotificationList, markRead } = useNotification();
 /* ======================= 변수 ======================= */
+
+/* ======================= 생명주기 훅 ======================= */
+onMounted(() => {
+  fetchNotificationList();
+});
+/* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
 const onClickRead = async (notification: NotificationsResponse) => {
