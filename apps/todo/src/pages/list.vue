@@ -76,6 +76,7 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useSearch } from '@/composables/todo/search';
 import { useWork } from '@/composables/todo/work';
 import type { UiWorkList } from '@/ui/todo.ui';
+import { readShoelaceChecked, readShoelaceSingleValue } from '@packages/ui';
 import {
   AllCommunityModule,
   ModuleRegistry,
@@ -168,18 +169,15 @@ const onClickSearch = () => {
 };
 
 const onChangeDeveloper = (event: Event) => {
-  const target = event.target as HTMLSelectElement;
-  listFilter.value.developer = target.value;
+  listFilter.value.developer = readShoelaceSingleValue(event);
 };
 
 const onChangeDoneFilter = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  listFilter.value.done = target.checked;
+  listFilter.value.done = readShoelaceChecked(event);
 };
 
 const onChangeWeeklyReport = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  weeklyReport.value = target.checked;
+  weeklyReport.value = readShoelaceChecked(event);
   onChangeSetWeeklyReportDate();
 };
 

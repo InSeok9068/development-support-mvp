@@ -77,6 +77,8 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 - Vue 컴포넌트로 기능을 감싸거나 재구현하기 전에, 반드시 Shoelace 공식 API로 해결 가능한지 먼저 검토한다.
 - `<sl-input>`과 `<sl-textarea>`만 v-model을 사용하며, 이외 폼 관련 컴포넌트
   `<sl-select>`, `<sl-radio>`, `<sl-checkbox>`, `<sl-switch>` 등은 `:value`와 `@sl-change`를 사용한다.
+- Shoelace `@sl-change` 이벤트의 값 파싱은 공용 헬퍼를 사용한다.
+  - `@packages/ui`의 `readShoelaceSingleValue`, `readShoelaceMultiValue`, `readShoelaceChecked`를 기본값으로 사용한다.
 
 #### 2. UI 동작 구현 판단 순서 (필수 준수)
 

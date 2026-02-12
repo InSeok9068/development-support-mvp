@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
+import { readShoelaceChecked, readShoelaceSingleValue } from '@packages/ui';
 import { Chart, type ChartData, type ChartOptions, registerables } from 'chart.js';
 import dayjs from 'dayjs';
 import { computed, onMounted, ref } from 'vue';
@@ -209,13 +210,11 @@ onMounted(() => {
 
 /* ======================= 메서드 ======================= */
 const onChangeDeveloperFilter = (event: Event) => {
-  const target = event.target as HTMLInputElement & { value: string };
-  selectedDeveloperId.value = target.value;
+  selectedDeveloperId.value = readShoelaceSingleValue(event);
 };
 
 const onChangeStatusFilter = (key: keyof typeof statusFilter.value, event: Event) => {
-  const target = event.target as HTMLInputElement & { checked: boolean };
-  statusFilter.value[key] = target.checked;
+  statusFilter.value[key] = readShoelaceChecked(event);
 };
 /* ======================= 메서드 ======================= */
 </script>

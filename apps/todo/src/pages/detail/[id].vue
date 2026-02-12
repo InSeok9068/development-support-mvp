@@ -294,7 +294,7 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useWorkDetail } from '@/composables/todo/work-detail';
 import { useSign } from '@/composables/user/sign';
-import { useModal } from '@packages/ui';
+import { readShoelaceChecked, readShoelaceSingleValue, useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
@@ -395,8 +395,7 @@ const onChangeFileInput = (event: Event) => {
 };
 
 const onChangeDone = (event: Event) => {
-  const target = event.target as { checked?: boolean } | null;
-  work.value.done = Boolean(target?.checked);
+  work.value.done = readShoelaceChecked(event);
   if (work.value.done) {
     work.value.doneDate = new Date().toISOString();
     work.value.state = 'done';
@@ -407,25 +406,22 @@ const onChangeDone = (event: Event) => {
 };
 
 const onChangeWorkState = (event: Event) => {
-  const target = event.target as { value?: string } | null;
-  work.value.state = target?.value ?? '';
+  work.value.state = readShoelaceSingleValue(event);
 };
 
 const onChangeDeveloper = (event: Event) => {
-  const target = event.target as { value?: string } | null;
-  work.value.developer = target?.value ?? '';
+  work.value.developer = readShoelaceSingleValue(event);
 };
 
 const onChangeWatcher = (event: Event) => {
-  const target = event.target as { checked?: boolean; value?: string } | null;
-  const value = target?.value ?? '';
+  const value = readShoelaceSingleValue(event);
   if (!value) {
     return;
   }
 
   const watchers = [...redmineData.value.watchers];
   const index = watchers.indexOf(value);
-  const isChecked = Boolean(target?.checked);
+  const isChecked = readShoelaceChecked(event);
 
   if (isChecked && index === -1) {
     watchers.push(value);
@@ -518,8 +514,7 @@ const onClickSelectRedmineData = () => selectRedmineData();
 const onClickUpdateRedmineData = () => updateRedmineData();
 
 const onChangeRedmineDoneRatio = (event: Event) => {
-  const target = event.target as HTMLInputElement | null;
-  redmineData.value.doneRatio = Number(target?.value ?? 0);
+  redmineData.value.doneRatio = Number(readShoelaceSingleValue(event) || 0);
 };
 
 const selectRedmineData = async () => {

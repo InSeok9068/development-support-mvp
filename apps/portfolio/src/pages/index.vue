@@ -400,6 +400,7 @@ import {
   sectorLabels,
   tagLabels,
 } from '@/ui/asset-labels';
+import { readShoelaceMultiValue, readShoelaceSingleValue } from '@packages/ui';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -421,10 +422,6 @@ type AssetEditForm = {
   tags: AdminAssetsTagsOptions[];
   sectors: AdminAssetsSectorsOptions[];
 };
-type SelectTarget = EventTarget & {
-  value?: string | string[];
-};
-
 const TAG_MAX_SELECT = 3;
 const SECTOR_MAX_SELECT = 2;
 
@@ -735,25 +732,25 @@ const onAfterHideAssetEditDialog = (event: Event) => {
 };
 
 const onChangeAssetEditCategory = (event: Event) => {
-  const category = readSingleSelectValue(event) as AdminAssetsCategoryOptions;
+  const category = readShoelaceSingleValue(event) as AdminAssetsCategoryOptions;
   assetEditForm.value.category = category;
   assetEditForm.value.groupType = resolveDefaultGroupType(category);
 };
 
 const onChangeAssetEditGroupType = (event: Event) => {
-  assetEditForm.value.groupType = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions;
+  assetEditForm.value.groupType = readShoelaceSingleValue(event) as AdminAssetsGroupTypeOptions;
 };
 
 const onChangeAssetEditTags = (event: Event) => {
   assetEditForm.value.tags = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsTagsOptions[],
     TAG_MAX_SELECT,
   );
 };
 
 const onChangeAssetEditSectors = (event: Event) => {
   assetEditForm.value.sectors = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsSectorsOptions[],
     SECTOR_MAX_SELECT,
   );
 };
@@ -923,21 +920,6 @@ const resetAssetEditDialogState = () => {
   assetEditMode.value = 'edit';
   selectedEditableAssetId.value = '';
   assetEditForm.value = buildEmptyAssetEditForm();
-};
-
-const readSingleSelectValue = (event: Event) => {
-  const target = event.target as SelectTarget | null;
-  const value = target?.value ?? '';
-  return Array.isArray(value) ? (value[0] ?? '') : value;
-};
-
-const readMultiSelectValue = (event: Event) => {
-  const target = event.target as SelectTarget | null;
-  const value = target?.value ?? [];
-  if (Array.isArray(value)) {
-    return value;
-  }
-  return value ? [value] : [];
 };
 
 const limitMultiSelectValues = <T extends string>(values: T[], maxSelect: number) => {

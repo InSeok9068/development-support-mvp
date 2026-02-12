@@ -533,6 +533,7 @@ import {
   sectorLabels,
   tagLabels,
 } from '@/ui/asset-labels';
+import { readShoelaceChecked, readShoelaceMultiValue, readShoelaceSingleValue } from '@packages/ui';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -548,13 +549,6 @@ type AdminAssetForm = {
   alias3: string;
   tags: AdminAssetsTagsOptions[];
   sectors: AdminAssetsSectorsOptions[];
-};
-
-type SelectTarget = EventTarget & {
-  value?: string | string[];
-};
-type SwitchTarget = EventTarget & {
-  checked?: boolean;
 };
 
 function buildEmptyAdminAssetForm(): AdminAssetForm {
@@ -813,20 +807,19 @@ const onClickRefreshAdminAssetList = () => {
 };
 
 const onChangeMatchCategoryFilter = (event: Event) => {
-  matchCategoryFilter.value = readSingleSelectValue(event) as ExtractedAssetsCategoryOptions | '';
+  matchCategoryFilter.value = readShoelaceSingleValue(event) as ExtractedAssetsCategoryOptions | '';
 };
 
 const onChangeAdminAssetCategoryFilter = (event: Event) => {
-  adminAssetCategoryFilter.value = readSingleSelectValue(event) as AdminAssetsCategoryOptions | '';
+  adminAssetCategoryFilter.value = readShoelaceSingleValue(event) as AdminAssetsCategoryOptions | '';
 };
 
 const onChangeAdminAssetGroupTypeFilter = (event: Event) => {
-  adminAssetGroupTypeFilter.value = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions | '';
+  adminAssetGroupTypeFilter.value = readShoelaceSingleValue(event) as AdminAssetsGroupTypeOptions | '';
 };
 
 const onChangeMatchDuplicateNameRemoved = (event: Event) => {
-  const target = event.target as SwitchTarget | null;
-  isMatchDuplicateNameRemoved.value = Boolean(target?.checked);
+  isMatchDuplicateNameRemoved.value = readShoelaceChecked(event);
 };
 
 const onClickOpenMatchActionDialog = (item: ExtractedAssetsResponse) => {
@@ -859,32 +852,32 @@ const onAfterHideMatchActionDialog = (event: Event) => {
 };
 
 const onChangeMatchActionMode = (event: Event) => {
-  const value = readSingleSelectValue(event);
+  const value = readShoelaceSingleValue(event);
   if (value === 'create' || value === 'link') {
     matchActionMode.value = value;
   }
 };
 
 const onChangeMatchCreateCategory = (event: Event) => {
-  const category = readSingleSelectValue(event) as AdminAssetsCategoryOptions;
+  const category = readShoelaceSingleValue(event) as AdminAssetsCategoryOptions;
   matchCreateForm.value.category = category;
   matchCreateForm.value.groupType = resolveDefaultGroupType(category);
 };
 
 const onChangeMatchCreateGroupType = (event: Event) => {
-  matchCreateForm.value.groupType = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions;
+  matchCreateForm.value.groupType = readShoelaceSingleValue(event) as AdminAssetsGroupTypeOptions;
 };
 
 const onChangeMatchCreateTags = (event: Event) => {
   matchCreateForm.value.tags = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsTagsOptions[],
     TAG_MAX_SELECT,
   );
 };
 
 const onChangeMatchCreateSectors = (event: Event) => {
   matchCreateForm.value.sectors = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsSectorsOptions[],
     SECTOR_MAX_SELECT,
   );
 };
@@ -918,7 +911,7 @@ const onClickSuggestMatchCreateFormByAi = async () => {
 };
 
 const onChangeSelectedAdminAssetForLink = (event: Event) => {
-  selectedAdminAssetIdForLink.value = readSingleSelectValue(event);
+  selectedAdminAssetIdForLink.value = readShoelaceSingleValue(event);
 };
 
 const onClickSubmitMatchAction = async () => {
@@ -1012,25 +1005,25 @@ const onAfterHideAdminAssetDialog = (event: Event) => {
 };
 
 const onChangeAdminAssetFormCategory = (event: Event) => {
-  const category = readSingleSelectValue(event) as AdminAssetsCategoryOptions;
+  const category = readShoelaceSingleValue(event) as AdminAssetsCategoryOptions;
   adminAssetForm.value.category = category;
   adminAssetForm.value.groupType = resolveDefaultGroupType(category);
 };
 
 const onChangeAdminAssetFormGroupType = (event: Event) => {
-  adminAssetForm.value.groupType = readSingleSelectValue(event) as AdminAssetsGroupTypeOptions;
+  adminAssetForm.value.groupType = readShoelaceSingleValue(event) as AdminAssetsGroupTypeOptions;
 };
 
 const onChangeAdminAssetFormTags = (event: Event) => {
   adminAssetForm.value.tags = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsTagsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsTagsOptions[],
     TAG_MAX_SELECT,
   );
 };
 
 const onChangeAdminAssetFormSectors = (event: Event) => {
   adminAssetForm.value.sectors = limitMultiSelectValues(
-    readMultiSelectValue(event) as AdminAssetsSectorsOptions[],
+    readShoelaceMultiValue(event) as AdminAssetsSectorsOptions[],
     SECTOR_MAX_SELECT,
   );
 };
@@ -1152,21 +1145,6 @@ const resetAdminAssetDialogState = () => {
   adminAssetDialogMode.value = 'create';
   selectedAdminAssetIdForEdit.value = '';
   adminAssetForm.value = buildEmptyAdminAssetForm();
-};
-
-const readSingleSelectValue = (event: Event) => {
-  const target = event.target as SelectTarget | null;
-  const value = target?.value ?? '';
-  return Array.isArray(value) ? (value[0] ?? '') : value;
-};
-
-const readMultiSelectValue = (event: Event) => {
-  const target = event.target as SelectTarget | null;
-  const value = target?.value ?? [];
-  if (Array.isArray(value)) {
-    return value;
-  }
-  return value ? [value] : [];
 };
 
 const limitMultiSelectValues = <T extends string>(values: T[], maxSelect: number) => {

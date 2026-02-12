@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import type { WorksResponse } from '@/api/pocketbase-types';
 import { useWork } from '@/composables/todo/work';
+import { readShoelaceChecked } from '@packages/ui';
 import type { CalendarOptions, EventClickArg, EventMountArg } from '@fullcalendar/core/index.js';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -198,8 +199,7 @@ function onDidMountEvent(args: EventMountArg) {
 }
 
 const onChangeEventTypeFilter = (key: keyof typeof eventTypeFilter.value, event: Event) => {
-  const target = event.target as HTMLInputElement & { checked: boolean };
-  eventTypeFilter.value[key] = target.checked;
+  eventTypeFilter.value[key] = readShoelaceChecked(event);
 };
 
 /* ======================= 메서드 ======================= */
