@@ -76,6 +76,25 @@ const composableMutationRules = [
   ),
 ];
 
+const shoelaceFormVModelRules = [
+  rule(
+    "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-select에서는 v-model 대신 :value + @sl-change를 사용하세요.',
+  ),
+  rule(
+    "VElement[name='sl-checkbox'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-checkbox에서는 v-model 대신 :checked/@sl-change를 사용하세요.',
+  ),
+  rule(
+    "VElement[name='sl-switch'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-switch에서는 v-model 대신 :checked/@sl-change를 사용하세요.',
+  ),
+  rule(
+    "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.',
+  ),
+];
+
 const pageBoundaryRules = [
   pbCollectionLiteralRule,
   rule(
@@ -104,6 +123,7 @@ const pageBoundaryRules = [
   ),
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
+  ...shoelaceFormVModelRules,
 ];
 
 const componentBoundaryRules = [
@@ -126,6 +146,7 @@ const componentBoundaryRules = [
   ),
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
+  ...shoelaceFormVModelRules,
 ];
 
 const composableRules = [
@@ -142,7 +163,7 @@ const composableRules = [
   ...queryKeyRules,
 ];
 
-const commonRules = [pbCollectionLiteralRule, ...queryKeyRules];
+const commonRules = [pbCollectionLiteralRule, ...queryKeyRules, ...shoelaceFormVModelRules];
 
 const eslintCustomRuleConfig = [
   // pages 적용 규칙
@@ -157,6 +178,13 @@ const eslintCustomRuleConfig = [
     'apps/*/src/components/**/*.{js,ts,vue}',
     'apps/*/src/composables/**/*.{js,ts,vue}',
   ]),
+  // Shoelace form 컴포넌트의 v-model 금지 규칙 (template AST 전용)
+  {
+    files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
+    rules: {
+      'vue/no-restricted-syntax': ['error', ...shoelaceFormVModelRules],
+    },
+  },
 ];
 
 export default eslintCustomRuleConfig;
