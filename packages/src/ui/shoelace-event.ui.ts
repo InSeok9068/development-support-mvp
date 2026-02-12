@@ -25,4 +25,3 @@ export const readShoelaceChecked = (event: Event): boolean => {
   const target = event.target as ShoelaceCheckedTarget | null;
   return Boolean(target?.checked);
 };
-

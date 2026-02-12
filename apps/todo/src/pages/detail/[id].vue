@@ -255,7 +255,11 @@
                 <a :href="getWorkFileUrl(work, work.file)" target="_blank">
                   {{ work.file }}
                 </a>
-                <sl-icon name="trash" class="cursor-pointer" @click.stop.prevent="onClickDeleteWorkFile(work)"></sl-icon>
+                <sl-icon
+                  name="trash"
+                  class="cursor-pointer"
+                  @click.stop.prevent="onClickDeleteWorkFile(work)"
+                ></sl-icon>
               </div>
             </div>
 
