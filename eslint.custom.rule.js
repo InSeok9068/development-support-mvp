@@ -1,19 +1,20 @@
 const AGENTS_REF = {
-  pbCollectionLiteral:
-    'AGENTS.md > PocketBase 가이드 > 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.',
+  pbCollectionLiteral: 'AGENTS.md > PocketBase 가이드 > 문자열 리터럴로 컬렉션 명을 지정하는 것을 금지한다.',
   noDirectPbCall:
     'AGENTS.md > Agent 금지 사항 > Composable 없이 pages/components에서 직접 PocketBase SDK를 호출하지 않는다.',
-  queryOnlyInComposable:
-    'AGENTS.md > Composables 가이드 > TanStack Query는 도메인 Composable 내부에서만 사용한다.',
+  queryOnlyInComposable: 'AGENTS.md > Composables 가이드 > TanStack Query는 도메인 Composable 내부에서만 사용한다.',
   realtimePageRule:
     'AGENTS.md > Realtime subscribe 규칙 > Page는 subscribeXxxRealtime(handler?) / unsubscribeXxxRealtime()만 사용한다.',
-  composableNaming:
-    'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Composable 메서드 명명 규칙.',
+  composableNaming: 'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Composable 메서드 명명 규칙.',
   noMutationReturn:
     'AGENTS.md > Agent 금지 사항 > Composable에서 Mutation 객체(useMutation 결과)를 그대로 반환하지 않는다.',
   mutateAsyncOnly:
     'AGENTS.md > Composables 가이드 > Mutation 도메인 액션 함수는 mutateAsync 기반 Promise 반환을 기본으로 한다.',
   queryKeyRule: 'AGENTS.md > TanStack Query 가이드 > Query Key는 일관된 규칙을 따른다.',
+  shoelaceFirstPrinciple: 'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙.',
+  shoelaceChangeParsing:
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked를 기본값으로 사용한다.',
+  sfcMethodNaming: 'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙.',
 };
 
 /* ======================= 공통 유틸 ======================= */
@@ -90,7 +91,7 @@ const realtimeSubscriptionRules = [
 /* ======================= Composable 규칙 ======================= */
 const composableMutationRules = [
   forbid(
-    "ReturnStatement > Identifier[name=/[Mm]utation/]",
+    'ReturnStatement > Identifier[name=/[Mm]utation/]',
     `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
   ),
   forbid(
@@ -116,59 +117,59 @@ const composableMutationRules = [
 const shoelaceFormVModelRules = [
   forbid(
     "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-select에서는 v-model 대신 :value + @sl-change를 사용하세요.',
+    `${AGENTS_REF.shoelaceFirstPrinciple} sl-select에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
   ),
   forbid(
     "VElement[name='sl-checkbox'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-checkbox에서는 v-model 대신 :checked/@sl-change를 사용하세요.',
+    `${AGENTS_REF.shoelaceFirstPrinciple} sl-checkbox에서는 v-model 대신 :checked/@sl-change를 사용하세요.`,
   ),
   forbid(
     "VElement[name='sl-switch'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-switch에서는 v-model 대신 :checked/@sl-change를 사용하세요.',
+    `${AGENTS_REF.shoelaceFirstPrinciple} sl-switch에서는 v-model 대신 :checked/@sl-change를 사용하세요.`,
   ),
   forbid(
     "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙. sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.',
+    `${AGENTS_REF.shoelaceFirstPrinciple} sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
   ),
 ];
 
 const shoelaceValueParsingRules = [
   forbid(
     "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.value 직접 접근을 피하세요.',
+    `${AGENTS_REF.shoelaceChangeParsing} event.target.value 직접 접근을 피하세요.`,
   ),
   forbid(
     "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.checked 직접 접근을 피하세요.',
+    `${AGENTS_REF.shoelaceChangeParsing} event.target.checked 직접 접근을 피하세요.`,
   ),
   forbid(
     "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.value 직접 접근을 피하세요.',
+    `${AGENTS_REF.shoelaceChangeParsing} event.target.value 직접 접근을 피하세요.`,
   ),
   forbid(
     "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 우선합니다. event.target.checked 직접 접근을 피하세요.',
+    `${AGENTS_REF.shoelaceChangeParsing} event.target.checked 직접 접근을 피하세요.`,
   ),
 ];
 
 const shoelaceHelperRecommendationRules = [
   recommend(
-    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
+    'FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
+    `${AGENTS_REF.shoelaceChangeParsing} readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.`,
   ),
   recommend(
-    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
-    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
+    'VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
+    `${AGENTS_REF.shoelaceChangeParsing} readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.`,
   ),
 ];
 const shoelaceChangeHandlerNamingRecommendationRules = [
   recommend(
     "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > Identifier:not([name=/^onChange[A-Z].+/])",
-    'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙. @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.',
+    `${AGENTS_REF.sfcMethodNaming} @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.`,
   ),
   recommend(
     "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > MemberExpression[property.name]:not(:has(Identifier[name=/^onChange[A-Z].+/]))",
-    'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙. @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.',
+    `${AGENTS_REF.sfcMethodNaming} @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.`,
   ),
 ];
 /* ======================= Shoelace 규칙 ======================= */
