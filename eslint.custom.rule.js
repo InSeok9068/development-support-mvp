@@ -129,6 +129,17 @@ const queryKeyRecommendationRules = [
   ),
 ];
 
+const shoelaceHelperRecommendationRules = [
+  rule(
+    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
+  ),
+  rule(
+    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
+  ),
+];
+
 const pageBoundaryRules = [
   pbCollectionLiteralRule,
   rule(
@@ -225,7 +236,7 @@ const eslintCustomRuleConfig = [
   {
     files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     rules: {
-      '@/no-restricted-syntax': ['warn', ...queryKeyRecommendationRules],
+      '@/no-restricted-syntax': ['warn', ...queryKeyRecommendationRules, ...shoelaceHelperRecommendationRules],
     },
   },
 ];

@@ -178,10 +178,10 @@ const onChangeDoneFilter = (event: Event) => {
 
 const onChangeWeeklyReport = (event: Event) => {
   weeklyReport.value = readShoelaceChecked(event);
-  onChangeSetWeeklyReportDate();
+  applyWeeklyReportDateFilter();
 };
 
-const onChangeSetWeeklyReportDate = () => {
+const applyWeeklyReportDateFilter = () => {
   if (weeklyReport.value) {
     listFilter.value.updatedFrom = dayjs(new Date()).startOf('week').add(1, 'day').format('YYYY-MM-DD');
     listFilter.value.updatedTo = dayjs(new Date()).startOf('week').add(5, 'day').format('YYYY-MM-DD');
