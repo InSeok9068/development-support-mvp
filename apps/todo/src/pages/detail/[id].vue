@@ -308,7 +308,7 @@ import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-rou
 /* ======================= 변수 ======================= */
 const route = useRoute() as RouteLocationNormalizedLoaded<'/detail/[id]'>;
 const {
-  workQuery,
+  work: workDetail,
   refetchWorkDetail,
   createScheduledNotification,
   deleteScheduledNotification,
@@ -364,7 +364,7 @@ const markdownContent = computed(() => {
 /* ======================= 감시자 ======================= */
 watch(keys.alt_s, (v) => v && updateWorkDetail());
 watch(
-  () => workQuery.data.value,
+  () => workDetail.value,
   (data) => {
     if (data) {
       work.value = structuredClone(toRaw(data));

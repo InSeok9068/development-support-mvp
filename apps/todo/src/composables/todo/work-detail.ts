@@ -29,6 +29,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
       }),
     enabled: computed(() => !!id.value),
   });
+  const work = computed(() => workQuery.data.value);
 
   const refetchWorkDetail = () => workQuery.refetch();
 
@@ -85,7 +86,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   /* ======================= 메서드 ======================= */
 
   return {
-    workQuery,
+    work,
     refetchWorkDetail,
     createScheduledNotification: createScheduledNotificationInternal,
     deleteScheduledNotification: deleteScheduledNotificationInternal,
