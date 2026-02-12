@@ -53,6 +53,17 @@ const queryKeyRecommendationRules = [
     `${AGENTS_REF.queryKeyRule} useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.`,
   ),
 ];
+
+const invalidationRecommendationRules = [
+  recommend(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)):has(> :nth-child(2)[type='Identifier']):not(:has(> Literal:nth-child(2)[value='detail']))",
+    `${AGENTS_REF.queryKeyRule} 상세 무효화라면 ['domain', 'detail', id] 형태를 권장합니다. 도메인 전체 무효화(['domain'])는 허용됩니다.`,
+  ),
+  recommend(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)[type='TemplateLiteral']):not(:has(> Literal:nth-child(2)[value='detail']))",
+    `${AGENTS_REF.queryKeyRule} 상세 무효화라면 ['domain', 'detail', id] 형태를 권장합니다. 도메인 전체 무효화(['domain'])는 허용됩니다.`,
+  ),
+];
 /* ======================= Query 규칙 ======================= */
 
 /* ======================= Realtime 규칙 ======================= */
@@ -150,6 +161,16 @@ const shoelaceHelperRecommendationRules = [
     'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
   ),
 ];
+const shoelaceChangeHandlerNamingRecommendationRules = [
+  recommend(
+    "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > Identifier:not([name=/^onChange[A-Z].+/])",
+    'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙. @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.',
+  ),
+  recommend(
+    "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > MemberExpression[property.name]:not(:has(Identifier[name=/^onChange[A-Z].+/]))",
+    'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙. @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.',
+  ),
+];
 /* ======================= Shoelace 규칙 ======================= */
 
 /* ======================= 레이어 경계 규칙 ======================= */
@@ -243,7 +264,13 @@ const eslintCustomRuleConfig = [
   {
     files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     rules: {
-      '@/no-restricted-syntax': ['warn', ...queryKeyRecommendationRules, ...shoelaceHelperRecommendationRules],
+      '@/no-restricted-syntax': [
+        'warn',
+        ...queryKeyRecommendationRules,
+        ...invalidationRecommendationRules,
+        ...shoelaceHelperRecommendationRules,
+        ...shoelaceChangeHandlerNamingRecommendationRules,
+      ],
     },
   },
 ];
