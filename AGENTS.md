@@ -430,6 +430,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 ## 작업 완료 기준
 
 - Agent는 코드 수정 또는 기능 구현 후 반드시 아래 절차를 수행해야 한다.
+- 단, `AGENTS.md` 문서 수정 또는 코드 동작성에 전혀 관련이 없는 비실행 파일(예: `.md` 문서)만 수정한 경우에는 필수 검증을 생략할 수 있다.
 - 모든 검증은 작업한 apps/{서비스명} 디렉터리 단위로 수행한다.
   - 예: `apps/todo`, `apps/portfolio`
 
