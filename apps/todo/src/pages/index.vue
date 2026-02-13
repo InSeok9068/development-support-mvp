@@ -176,7 +176,7 @@ const { showConfirmModal } = useModal();
 const validator = useValidator([
   {
     key: 'title',
-    validate: (value) => !isEmpty(String(value ?? '')),
+    validate: (value) => !isEmpty(String(value)),
     message: '최소 1자리 이상 입력해주세요.',
   },
 ]);
