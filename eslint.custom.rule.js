@@ -12,6 +12,8 @@ const AGENTS_REF = {
     'AGENTS.md > Composables 가이드 > Mutation 도메인 액션 함수는 mutateAsync 기반 Promise 반환을 기본으로 한다.',
   queryKeyRule: 'AGENTS.md > TanStack Query 가이드 > Query Key는 일관된 규칙을 따른다.',
   shoelaceFirstPrinciple: 'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙.',
+  shoelaceNativeFormException:
+    'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace 우선 원칙(네이티브 폼 태그 예외: input[type=file], input[type=text][hidden]만 허용).',
   shoelaceChangeParsing:
     'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked를 기본값으로 사용한다.',
   sfcMethodNaming: 'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙.',
@@ -130,6 +132,25 @@ const shoelaceFormVModelRules = [
   forbid(
     "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
     `${AGENTS_REF.shoelaceFirstPrinciple} sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
+  ),
+];
+
+const nativeFormTagRestrictionRules = [
+  forbid(
+    "VElement[name='button']",
+    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <button> 대신 <sl-button>을 사용하세요.`,
+  ),
+  forbid(
+    "VElement[name='select']",
+    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <select> 대신 <sl-select>를 사용하세요.`,
+  ),
+  forbid(
+    "VElement[name='textarea']",
+    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <textarea> 대신 <sl-textarea>를 사용하세요.`,
+  ),
+  forbid(
+    "VElement[name='input']:not(:has(VAttribute[key.name='type'][value.value='file'])):not(:has(VAttribute[key.name='type'][value.value='text']):has(VAttribute[key.name='hidden']))",
+    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <input>은 type='file' 또는 type='text' hidden 예외 외 사용을 금지합니다.`,
   ),
 ];
 
@@ -270,7 +291,7 @@ const eslintCustomRuleConfig = [
   {
     files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
-      'vue/no-restricted-syntax': ['error', ...shoelaceFormVModelRules],
+      'vue/no-restricted-syntax': ['error', ...shoelaceFormVModelRules, ...nativeFormTagRestrictionRules],
     },
   },
   // useQuery queryKey 2nd segment / readShoelace 헬퍼 권장 규칙 (warning)
