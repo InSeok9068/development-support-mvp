@@ -68,9 +68,9 @@
               등록
             </sl-button>
           </div>
-          <small v-show="validator.show('title')" class="font-bold text-red-500">{{
-            validator.message('title')
-          }}</small>
+          <small v-show="validator.show('title')" class="font-bold text-red-500">
+            {{ validator.message('title') }}
+          </small>
         </form>
       </div>
       <VueDraggable
@@ -150,7 +150,7 @@ import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useSign } from '@/composables/user/sign';
 import { useValidator } from '@/composables/validator';
-import { useModal } from '@packages/ui';
+import { readShoelaceSingleValue, useModal } from '@packages/ui';
 import dayjs from 'dayjs';
 import { isEmpty } from 'validator';
 import { onMounted, ref } from 'vue';
@@ -214,8 +214,8 @@ const onClickCreateWork = async () => {
   }
 };
 
-const onInputWorkTitle = () => {
-  validator.validateField('title', workArgs.value.title);
+const onInputWorkTitle = (event: Event) => {
+  validator.validateField('title', readShoelaceSingleValue(event));
 };
 
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {

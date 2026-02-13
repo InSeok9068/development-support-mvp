@@ -1,6 +1,15 @@
 import { ref } from 'vue';
 
-type ValidatorValue = string | number | boolean | null | undefined;
+type ValidatorValue = string | number | boolean | string[] | null | undefined;
+
+type FormFieldElement = HTMLElement & {
+  name?: string;
+  type?: string;
+  value?: unknown;
+  checked?: boolean;
+  disabled?: boolean;
+  multiple?: boolean;
+};
 
 interface ValidatorRule<TKey extends string> {
   key: TKey;
@@ -11,6 +20,8 @@ interface ValidatorRule<TKey extends string> {
 
 export const useValidator = <TKey extends string>(initialSchema: ValidatorRule<TKey>[] = []) => {
   const defaultMessage = '입력값이 올바르지 않습니다.';
+  const fieldSelector =
+    'input, select, textarea, sl-input, sl-textarea, sl-select, sl-checkbox, sl-switch, sl-radio-group';
 
   /* ======================= 변수 ======================= */
   const schema = ref<ValidatorRule<TKey>[]>([...initialSchema]);
@@ -63,30 +74,22 @@ export const useValidator = <TKey extends string>(initialSchema: ValidatorRule<T
       return false;
     }
 
-    const inputs = form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-      'input, select, textarea',
-    );
-    const filteredInputs = [] as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
-    inputs.forEach((input) => {
-      if (!['submit', 'button', 'reset'].includes(input.type)) {
-        filteredInputs.push(input);
-      }
-    });
+    const fields = form.querySelectorAll<FormFieldElement>(fieldSelector);
 
     let isValidAll = true;
-    for (let i = 0; i < filteredInputs.length; i++) {
-      const input = filteredInputs[i]!;
-      if (!input.name) {
+    for (let i = 0; i < fields.length; i++) {
+      const field = fields[i]!;
+      if (!field.name || isSkippableField(field)) {
         continue;
       }
 
-      const key = input.name as TKey;
+      const key = field.name as TKey;
       const rule = findRule(key);
       if (!rule) {
         continue;
       }
 
-      rule.isValid = rule.validate(input.value);
+      rule.isValid = rule.validate(readFieldValue(field));
       if (!rule.isValid) {
         isValidAll = false;
       }
@@ -114,6 +117,49 @@ export const useValidator = <TKey extends string>(initialSchema: ValidatorRule<T
     schema.value.forEach((rule) => {
       rule.isValid = undefined;
     });
+  };
+
+  const isSkippableField = (field: FormFieldElement) => {
+    if (field.disabled) {
+      return true;
+    }
+
+    const type = String(field.type ?? '').toLowerCase();
+    return ['submit', 'button', 'reset'].includes(type);
+  };
+
+  const readFieldValue = (field: FormFieldElement): ValidatorValue => {
+    const tagName = field.tagName.toLowerCase();
+    if (tagName === 'input') {
+      const input = field as HTMLInputElement;
+      if (['checkbox', 'radio'].includes(input.type)) {
+        return input.checked;
+      }
+      return input.value ?? '';
+    }
+
+    if (tagName === 'select') {
+      const select = field as HTMLSelectElement;
+      if (select.multiple) {
+        return Array.from(select.selectedOptions).map((option) => option.value);
+      }
+      return select.value ?? '';
+    }
+
+    if (tagName === 'sl-checkbox' || tagName === 'sl-switch') {
+      return Boolean(field.checked);
+    }
+
+    const value = field.value;
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string');
+    }
+
+    if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+      return value;
+    }
+
+    return '';
   };
   /* ======================= 메서드 ======================= */
 
