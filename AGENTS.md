@@ -202,6 +202,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 - Mutation 이후에는 표준 invalidation 규칙으로 캐시를 갱신한다.
   - 기본: 관련 Query Key invalidate
   - 필요 시: setQueryData로 optimistic update (필요한 경우에만 사용하며, 기본값은 invalidate이다.)
+- `useQuery`에서 파라미터가 바뀌는 조회는 `queryFn`이 외부 ref/state를 직접 읽지 않고, 반드시 `queryKey`에서 파라미터를 읽어 실행한다.
 - 비동기 로직(fetch, mutation, error handling)은 Query 레이어의 책임이다.
 - 예외규칙
   - 캐시/재사용 가치가 없는 호출(인증/세션·단발성 액션·즉시성 검증)은 TanStack Query를 쓰지 않는다.
