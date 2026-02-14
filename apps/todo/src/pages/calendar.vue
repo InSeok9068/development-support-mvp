@@ -35,17 +35,17 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import type { DateClickArg } from '@fullcalendar/interaction/index.js';
 import FullCalendar from '@fullcalendar/vue3';
+import { useDebounceFn, useEventListener } from '@vueuse/core';
 import dayjs from 'dayjs';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
-import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { nextTick, onBeforeMount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
 const { works, fetchWorkFullList } = useWork();
 const router = useRouter();
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null);
-let resizeTimer: number | null = null;
 const eventTypeFilter = ref({
   created: false,
   updated: false,
@@ -150,15 +150,7 @@ onBeforeMount(() => {
 
 onMounted(() => {
   requestCalendarSize();
-  window.addEventListener('resize', onResizeCalendar);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResizeCalendar);
-  if (resizeTimer) {
-    window.clearTimeout(resizeTimer);
-    resizeTimer = null;
-  }
+  useEventListener(window, 'resize', onResizeCalendar);
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -171,14 +163,9 @@ const requestCalendarSize = () => {
   });
 };
 
-const onResizeCalendar = () => {
-  if (resizeTimer) {
-    window.clearTimeout(resizeTimer);
-  }
-  resizeTimer = window.setTimeout(() => {
-    calendarRef.value?.getApi().updateSize();
-  }, 100);
-};
+const onResizeCalendar = useDebounceFn(() => {
+  calendarRef.value?.getApi().updateSize();
+}, 100);
 
 function onClickDate(args: DateClickArg) {
   console.log(args);

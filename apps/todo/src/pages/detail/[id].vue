@@ -297,12 +297,13 @@ import { useCode } from '@/composables/code';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useWorkDetail } from '@/composables/todo/work-detail';
+import { useToast } from '@/composables/toast';
 import { useSign } from '@/composables/user/sign';
 import { readShoelaceChecked, readShoelaceSingleValue, useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
 import dayjs from 'dayjs';
 import TurndownService from 'turndown';
-import { computed, onMounted, onUnmounted, ref, toRaw, watch } from 'vue';
+import { computed, onMounted, ref, toRaw, watch } from 'vue';
 import { type RouteLocationNormalizedLoaded, useRoute, useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -319,7 +320,8 @@ const {
 } = useWorkDetail(computed(() => route.params.id));
 const { deleteWork, updateWork } = useWork();
 const { getCodesByType } = useCode();
-const { showMessageModal } = useModal();
+const { showMessageModal, showConfirmModal } = useModal();
+const { showMessageToast } = useToast();
 const { developers, fetchDeveloperList } = useDeveloper();
 const { getUserId } = useSign();
 const router = useRouter();
@@ -327,7 +329,6 @@ const keys = useMagicKeys();
 const scheduledNotificationTime = ref<string>('');
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFileName = ref<string>('');
-let redirectTimer: number | null = null;
 const work = ref<
   WorksResponse<{
     scheduledNotifications?: ScheduledNotificationsResponse[];
@@ -377,13 +378,6 @@ watch(
 /* ======================= 생명주기 훅 ======================= */
 onMounted(() => {
   fetchDeveloperList();
-});
-
-onUnmounted(() => {
-  if (redirectTimer) {
-    window.clearTimeout(redirectTimer);
-    redirectTimer = null;
-  }
 });
 /* ======================= 생명주기 훅 ======================= */
 
@@ -449,10 +443,16 @@ const onClickUpdate = () => {
   updateWorkDetail();
 };
 
-const onClickDelete = async () => {
-  await deleteWork(work.value);
-  showMessageModal('삭제 완료');
-  redirectTimer = window.setTimeout(() => router.push('/'), 500);
+const onClickDelete = () => {
+  showConfirmModal({
+    title: '삭제 확인',
+    message: '해당 업무를 삭제할까요?',
+    onConfirm: async () => {
+      await deleteWork(work.value);
+      showMessageToast('삭제되었습니다.');
+      await router.replace('/');
+    },
+  });
 };
 
 const onClickDeleteWorkFile = async (work: WorksResponse) => {

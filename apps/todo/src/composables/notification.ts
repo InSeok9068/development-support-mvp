@@ -4,7 +4,7 @@ import { useGlobal } from '@/composables/global';
 import { useRealtime } from '@/composables/realtime';
 import { useToast } from '@/composables/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { tryOnScopeDispose } from '@vueuse/core';
+import { tryOnScopeDispose, useIntervalFn } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { computed, isRef, ref, unref, watch, type Ref } from 'vue';
 
@@ -40,7 +40,26 @@ export const useNotification = () => {
     ] as const;
   type NotificationsListQueryKey = ReturnType<typeof buildNotificationsListQueryKey>;
   const notificationsListQueryKey = computed(() => buildNotificationsListQueryKey(notificationsListQueryParams.value));
-  let scheduledIntervalId: number | null = null;
+  const scheduledNotificationsInterval = useIntervalFn(
+    () => {
+      if (isCheckingScheduledNotifications) {
+        return;
+      }
+      isCheckingScheduledNotifications = true;
+      void fetchDueScheduledNotifications()
+        .then(async (scheduledNotifications) => {
+          for (const record of scheduledNotifications) {
+            await removeScheduledNotification(record.id);
+            await createNotification(record as Create<Collections.Notifications>);
+          }
+        })
+        .finally(() => {
+          isCheckingScheduledNotifications = false;
+        });
+    },
+    1000 * 60,
+    { immediate: false },
+  );
   let isCheckingScheduledNotifications = false;
 
   const loadUnreadCount = async () =>
@@ -87,10 +106,7 @@ export const useNotification = () => {
 
   /* ======================= 생명주기 ======================= */
   tryOnScopeDispose(() => {
-    if (scheduledIntervalId) {
-      window.clearInterval(scheduledIntervalId);
-      scheduledIntervalId = null;
-    }
+    scheduledNotificationsInterval.pause();
   });
   /* ======================= 생명주기 ======================= */
 
@@ -150,34 +166,16 @@ export const useNotification = () => {
     createNotificationMutation.mutateAsync(payload);
 
   const subscribeScheduledNotifications = async () => {
-    if (scheduledIntervalId) {
+    if (scheduledNotificationsInterval.isActive.value) {
       return;
     }
 
     // 1분 마다 확인
-    scheduledIntervalId = window.setInterval(() => {
-      if (isCheckingScheduledNotifications) {
-        return;
-      }
-      isCheckingScheduledNotifications = true;
-      void fetchDueScheduledNotifications()
-        .then(async (scheduledNotifications) => {
-          for (const record of scheduledNotifications) {
-            await removeScheduledNotification(record.id);
-            await createNotification(record as Create<Collections.Notifications>);
-          }
-        })
-        .finally(() => {
-          isCheckingScheduledNotifications = false;
-        });
-    }, 1000 * 60);
+    scheduledNotificationsInterval.resume();
   };
 
   const unsubscribeScheduledNotifications = () => {
-    if (scheduledIntervalId) {
-      window.clearInterval(scheduledIntervalId);
-      scheduledIntervalId = null;
-    }
+    scheduledNotificationsInterval.pause();
   };
 
   const subscribeNotificationsByPermission = (
