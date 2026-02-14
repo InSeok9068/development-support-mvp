@@ -137,9 +137,12 @@ watch(works, (newValue) => {
   }));
 });
 
-watch(global.value, (newValue) => {
-  theme.value = newValue.theme === 'white' ? whiteTheme : darkTheme;
-});
+watch(
+  () => global.value.theme,
+  (nextTheme) => {
+    theme.value = nextTheme === 'white' ? whiteTheme : darkTheme;
+  },
+);
 
 /* ======================= 감시자 ======================= */
 

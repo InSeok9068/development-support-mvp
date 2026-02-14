@@ -20,7 +20,7 @@ import TheLaytout from '@/layouts/TheLaytout.vue';
 import { AppModal, useModal } from '@packages/ui';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import { useMagicKeys } from '@vueuse/core';
-import { onMounted, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
@@ -33,6 +33,7 @@ const { global, initTheme } = useGlobal();
 const { fetchCodeList } = useCode();
 const { initSetting } = useSetting();
 const keys = useMagicKeys();
+const notificationPermission = computed(() => global.value.notificationPermission);
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -80,7 +81,7 @@ onMounted(async () => {
         await Notification.requestPermission();
       }
     }
-    subscribeNotificationsByPermission(global.value.notificationPermission);
+    subscribeNotificationsByPermission(notificationPermission);
   }
 });
 /* ======================= 생명주기 훅 ======================= */
