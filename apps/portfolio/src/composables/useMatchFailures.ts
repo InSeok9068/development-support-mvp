@@ -50,26 +50,32 @@ export const useMatchFailures = (
   /* ======================= 변수 ======================= */
   const fromDate = computed(() => dateFilter?.fromDate.value ?? '');
   const toDate = computed(() => dateFilter?.toDate.value ?? '');
-  const matchFailureQueryKey = computed(
-    () =>
-      [
-        'extracted-assets',
-        'unmatched',
-        {
-          fromDate: fromDate.value,
-          toDate: toDate.value,
-        },
-      ] as const,
+  const buildMatchFailureQueryKey = (params: { fromDate: string; toDate: string }) =>
+    [
+      'extracted-assets',
+      'unmatched',
+      {
+        fromDate: params.fromDate,
+        toDate: params.toDate,
+      },
+    ] as const;
+  type MatchFailureQueryKey = ReturnType<typeof buildMatchFailureQueryKey>;
+  const matchFailureQueryKey = computed(() =>
+    buildMatchFailureQueryKey({
+      fromDate: fromDate.value,
+      toDate: toDate.value,
+    }),
   );
-  const pocketbaseFilter = computed(() => buildMatchFailureFilter(fromDate.value, toDate.value));
 
   const matchFailureQuery = useQuery({
     queryKey: matchFailureQueryKey,
-    queryFn: () =>
-      pb.collection(Collections.ExtractedAssets).getFullList<ExtractedAssetsResponse>({
-        filter: pocketbaseFilter.value,
+    queryFn: ({ queryKey }) => {
+      const [, , params] = queryKey as MatchFailureQueryKey;
+      return pb.collection(Collections.ExtractedAssets).getFullList<ExtractedAssetsResponse>({
+        filter: buildMatchFailureFilter(params.fromDate, params.toDate),
         sort: '-created',
-      }),
+      });
+    },
     enabled,
   });
   const matchFailureAiSuggestionMutation = useMutation({

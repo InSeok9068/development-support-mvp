@@ -29,15 +29,18 @@ export const useDeveloper = () => {
       sort: queryParams.value.sort,
       option: queryParams.value.option,
     },
-  ]);
+  ] as const);
+  type DevelopersListQueryKey = (typeof developersQueryKey.value);
   const developersQuery = useQuery({
     queryKey: developersQueryKey,
-    queryFn: () =>
-      pb.collection(Collections.Developers).getFullList({
-        filter: queryParams.value.filter,
-        sort: queryParams.value.sort,
-        ...queryParams.value.option,
-      }),
+    queryFn: ({ queryKey }) => {
+      const [, , params] = queryKey as DevelopersListQueryKey;
+      return pb.collection(Collections.Developers).getFullList({
+        filter: params.filter,
+        sort: params.sort,
+        ...params.option,
+      });
+    },
   });
   const developers = computed(() => developersQuery.data.value ?? []);
 

@@ -28,15 +28,18 @@ export const useNotification = () => {
     sort: '-created',
   });
   const isNotificationsListEnabled = ref(false);
-  const notificationsListQueryKey = computed(() => [
-    'notifications',
-    'list',
-    {
-      page: notificationsListQueryParams.value.page,
-      perPage: notificationsListQueryParams.value.perPage,
-      sort: notificationsListQueryParams.value.sort,
-    },
-  ]);
+  const buildNotificationsListQueryKey = (params: NotificationListQueryParams) =>
+    [
+      'notifications',
+      'list',
+      {
+        page: params.page,
+        perPage: params.perPage,
+        sort: params.sort,
+      },
+    ] as const;
+  type NotificationsListQueryKey = ReturnType<typeof buildNotificationsListQueryKey>;
+  const notificationsListQueryKey = computed(() => buildNotificationsListQueryKey(notificationsListQueryParams.value));
   let scheduledIntervalId: number | null = null;
   let isCheckingScheduledNotifications = false;
 
@@ -61,7 +64,10 @@ export const useNotification = () => {
 
   const notificationsListQuery = useQuery({
     queryKey: notificationsListQueryKey,
-    queryFn: () => loadNotificationList(notificationsListQueryParams.value),
+    queryFn: ({ queryKey }) => {
+      const [, , params] = queryKey as NotificationsListQueryKey;
+      return loadNotificationList(params);
+    },
     enabled: computed(() => isNotificationsListEnabled.value),
   });
   const notifications = computed(() => notificationsListQuery.data.value ?? []);
@@ -198,10 +204,14 @@ export const useNotification = () => {
   ) => {
     const nextParams = params ? unref(params) : notificationsListQueryParams.value;
     notificationsListQueryParams.value = { ...nextParams };
+    const nextQueryKey = buildNotificationsListQueryKey(nextParams);
     isNotificationsListEnabled.value = true;
     await queryClient.fetchQuery({
-      queryKey: notificationsListQueryKey.value,
-      queryFn: () => loadNotificationList(notificationsListQueryParams.value),
+      queryKey: nextQueryKey,
+      queryFn: ({ queryKey }) => {
+        const [, , queryParams] = queryKey as NotificationsListQueryKey;
+        return loadNotificationList(queryParams);
+      },
     });
   };
 

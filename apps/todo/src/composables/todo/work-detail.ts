@@ -11,6 +11,8 @@ import { computed, unref, type Ref } from 'vue';
 export const useWorkDetail = (workId: string | Ref<string>) => {
   /* ======================= 변수 ======================= */
   const id = computed(() => unref(workId));
+  const workDetailQueryKey = computed(() => ['works', 'detail', id.value] as const);
+  type WorkDetailQueryKey = (typeof workDetailQueryKey.value);
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */
@@ -18,15 +20,17 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
 
   /* ======================= 메서드 ======================= */
   const workQuery = useQuery({
-    queryKey: computed(() => ['works', 'detail', id.value] as const),
-    queryFn: () =>
-      pb.collection(Collections.Works).getOne<
+    queryKey: workDetailQueryKey,
+    queryFn: ({ queryKey }) => {
+      const [, , workId] = queryKey as WorkDetailQueryKey;
+      return pb.collection(Collections.Works).getOne<
         WorksResponse<{
           scheduledNotifications?: ScheduledNotificationsResponse[];
         }>
-      >(id.value, {
+      >(workId, {
         expand: 'scheduledNotifications',
-      }),
+      });
+    },
     enabled: computed(() => !!id.value),
   });
   const work = computed(() => workQuery.data.value);

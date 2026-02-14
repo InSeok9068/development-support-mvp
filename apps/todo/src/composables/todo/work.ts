@@ -49,7 +49,8 @@ export const useWork = () => {
       perPage: params.perPage,
       option: params.option,
     },
-  ];
+  ] as const;
+  type WorkListQueryKey = ReturnType<typeof buildQueryKey>;
 
   const fetchWorks = async (params: WorkQueryParams) => {
     if (params.mode === 'full') {
@@ -72,7 +73,10 @@ export const useWork = () => {
   const worksQueryKey = computed(() => buildQueryKey(queryParams.value));
   const worksQuery = useQuery({
     queryKey: worksQueryKey,
-    queryFn: () => fetchWorks(queryParams.value),
+    queryFn: ({ queryKey }) => {
+      const [, , params] = queryKey as WorkListQueryKey;
+      return fetchWorks(params);
+    },
     placeholderData: keepPreviousData,
   });
   const works = computed(() => worksQuery.data.value ?? []);

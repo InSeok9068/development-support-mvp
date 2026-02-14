@@ -449,8 +449,8 @@ const onClickUpdate = () => {
   updateWorkDetail();
 };
 
-const onClickDelete = () => {
-  deleteWork(work.value);
+const onClickDelete = async () => {
+  await deleteWork(work.value);
   showMessageModal('삭제 완료');
   redirectTimer = window.setTimeout(() => router.push('/'), 500);
 };
