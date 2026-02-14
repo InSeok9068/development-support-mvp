@@ -76,8 +76,8 @@
                 </div>
 
                 <div class="flex flex-wrap items-end gap-2">
-                  <sl-input v-model="matchFromDate" class="min-w-[140px] flex-1" type="date"></sl-input>
-                  <sl-input v-model="matchToDate" class="min-w-[140px] flex-1" type="date"></sl-input>
+                  <sl-input v-model="matchFromDate" class="min-w-35 flex-1" type="date"></sl-input>
+                  <sl-input v-model="matchToDate" class="min-w-35 flex-1" type="date"></sl-input>
                   <sl-switch
                     class="pb-2"
                     :checked="isMatchDuplicateNameRemoved"
