@@ -1,0 +1,18 @@
+{
+  "name": "@apps/kjca",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "dev": "vite",
+    "build": "vue-tsc && vite build --emptyOutDir",
+    "preview": "vite preview",
+    "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
+    "lint": "eslint \"src/**/*.{js,ts,vue}\"",
+    "lint:fix": "eslint \"src/**/*.{js,ts,vue,css,html}\" --fix",
+    "lint:format": "prettier --write ."
+  },
+  "dependencies": {
+    "@packages": "workspace:*"
+  }
+}
