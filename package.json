@@ -28,6 +28,7 @@
     "todo:test": "pnpm --filter @apps/todo test",
     "todo:test:ui": "pnpm --filter @apps/todo test:ui",
     "todo:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\todo && .\\pbw.exe pocketbase serve --dev\"",
+    "todo:pb:hook": "cmd /d /c \"robocopy %CD%\\apps\\todo\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\todo\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\"",
 
     "portfolio:dev": "pnpm --filter @apps/portfolio dev",
     "portfolio:build": "pnpm --filter @apps/portfolio build",
@@ -39,6 +40,7 @@
     "portfolio:test": "pnpm --filter @apps/portfolio test",
     "portfolio:test:ui": "pnpm --filter @apps/portfolio test:ui",
     "portfolio:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio && .\\pbw.exe pocketbase serve --dev\"",
+    "portfolio:pb:hook": "cmd /d /c \"robocopy %CD%\\apps\\portfolio\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\"",
 
     "kjca:dev": "pnpm --filter @apps/kjca dev",
     "kjca:build": "pnpm --filter @apps/kjca build",
