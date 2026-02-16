@@ -10,7 +10,9 @@
   "tailwindCSS.lint.usedBlocklistedClass": "ignore",
   "iconify.inplace": false,
   "explorer.fileNesting.patterns": {
-    "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml"
+    "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml, pnpm-helper.sh",
+    ".prettierrc.cjs": ".prettierignore",
+    "eslint.config.js": "eslint.custom.rule.js"
   },
   "code-runner.executorMap": {
     "typescript": "tsx"
