@@ -124,6 +124,36 @@ routerAdd('POST', '/api/staff-auth-probe', (e) => {
     return `${host}/${url}`;
   };
 
+  const extractPrintUrlFromCell = (cellHtml) => {
+    const source = decodeHtmlEntities(String(cellHtml ?? ''));
+    if (!source) return '';
+
+    const candidates = [];
+    const quotedUrlRegex = /['"]((?:https?:\/\/|\/|\?)[^'"]+)['"]/gi;
+    let urlMatch = null;
+    while ((urlMatch = quotedUrlRegex.exec(source))) {
+      const candidate = String(urlMatch[1] ?? '').trim();
+      if (!candidate) continue;
+      candidates.push(candidate);
+    }
+
+    const normalized = candidates
+      .map((candidate) => candidate.trim())
+      .filter((candidate) => !!candidate)
+      .filter((candidate) => candidate !== '#')
+      .filter((candidate) => !/^javascript:/i.test(candidate))
+      .filter((candidate) => !/^void\(0\)/i.test(candidate));
+
+    if (!normalized.length) return '';
+
+    const preferred =
+      normalized.find((candidate) => candidate.includes('bd_idx=')) ??
+      normalized.find((candidate) => candidate.includes('/diary/') || candidate.startsWith('?site=')) ??
+      normalized[0];
+
+    return toAbsoluteUrl(preferred);
+  };
+
   const parseTeamLeadRowsFromDiaryHtml = (diaryHtml) => {
     const html = String(diaryHtml ?? '');
 
@@ -153,11 +183,7 @@ routerAdd('POST', '/api/staff-auth-probe', (e) => {
       const createdAt = stripTags(cellHtmlByLabel['등록일시'] ?? '');
 
       const printCell = String(cellHtmlByLabel['인쇄'] ?? '');
-      const hrefMatch = printCell.match(/href\s*=\s*['"]([^'"]+)['"]/i);
-      // href 속성은 HTML에서 &amp; 형태로 내려올 수 있으므로 디코딩 후 사용한다.
-      const rawHref = hrefMatch ? hrefMatch[1] : '';
-      const decodedHref = decodeHtmlEntities(rawHref);
-      const printUrl = toAbsoluteUrl(decodedHref);
+      const printUrl = extractPrintUrlFromCell(printCell);
 
       rows.push({
         org,

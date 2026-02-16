@@ -27,6 +27,8 @@ type StaffDiaryAnalyzePayload = {
 
 type StaffDiaryAnalyzeResponse = {
   ok: boolean;
+  stoppedReason?: string;
+  alertMessage?: string;
   results: Array<{
     dept: string;
     position: string;

@@ -105,6 +105,7 @@
               <sl-progress-bar class="mt-2" indeterminate></sl-progress-bar>
             </sl-alert>
 
+            <sl-alert v-if="analysisNoticeMessage" variant="warning" open>{{ analysisNoticeMessage }}</sl-alert>
             <sl-alert v-if="analysisErrorMessage" variant="danger" open>{{ analysisErrorMessage }}</sl-alert>
           </div>
         </sl-card>
@@ -225,6 +226,7 @@ const lastDiaryAccessible = ref<boolean | null>(null);
 const teamLeadRows = ref<Array<{ dept: string; position: string; staffName: string; printUrl: string }>>([]);
 const isAnalyzing = ref(false);
 const testAnalyzeOneOnly = ref(false);
+const analysisNoticeMessage = ref('');
 const analysisErrorMessage = ref('');
 const analysisResults = ref<
   Array<{
@@ -313,6 +315,7 @@ const onClickCallStaffAuthProbe = async () => {
 
   lastDiaryAccessible.value = response.isDiaryAccessible;
   analysisResults.value = [];
+  analysisNoticeMessage.value = '';
   analysisErrorMessage.value = '';
   testAnalyzeOneOnly.value = false;
   // URL은 화면에 표시하지 않지만, 다음 단계에서 쓸 수 있도록 상태로 들고 있는다.
@@ -325,6 +328,7 @@ const onClickCallStaffAuthProbe = async () => {
 };
 
 const onClickAnalyzeDiary = async () => {
+  analysisNoticeMessage.value = '';
   analysisErrorMessage.value = '';
   isAnalyzing.value = true;
 
@@ -352,6 +356,7 @@ const onClickAnalyzeDiary = async () => {
         special: item.special ?? [],
         printUrl: item.printUrl,
       }));
+    analysisNoticeMessage.value = String(response.alertMessage ?? '').trim();
   } catch (error) {
     analysisErrorMessage.value = (error as { message?: string })?.message ? String((error as { message?: string }).message) : `${error}`;
   } finally {

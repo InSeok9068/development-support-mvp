@@ -224,6 +224,27 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
       .filter((v) => !!v);
   };
 
+  const inferGemini429Cause = (message, detailsText) => {
+    const source = `${String(message ?? '')} ${String(detailsText ?? '')}`.toLowerCase();
+    if (!source.trim()) return 'unknown';
+
+    const hasQuotaSignal =
+      source.includes('quota') ||
+      source.includes('billing') ||
+      source.includes('free tier') ||
+      source.includes('resource_exhausted');
+    if (hasQuotaSignal) return 'quota-or-billing-limit';
+
+    const hasRateSignal =
+      source.includes('rate') ||
+      source.includes('too many requests') ||
+      source.includes('per minute') ||
+      source.includes('retry');
+    if (hasRateSignal) return 'request-rate-limit';
+
+    return 'unknown';
+  };
+
   try {
     const requestStartedAt = nowMs();
 
@@ -306,6 +327,8 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
     }
 
     const results = [];
+    let stoppedReason = '';
+    let alertMessage = '';
 
     // 3) 각 링크 접속 -> div.doc_text.editor -> Gemini 추출
     for (let i = 0; i < targets.length; i += 1) {
@@ -325,7 +348,7 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
         continue;
       }
 
-      logger.info('target started', 'index', i, 'dept', dept, 'position', position, 'staffName', staffName);
+      logger.info('target started', 'index', i, 'dept', dept, 'position', position, 'staffName', staffName, 'printUrl', printUrl);
 
       const detailStartedAt = nowMs();
       const detailResponse = $http.send({
@@ -352,6 +375,21 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
         toMsText(nowMs() - detailStartedAt),
       );
 
+      if (detailResponse.statusCode < 200 || detailResponse.statusCode >= 300) {
+        results.push({
+          dept,
+          position,
+          staffName,
+          ok: false,
+          error: `원본 페이지 조회 실패 (HTTP ${detailResponse.statusCode})`,
+          promotion: [],
+          vacation: [],
+          special: [],
+          printUrl,
+        });
+        continue;
+      }
+
       if (detectAuthRequiredHtml(detailHtml)) {
         logger.warn('target auth required', 'index', i, 'dept', dept, 'elapsed', toMsText(nowMs() - targetStartedAt));
         results.push({
@@ -369,7 +407,9 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
       }
 
       const extractStartedAt = nowMs();
-      const docInnerHtml = extractDivInnerHtmlByClasses(detailHtml, ['doc_text', 'editor']);
+      const docInnerHtml =
+        extractDivInnerHtmlByClasses(detailHtml, ['doc_text', 'editor']) ||
+        extractDivInnerHtmlByClasses(detailHtml, ['doc_text']);
       const docText = htmlToText(docInnerHtml);
       logger.info(
         'doc_text extracted',
@@ -398,7 +438,7 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
           position,
           staffName,
           ok: false,
-          error: 'doc_text.editor 내용을 찾지 못했습니다.',
+          error: `본문 영역(doc_text)을 찾지 못했습니다. (HTTP ${detailResponse.statusCode})`,
           promotion: [],
           vacation: [],
           special: [],
@@ -458,6 +498,30 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
 
       const responseBody = toString(geminiResponse.body);
       const isSuccess = geminiResponse.statusCode >= 200 && geminiResponse.statusCode < 300;
+      const parsedErrorBody = parseJsonSafely(responseBody, {});
+      const geminiError = parsedErrorBody?.error ?? {};
+      const geminiErrorStatus = String(geminiError?.status ?? '').trim();
+      const geminiErrorMessage = String(geminiError?.message ?? '').trim();
+      const geminiErrorDetailsText = Array.isArray(geminiError?.details)
+        ? geminiError.details
+            .map((detail) => {
+              if (detail === null || detail === undefined) return '';
+              const text = `${detail}`;
+              return text === '[object Object]' ? JSON.stringify(detail) : text;
+            })
+            .join(' | ')
+        : '';
+      const retryAfter = getHeaderValues(geminiResponse.headers, 'Retry-After')[0] ?? '';
+      const rateLimitRelatedHeaders = {
+        retryAfter,
+        xRateLimitLimit: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Limit')[0] ?? '',
+        xRateLimitRemaining: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Remaining')[0] ?? '',
+        xRateLimitReset: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Reset')[0] ?? '',
+        xRatelimitLimitRequests: getHeaderValues(geminiResponse.headers, 'x-ratelimit-limit-requests')[0] ?? '',
+        xRatelimitRemainingRequests: getHeaderValues(geminiResponse.headers, 'x-ratelimit-remaining-requests')[0] ?? '',
+        xRatelimitLimitTokens: getHeaderValues(geminiResponse.headers, 'x-ratelimit-limit-tokens')[0] ?? '',
+        xRatelimitRemainingTokens: getHeaderValues(geminiResponse.headers, 'x-ratelimit-remaining-tokens')[0] ?? '',
+      };
       logger.info(
         'gemini completed',
         'index',
@@ -468,19 +532,63 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
         toMsText(geminiElapsedMs),
         'responseLength',
         responseBody.length,
+        'retryAfter',
+        retryAfter,
       );
+
+      if (!isSuccess) {
+        logger.warn(
+          'gemini failed detail',
+          'index',
+          i,
+          'statusCode',
+          geminiResponse.statusCode,
+          'errorStatus',
+          geminiErrorStatus,
+          'errorMessage',
+          geminiErrorMessage,
+          'errorDetails',
+          geminiErrorDetailsText,
+          'rateLimitHeaders',
+          JSON.stringify(rateLimitRelatedHeaders),
+        );
+      }
+
+      const rateLimitCauseGuess =
+        geminiResponse.statusCode === 429 ? inferGemini429Cause(geminiErrorMessage, geminiErrorDetailsText) : '';
+
+      if (geminiResponse.statusCode === 429) {
+        logger.warn(
+          'gemini rate limit classified',
+          'index',
+          i,
+          'causeGuess',
+          rateLimitCauseGuess,
+          'retryAfter',
+          retryAfter,
+        );
+      }
+
       if (!isSuccess) {
         results.push({
           dept,
           position,
           staffName,
           ok: false,
-          error: 'AI 요청에 실패했습니다.',
+          error: `AI 요청 실패 (HTTP ${geminiResponse.statusCode})`,
           promotion: [],
           vacation: [],
           special: [],
           printUrl,
         });
+
+        if (rateLimitCauseGuess === 'quota-or-billing-limit') {
+          stoppedReason = 'quota-exceeded';
+          alertMessage = 'Gemini 무료 쿼터가 소진되어 분석을 중단했습니다. 잠시 후 다시 시도하거나 과금/플랜을 확인해주세요.';
+          logger.warn('analysis stopped by quota limit', 'index', i, 'resultsCount', results.length, 'targetsCount', targets.length);
+          break;
+        }
+
         continue;
       }
 
@@ -522,6 +630,8 @@ routerAdd('POST', '/api/staff-diary/analyze', (e) => {
     return e.json(200, {
       ok: true,
       results,
+      stoppedReason,
+      alertMessage,
     });
   } catch (error) {
     logger.error('request failed', 'error', `${error}`);
