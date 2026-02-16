@@ -38,18 +38,19 @@ export const useWork = () => {
   /* ======================= 감시자 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const buildQueryKey = (params: WorkQueryParams) => [
-    'works',
-    'list',
-    {
-      mode: params.mode,
-      filter: params.filter,
-      sort: params.sort,
-      page: params.page,
-      perPage: params.perPage,
-      option: params.option,
-    },
-  ] as const;
+  const buildQueryKey = (params: WorkQueryParams) =>
+    [
+      'works',
+      'list',
+      {
+        mode: params.mode,
+        filter: params.filter,
+        sort: params.sort,
+        page: params.page,
+        perPage: params.perPage,
+        option: params.option,
+      },
+    ] as const;
   type WorkListQueryKey = ReturnType<typeof buildQueryKey>;
 
   const fetchWorks = async (params: WorkQueryParams) => {

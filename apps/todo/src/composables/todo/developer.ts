@@ -21,16 +21,19 @@ export const useDeveloper = () => {
   /* ======================= 감시자 ======================= */
 
   /* ======================= 메서드 ======================= */
-  const developersQueryKey = computed(() => [
-    'developers',
-    'list',
-    {
-      filter: queryParams.value.filter,
-      sort: queryParams.value.sort,
-      option: queryParams.value.option,
-    },
-  ] as const);
-  type DevelopersListQueryKey = (typeof developersQueryKey.value);
+  const developersQueryKey = computed(
+    () =>
+      [
+        'developers',
+        'list',
+        {
+          filter: queryParams.value.filter,
+          sort: queryParams.value.sort,
+          option: queryParams.value.option,
+        },
+      ] as const,
+  );
+  type DevelopersListQueryKey = typeof developersQueryKey.value;
   const developersQuery = useQuery({
     queryKey: developersQueryKey,
     queryFn: ({ queryKey }) => {

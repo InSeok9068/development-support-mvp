@@ -171,7 +171,9 @@
                         </sl-button>
                       </div>
 
-                      <sl-alert v-if="!item.ok" variant="danger" open>{{ item.error || '분석에 실패했습니다.' }}</sl-alert>
+                      <sl-alert v-if="!item.ok" variant="danger" open>{{
+                        item.error || '분석에 실패했습니다.'
+                      }}</sl-alert>
 
                       <div>
                         <div class="font-semibold">홍보</div>
@@ -358,7 +360,9 @@ const onClickAnalyzeDiary = async () => {
       }));
     analysisNoticeMessage.value = String(response.alertMessage ?? '').trim();
   } catch (error) {
-    analysisErrorMessage.value = (error as { message?: string })?.message ? String((error as { message?: string }).message) : `${error}`;
+    analysisErrorMessage.value = (error as { message?: string })?.message
+      ? String((error as { message?: string }).message)
+      : `${error}`;
   } finally {
     isAnalyzing.value = false;
   }

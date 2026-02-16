@@ -12,7 +12,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
   /* ======================= 변수 ======================= */
   const id = computed(() => unref(workId));
   const workDetailQueryKey = computed(() => ['works', 'detail', id.value] as const);
-  type WorkDetailQueryKey = (typeof workDetailQueryKey.value);
+  type WorkDetailQueryKey = typeof workDetailQueryKey.value;
   /* ======================= 변수 ======================= */
 
   /* ======================= 감시자 ======================= */

@@ -81,11 +81,12 @@ const onClickSignIn = async () => {
     successMessage.value = '로그인 완료';
     await router.push('/');
   } catch (error) {
-    errorMessage.value = (error as { message?: string })?.message ? String((error as { message?: string }).message) : `${error}`;
+    errorMessage.value = (error as { message?: string })?.message
+      ? String((error as { message?: string }).message)
+      : `${error}`;
   } finally {
     isSubmitting.value = false;
   }
 };
 /* ======================= 메서드 ======================= */
 </script>
-

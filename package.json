@@ -7,6 +7,7 @@
     "format": "prettier --write .",
     "lint:all": "eslint .",
     "pb:kill": "cmd /d /c \"taskkill /F /IM pbw.exe /T >NUL 2>&1 & taskkill /F /IM pocketbase.exe /T >NUL 2>&1 & exit /b 0\"",
+
     "dev": "pnpm -C apps/todo dev",
     "build": "pnpm -C apps/todo build",
     "preview": "pnpm -C apps/todo preview",
@@ -16,6 +17,7 @@
     "lint:format": "pnpm -C apps/todo lint:format",
     "test": "pnpm -C apps/todo test",
     "test:ui": "pnpm -C apps/todo test:ui",
+
     "todo:dev": "pnpm --filter @apps/todo dev",
     "todo:build": "pnpm --filter @apps/todo build",
     "todo:preview": "pnpm --filter @apps/todo preview",
@@ -26,6 +28,7 @@
     "todo:test": "pnpm --filter @apps/todo test",
     "todo:test:ui": "pnpm --filter @apps/todo test:ui",
     "todo:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\todo && .\\pbw.exe pocketbase serve --dev\"",
+
     "portfolio:dev": "pnpm --filter @apps/portfolio dev",
     "portfolio:build": "pnpm --filter @apps/portfolio build",
     "portfolio:preview": "pnpm --filter @apps/portfolio preview",
@@ -36,6 +39,7 @@
     "portfolio:test": "pnpm --filter @apps/portfolio test",
     "portfolio:test:ui": "pnpm --filter @apps/portfolio test:ui",
     "portfolio:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio && .\\pbw.exe pocketbase serve --dev\"",
+
     "kjca:dev": "pnpm --filter @apps/kjca dev",
     "kjca:build": "pnpm --filter @apps/kjca build",
     "kjca:preview": "pnpm --filter @apps/kjca preview",
