@@ -10,7 +10,9 @@
     "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
     "lint": "eslint \"src/**/*.{js,ts,vue}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts,vue,css,html}\" --fix",
-    "lint:format": "prettier --write ."
+    "lint:format": "prettier --write .",
+    "pb:dev": "pnpm exec dotenv -e ../../.env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\todo && .\\pbw.exe pocketbase serve --dev\"",
+    "pb:hook": "cmd /d /c \"robocopy .\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\todo\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\""
   },
   "dependencies": {
     "@packages": "workspace:*"

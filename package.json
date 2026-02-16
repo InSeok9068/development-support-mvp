@@ -27,8 +27,8 @@
     "todo:lint:format": "pnpm --filter @apps/todo lint:format",
     "todo:test": "pnpm --filter @apps/todo test",
     "todo:test:ui": "pnpm --filter @apps/todo test:ui",
-    "todo:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\todo && .\\pbw.exe pocketbase serve --dev\"",
-    "todo:pb:hook": "cmd /d /c \"robocopy %CD%\\apps\\todo\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\todo\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\"",
+    "todo:pb:dev": "pnpm --filter @apps/todo pb:dev",
+    "todo:pb:hook": "pnpm --filter @apps/todo pb:hook",
 
     "portfolio:dev": "pnpm --filter @apps/portfolio dev",
     "portfolio:build": "pnpm --filter @apps/portfolio build",
@@ -39,8 +39,8 @@
     "portfolio:lint:format": "pnpm --filter @apps/portfolio lint:format",
     "portfolio:test": "pnpm --filter @apps/portfolio test",
     "portfolio:test:ui": "pnpm --filter @apps/portfolio test:ui",
-    "portfolio:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio && .\\pbw.exe pocketbase serve --dev\"",
-    "portfolio:pb:hook": "cmd /d /c \"robocopy %CD%\\apps\\portfolio\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\"",
+    "portfolio:pb:dev": "pnpm --filter @apps/portfolio pb:dev",
+    "portfolio:pb:hook": "pnpm --filter @apps/portfolio pb:hook",
 
     "kjca:dev": "pnpm --filter @apps/kjca dev",
     "kjca:build": "pnpm --filter @apps/kjca build",
@@ -51,8 +51,8 @@
     "kjca:lint:format": "pnpm --filter @apps/kjca lint:format",
     "kjca:test": "pnpm --filter @apps/kjca test",
     "kjca:test:ui": "pnpm --filter @apps/kjca test:ui",
-    "kjca:pb:dev": "pnpm exec dotenv -e .env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\kjca && .\\pbw.exe pocketbase serve --dev\"",
-    "kjca:pb:hook": "cmd /d /c \"robocopy %CD%\\apps\\kjca\\pb_hooks %USERPROFILE%\\IdeaProjects\\pocketbase\\kjca\\pb_hooks /MIR >NUL & if errorlevel 8 exit /b 1 & exit /b 0\""
+    "kjca:pb:dev": "pnpm --filter @apps/kjca pb:dev",
+    "kjca:pb:hook": "pnpm --filter @apps/kjca pb:hook"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
