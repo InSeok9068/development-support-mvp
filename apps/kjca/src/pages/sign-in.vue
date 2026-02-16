@@ -2,19 +2,16 @@
   <main class="mx-auto flex min-h-screen max-w-xl items-center justify-center px-4 py-6">
     <sl-card class="w-full">
       <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-lg font-semibold">로그인</div>
-          <sl-button variant="text" @click="onClickGoSignUp">회원가입</sl-button>
-        </div>
+        <div class="text-lg font-semibold">로그인</div>
 
         <div v-if="isSignedIn && authRecord" class="text-sm">
-          현재 로그인: {{ authRecord.name || authRecord.email }}
+          현재 로그인: {{ authRecord.email }}
         </div>
 
         <sl-input
           v-model="loginId"
-          label="아이디 (PocketBase 로그인)"
-          placeholder="예: kjcareer11 또는 test@example.com"
+          label="아이디 (PocketBase 슈퍼유저 로그인)"
+          placeholder="예: admin@example.com"
         ></sl-input>
 
         <sl-input
@@ -60,10 +57,6 @@ const successMessage = ref('');
 /* ======================= 생명주기 훅 ======================= */
 
 /* ======================= 메서드 ======================= */
-const onClickGoSignUp = async () => {
-  await router.push('/sign-up');
-};
-
 const onClickGoHome = async () => {
   await router.push('/');
 };

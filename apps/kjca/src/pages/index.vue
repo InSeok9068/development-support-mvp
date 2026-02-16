@@ -5,14 +5,13 @@
         <div class="text-lg font-semibold">KJCA 업무일지</div>
         <div class="text-sm">
           PocketBase 로그인:
-          <span v-if="isSignedIn && authRecord">{{ authRecord.name || authRecord.email }}</span>
+          <span v-if="isSignedIn && authRecord">{{ authRecord.email }}</span>
           <span v-else>미로그인</span>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
         <sl-button v-if="!isSignedIn" variant="default" @click="onClickGoSignIn">로그인</sl-button>
-        <sl-button v-if="!isSignedIn" variant="default" @click="onClickGoSignUp">회원가입</sl-button>
         <sl-button v-if="isSignedIn" variant="default" @click="onClickSignOut">로그아웃</sl-button>
       </div>
     </div>
@@ -299,10 +298,6 @@ const analyzeTargetCount = computed(() => {
 /* ======================= 메서드 ======================= */
 const onClickGoSignIn = async () => {
   await router.push('/sign-in');
-};
-
-const onClickGoSignUp = async () => {
-  await router.push('/sign-up');
 };
 
 const onClickSignOut = () => {

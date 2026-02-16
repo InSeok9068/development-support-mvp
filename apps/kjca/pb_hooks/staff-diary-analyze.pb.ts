@@ -265,9 +265,24 @@ routerAdd(
         return e.error(400, 'targets는 최대 50개까지 지원합니다.', {});
       }
 
-      // users.name = KJCA mng_id, users.kjcaPw = KJCA mng_pw (평문 저장)
-      const mngId = String(e.auth.getString('name') ?? '').trim();
-      const mngPw = String(e.auth.getString('kjcaPw') ?? '').trim();
+      const superuserEmail = String(e.auth.getString('email') ?? '').trim();
+      if (!superuserEmail) {
+        return e.error(400, '슈퍼유저 이메일 정보를 확인할 수 없습니다.', {});
+      }
+
+      let userRecord = null;
+      try {
+        userRecord = $app.findAuthRecordByEmail('users', superuserEmail);
+      } catch {
+        userRecord = null;
+      }
+
+      if (!userRecord) {
+        return e.error(400, `users 컬렉션에서 로그인 계정(${superuserEmail})을 찾지 못했습니다.`, {});
+      }
+
+      const mngId = String(userRecord.getString('name') ?? '').trim();
+      const mngPw = String(userRecord.getString('kjcaPw') ?? '').trim();
       if (!mngId || !mngPw) {
         return e.error(400, 'KJCA 계정 정보가 필요합니다. (users.name=mng_id, users.kjcaPw=mng_pw)', {});
       }
@@ -665,5 +680,5 @@ routerAdd(
       return e.error(500, '분석 처리에 실패했습니다.', { cause: `${error}` });
     }
   },
-  $apis.requireAuth(),
+  $apis.requireSuperuserAuth(),
 );
