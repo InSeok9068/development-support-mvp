@@ -4,9 +4,7 @@
       <div class="flex flex-col gap-4">
         <div class="text-lg font-semibold">로그인</div>
 
-        <div v-if="isSignedIn && authRecord" class="text-sm">
-          현재 로그인: {{ authRecord.email }}
-        </div>
+        <div v-if="isSignedIn && authRecord" class="text-sm">현재 로그인: {{ authRecord.email }}</div>
 
         <sl-input
           v-model="loginId"
