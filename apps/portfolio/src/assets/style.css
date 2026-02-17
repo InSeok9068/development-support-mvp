@@ -1,4 +1,2 @@
-@import 'open-props/style';
-
 @import 'tailwindcss';
 @custom-variant dark (&:where(.sl-theme-dark, .sl-theme-dark *));

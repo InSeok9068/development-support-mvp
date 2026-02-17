@@ -70,7 +70,6 @@
     "dayjs": "^1.11.19",
     "dhtmlx-gantt": "^9.1.1",
     "es-toolkit": "^1.44.0",
-    "open-props": "^1.7.23",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "pocketbase": "^0.26.8",
