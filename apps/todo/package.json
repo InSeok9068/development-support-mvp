@@ -2,7 +2,7 @@
   "name": "@apps/todo",
   "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest --run",
     "test:ui": "vitest --ui",
     "dev": "vite",
     "build": "vue-tsc && vite build --emptyOutDir",
