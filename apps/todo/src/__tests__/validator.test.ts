@@ -1,38 +1,46 @@
 import { useValidator } from '@/composables/validator';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 type TodoFormField = 'title' | 'done' | 'tags';
-type MockField = {
-  tagName: string;
-  name?: string;
-  type?: string;
-  value?: unknown;
-  checked?: boolean;
-  disabled?: boolean;
-  multiple?: boolean;
-  selectedOptions?: Array<{ value: string }>;
+type ShoelaceCheckboxElement = HTMLElement & { name: string; checked: boolean };
+type ShoelaceSelectElement = HTMLElement & { name: string; value: unknown };
+
+const createTodoForm = () => {
+  const form = document.createElement('form');
+  form.id = 'todo-form';
+  form.name = 'todo-form';
+
+  const titleInput = document.createElement('input');
+  titleInput.name = 'title';
+  titleInput.value = '테스트 업무';
+
+  const doneCheckbox = document.createElement('sl-checkbox') as ShoelaceCheckboxElement;
+  doneCheckbox.name = 'done';
+  doneCheckbox.checked = true;
+
+  const tagsSelect = document.createElement('sl-select') as ShoelaceSelectElement;
+  tagsSelect.name = 'tags';
+  tagsSelect.value = ['frontend', 'backend'];
+
+  const disabledInput = document.createElement('input');
+  disabledInput.name = 'title';
+  disabledInput.value = '';
+  disabledInput.disabled = true;
+
+  const buttonInput = document.createElement('input');
+  buttonInput.name = 'done';
+  buttonInput.type = 'button';
+  buttonInput.value = '';
+
+  form.append(titleInput, doneCheckbox, tagsSelect, disabledInput, buttonInput);
+  document.body.append(form);
+
+  return { doneCheckbox, tagsSelect };
 };
 
 describe('useValidator', () => {
-  const setupDocument = (formId: string, fields: MockField[]) => {
-    const mockForm = {
-      querySelectorAll: vi.fn(() => fields),
-    };
-    const mockDocument = {
-      forms: {
-        namedItem: vi.fn((id: string) => (id === formId ? mockForm : null)),
-      },
-    };
-
-    vi.stubGlobal('document', mockDocument);
-  };
-
   beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
+    document.body.innerHTML = '';
   });
 
   test('validateField는 개별 필드 유효성 상태를 반영한다', () => {
@@ -55,24 +63,7 @@ describe('useValidator', () => {
   });
 
   test('validateForm은 form 필드를 순회하며 Shoelace 값도 검증한다', () => {
-    const doneCheckbox: MockField = {
-      tagName: 'sl-checkbox',
-      name: 'done',
-      checked: true,
-    };
-    const tagsSelect: MockField = {
-      tagName: 'select',
-      name: 'tags',
-      multiple: true,
-      selectedOptions: [{ value: 'frontend' }, { value: 'backend' }],
-    };
-    setupDocument('todo-form', [
-      { tagName: 'input', name: 'title', value: '테스트 업무' },
-      doneCheckbox,
-      tagsSelect,
-      { tagName: 'input', name: 'title', disabled: true, value: '' },
-      { tagName: 'input', name: 'done', type: 'button', value: '' },
-    ]);
+    const { doneCheckbox, tagsSelect } = createTodoForm();
 
     const validator = useValidator<TodoFormField>([
       {
@@ -89,6 +80,9 @@ describe('useValidator', () => {
       },
     ]);
 
+    doneCheckbox.checked = true;
+    tagsSelect.value = ['frontend', 'backend'];
+
     const result = validator.validateForm('todo-form');
 
     expect(result).toBe(true);
@@ -98,21 +92,7 @@ describe('useValidator', () => {
   });
 
   test('validateForm은 잘못된 값을 감지하고 기본 메시지를 유지한다', () => {
-    const doneCheckbox: MockField = {
-      tagName: 'sl-checkbox',
-      name: 'done',
-      checked: false,
-    };
-    const tagsSelect: MockField = {
-      tagName: 'sl-select',
-      name: 'tags',
-      value: [],
-    };
-    setupDocument('todo-form', [
-      { tagName: 'input', name: 'title', value: '테스트 업무' },
-      doneCheckbox,
-      tagsSelect,
-    ]);
+    const { doneCheckbox, tagsSelect } = createTodoForm();
 
     const validator = useValidator<TodoFormField>([
       {
@@ -128,6 +108,9 @@ describe('useValidator', () => {
         validate: (value) => Array.isArray(value) && value.length > 0,
       },
     ]);
+
+    doneCheckbox.checked = false;
+    tagsSelect.value = [];
 
     const result = validator.validateForm('todo-form');
 

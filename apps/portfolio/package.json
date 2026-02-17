@@ -2,7 +2,7 @@
   "name": "@apps/portfolio",
   "type": "module",
   "scripts": {
-    "test": "vitest --run",
+    "test": "vitest --run --environment jsdom",
     "test:ui": "vitest --ui",
     "dev": "vite",
     "build": "vue-tsc && vite build --emptyOutDir",
