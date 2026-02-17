@@ -55,6 +55,7 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 - todo : 할일 관리 도구
 - portfolio : 자산 포트 폴리오
+- kjca : 국제 커리어
 
 ---
 
@@ -453,7 +454,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+**Tradeoff:** These guidelines prioritize MVP delivery speed and implementation clarity over excessive caution; apply strict caution only for high-risk changes.
 
 ## 1. Think Before Coding
 
