@@ -436,6 +436,18 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 - 모든 검증은 작업한 apps/{서비스명} 디렉터리 단위로 수행한다.
   - 예: `apps/todo`, `apps/portfolio`
 
+### AI 작업 검증용 테스트 운영 규칙
+
+- 본 프로젝트의 `__tests__`는 기본적으로 AI의 작업 검증 장치로 사용한다.
+- 테스트는 아래 2가지로 구분한다.
+  - 영구 테스트: 핵심 회귀 방지용 최소 테스트만 유지
+  - 임시 테스트: AI가 현재 작업 검증을 위해 작성하는 테스트
+- 임시 테스트는 `__tests__/ai-temp` 경로에 작성한다.
+- 임시 테스트는 현재 작업 범위만 검증하며, 작업 완료 후 삭제를 원칙으로 한다.
+- 단, 재발 방지 가치가 명확한 경우에만 임시 테스트를 영구 테스트로 승격한다.
+- 외부 네트워크, 시간 의존, 랜덤 값 등 flaky(불안정) 테스트는 금지한다.
+- 테스트가 필요한 코드 수정의 경우, `pnpm lint`와 `pnpm build`에 더해 `pnpm test`를 추가 실행한다.
+
 ### 필수 검증 절차
 
 1. 작업 대상 서비스의 디렉터리(apps/{서비스명})로 이동한다.
@@ -445,6 +457,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 5. 위 절차가 모두 완료된 경우에만 작업을 "완료"로 간주한다.
 
 - `pnpm lint` 또는 `pnpm build` 단계에서 오류가 발생한 경우, 작업은 완료된 것으로 간주하지 않는다.
+- 테스트가 필요한 코드 수정에서 `pnpm test` 단계 실패 시에도 작업은 완료된 것으로 간주하지 않는다.
 - 검증 절차를 생략하거나 추정으로 판단하지 않는다.
 - 루트 디렉터리에서의 실행 결과로 대체하지 않는다.
 
@@ -496,3 +509,23 @@ When your changes create orphans:
 - Don't remove pre-existing dead code unless asked.
 
 The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
