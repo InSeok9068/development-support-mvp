@@ -210,8 +210,14 @@
               </div>
               <div class="flex items-center gap-2">
                 <sl-input v-model="scheduledNotificationTime" type="datetime-local" class="min-w-0 flex-1"></sl-input>
-                <sl-button class="shrink-0" variant="default" @click="onClickCreateScheduledNotification">
-                  추가
+                <sl-button
+                  class="shrink-0"
+                  variant="default"
+                  aria-label="미리알람 추가"
+                  title="미리알람 추가"
+                  @click="onClickCreateScheduledNotification"
+                >
+                  <sl-icon name="plus-lg"></sl-icon>
                 </sl-button>
               </div>
               <div v-show="(work.expand?.scheduledNotifications ?? []).length === 0" class="mt-3">
