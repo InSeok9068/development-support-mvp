@@ -52,7 +52,19 @@
     "kjca:test": "pnpm --filter @apps/kjca test",
     "kjca:test:ui": "pnpm --filter @apps/kjca test:ui",
     "kjca:pb:dev": "pnpm --filter @apps/kjca pb:dev",
-    "kjca:pb:hook": "pnpm --filter @apps/kjca pb:hook"
+    "kjca:pb:hook": "pnpm --filter @apps/kjca pb:hook",
+
+    "stylemate:dev": "pnpm --filter @apps/stylemate dev",
+    "stylemate:build": "pnpm --filter @apps/stylemate build",
+    "stylemate:preview": "pnpm --filter @apps/stylemate preview",
+    "stylemate:typegen": "pnpm --filter @apps/stylemate typegen",
+    "stylemate:lint": "pnpm --filter @apps/stylemate lint",
+    "stylemate:lint:fix": "pnpm --filter @apps/stylemate lint:fix",
+    "stylemate:lint:format": "pnpm --filter @apps/stylemate lint:format",
+    "stylemate:test": "pnpm --filter @apps/stylemate test",
+    "stylemate:test:ui": "pnpm --filter @apps/stylemate test:ui",
+    "stylemate:pb:dev": "pnpm --filter @apps/stylemate pb:dev",
+    "stylemate:pb:hook": "pnpm --filter @apps/stylemate pb:hook"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
