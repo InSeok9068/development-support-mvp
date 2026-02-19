@@ -259,7 +259,7 @@
               </div>
               <div v-show="work.file" class="mt-3 flex items-center gap-2">
                 <a :href="getWorkFileUrl(work, work.file)" target="_blank">
-                  {{ work.file }}
+                  {{ work.originalFileName || work.file }}
                 </a>
                 <sl-icon
                   name="trash"
@@ -464,6 +464,7 @@ const onClickDelete = () => {
 const onClickDeleteWorkFile = async (work: WorksResponse) => {
   await updateWork(work.id, {
     file: null,
+    originalFileName: '',
   });
   // work.file = '';
 };

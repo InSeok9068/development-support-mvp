@@ -173,6 +173,7 @@ export type WorksRecord = {
 	file?: FileNameString
 	id: string
 	joplin?: string
+	originalFileName?: string
 	redmine?: string
 	scheduledNotifications?: RecordIdString[]
 	sort?: number

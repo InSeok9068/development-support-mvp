@@ -1416,6 +1416,20 @@
         "type": "file"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2542234503",
+        "max": 0,
+        "min": 0,
+        "name": "originalFileName",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
         "hidden": false,
         "id": "jdkwib5n",
         "max": null,

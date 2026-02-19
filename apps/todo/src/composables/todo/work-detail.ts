@@ -78,6 +78,7 @@ export const useWorkDetail = (workId: string | Ref<string>) => {
     payload.append('dueDate', work.dueDate ?? '');
 
     if (files && files.length > 0) {
+      payload.append('originalFileName', files[0]?.name ?? '');
       for (const file of Array.from(files)) {
         payload.append('file', file);
       }
