@@ -1,8 +1,7 @@
 import pb from '@/api/pocketbase';
 
 type StaffAuthProbePayload = {
-  scDayStart?: string;
-  scDayEnd?: string;
+  scDay?: string;
 };
 
 type StaffAuthProbeResponse = {
@@ -17,6 +16,7 @@ type StaffAuthProbeResponse = {
 };
 
 type StaffDiaryAnalyzePayload = {
+  reportDate?: string;
   targets: Array<{
     dept: string;
     position: string;

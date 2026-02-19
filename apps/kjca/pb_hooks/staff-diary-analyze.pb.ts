@@ -17,9 +17,11 @@ routerAdd(
 
     const payload = new DynamicModel({
       targets: [],
+      reportDate: '',
     });
     e.bindBody(payload);
 
+    // ---------- JSON/응답 파싱 유틸 ----------
     const parseJsonSafely = (text, fallback) => {
       try {
         return JSON.parse(text);
@@ -41,6 +43,7 @@ routerAdd(
       return normalized.slice(objectStart, objectEnd + 1).trim();
     };
 
+    // ---------- HTTP 헤더/쿠키 처리 유틸 ----------
     const getHeaderValues = (headers, key) => {
       if (!headers) return [];
 
@@ -121,6 +124,7 @@ routerAdd(
       return redirectRegex.test(text);
     };
 
+    // ---------- 날짜/필터/해시 유틸 ----------
     const decodeHtmlEntities = (text) => {
       const source = String(text ?? '');
       return source
@@ -132,6 +136,38 @@ routerAdd(
         .replace(/&#39;/g, "'");
     };
 
+    const buildTodayDateText = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = `${now.getMonth() + 1}`.padStart(2, '0');
+      const day = `${now.getDate()}`.padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const normalizeReportDate = (value) => {
+      const text = String(value ?? '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+      return buildTodayDateText();
+    };
+
+    const escapeFilterValue = (value) => {
+      return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+    };
+
+    const hashText = (text) => {
+      const source = String(text ?? '');
+      let hash = 0x811c9dc5;
+      for (let i = 0; i < source.length; i += 1) {
+        hash ^= source.charCodeAt(i);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+        hash >>>= 0;
+      }
+      return `${hash.toString(16).padStart(8, '0')}-${source.length}`;
+    };
+
+    // ---------- URL/요청 헤더 구성 유틸 ----------
     const toAbsoluteUrl = (maybeRelativeUrl) => {
       const url = String(maybeRelativeUrl ?? '').trim();
       if (!url) return '';
@@ -171,6 +207,7 @@ routerAdd(
       return headers;
     };
 
+    // ---------- HTML 본문 추출/정규화 유틸 ----------
     const extractDivInnerHtmlByClasses = (html, requiredClasses) => {
       const source = String(html ?? '');
       if (!source) return '';
@@ -235,6 +272,20 @@ routerAdd(
       return value.map((v) => String(v ?? '').trim()).filter((v) => !!v);
     };
 
+    const normalizeJsonArrayField = (value) => {
+      if (Array.isArray(value)) return normalizeStringArray(value);
+      if (value === null || value === undefined) return [];
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        const parsed = parseJsonSafely(trimmed, null);
+        if (Array.isArray(parsed)) return normalizeStringArray(parsed);
+        return normalizeStringArray([trimmed]);
+      }
+      return [];
+    };
+
+    // ---------- 분석/결과 정규화 유틸 ----------
     const inferGemini429Cause = (message, detailsText) => {
       const source = `${String(message ?? '')} ${String(detailsText ?? '')}`.toLowerCase();
       if (!source.trim()) return 'unknown';
@@ -256,14 +307,126 @@ routerAdd(
       return 'unknown';
     };
 
+    const stringifyGeminiErrorDetails = (details) => {
+      if (!Array.isArray(details)) return '';
+      return details
+        .map((detail) => {
+          if (detail === null || detail === undefined) return '';
+          const text = `${detail}`;
+          return text === '[object Object]' ? JSON.stringify(detail) : text;
+        })
+        .join(' | ');
+    };
+
+    const buildAnalyzeResult = (params) => {
+      return {
+        dept: params.dept,
+        position: params.position,
+        staffName: params.staffName,
+        ok: params.ok !== false,
+        error: params.error,
+        promotion: params.promotion ?? [],
+        vacation: params.vacation ?? [],
+        special: params.special ?? [],
+        printUrl: params.printUrl,
+      };
+    };
+
+    const buildPrompt = (params) => {
+      return (
+        '아래는 업무일지 본문 텍스트야. 부서별로 "홍보", "휴가", "특이사항"을 최대한 빠짐없이 추출해.\n' +
+        '반드시 코드펜스 없이 JSON 객체만 반환해.\n' +
+        '추출할 내용이 없으면 해당 배열은 빈 배열([])로 반환.\n' +
+        '\n' +
+        '응답 스키마:\n' +
+        '{\n' +
+        '  "promotion": ["string"],\n' +
+        '  "vacation": ["string"],\n' +
+        '  "special": ["string"]\n' +
+        '}\n' +
+        '\n' +
+        `부서: ${params.dept}\n` +
+        (params.staffName ? `성명: ${params.staffName}\n` : '') +
+        '\n' +
+        '본문:\n' +
+        params.docText
+      );
+    };
+
+    const cacheCollectionName = 'staff_diary_analysis_cache';
+    const geminiModelName = 'gemini-2.5-flash-lite';
+
+    // ---------- 캐시 조회 키(일자+부서+원본+해시) 구성 ----------
+    const buildCacheIdentityFilter = (params) => {
+      return (
+        `reportDate = '${escapeFilterValue(params.reportDate)}'` +
+        ` && dept = '${escapeFilterValue(params.dept)}'` +
+        ` && printUrl = '${escapeFilterValue(params.printUrl)}'` +
+        ` && sourceHash = '${escapeFilterValue(params.sourceHash)}'`
+      );
+    };
+
+    const findSuccessCache = (params) => {
+      const filter = `${buildCacheIdentityFilter(params)} && status = 'success'`;
+
+      try {
+        return $app.findFirstRecordByFilter(cacheCollectionName, filter);
+      } catch {
+        return null;
+      }
+    };
+
+    const upsertSuccessCache = (params) => {
+      try {
+        const collection = $app.findCollectionByNameOrId(cacheCollectionName);
+        const lookupFilter = buildCacheIdentityFilter(params);
+
+        let record = null;
+        try {
+          record = $app.findFirstRecordByFilter(cacheCollectionName, lookupFilter);
+        } catch {
+          record = null;
+        }
+
+        const targetRecord = record || new Record(collection);
+        targetRecord.set('reportDate', params.reportDate);
+        targetRecord.set('dept', params.dept);
+        targetRecord.set('position', params.position);
+        targetRecord.set('staffName', params.staffName);
+        targetRecord.set('printUrl', params.printUrl);
+        targetRecord.set('sourceHash', params.sourceHash);
+        targetRecord.set('promotion', params.promotion ?? []);
+        targetRecord.set('vacation', params.vacation ?? []);
+        targetRecord.set('special', params.special ?? []);
+        targetRecord.set('status', 'success');
+        targetRecord.set('errorMessage', '');
+        targetRecord.set('model', geminiModelName);
+        targetRecord.set('promptVersion', 1);
+        $app.save(targetRecord);
+      } catch (error) {
+        logger.warn(
+          'cache upsert skipped',
+          'dept',
+          params.dept,
+          'reportDate',
+          params.reportDate,
+          'error',
+          `${error}`,
+        );
+      }
+    };
+
+    // ---------- 메인 요청 처리 ----------
     try {
       const requestStartedAt = nowMs();
 
+      // 1) 요청/권한/필수 설정값 검증
       if (!e.auth) {
         return e.error(401, '인증이 필요합니다.', {});
       }
 
       const targets = Array.isArray(payload.targets) ? payload.targets : [];
+      const reportDate = normalizeReportDate(payload.reportDate);
       if (!targets.length) {
         return e.error(400, 'targets가 필요합니다.', {});
       }
@@ -302,7 +465,7 @@ routerAdd(
 
       let sessionCookie = '';
 
-      // 1) 초기 세션 쿠키 확보
+      // 2) KJCA 로그인 세션 확보 (사전 auth 진입 -> 로그인)
       const authInitStartedAt = nowMs();
       const staffAuthInitResponse = $http.send({
         url: staffAuthUrl,
@@ -318,7 +481,6 @@ routerAdd(
         toMsText(nowMs() - authInitStartedAt),
       );
 
-      // 2) 로그인
       const loginBody =
         `url=${encodeURIComponent('/board/admin')}` +
         '&sf_mobile_key=' +
@@ -356,7 +518,7 @@ routerAdd(
       let stoppedReason = '';
       let alertMessage = '';
 
-      // 3) 각 링크 접속 -> div.doc_text.editor -> Gemini 추출
+      // 3) 타겟별 처리: 원문 조회 -> 본문 추출 -> 캐시 조회 -> AI 분석 -> 캐시 저장
       for (let i = 0; i < targets.length; i += 1) {
         const targetStartedAt = nowMs();
         const target = targets[i] || {};
@@ -413,42 +575,43 @@ routerAdd(
           toMsText(nowMs() - detailStartedAt),
         );
 
+        // 3-1) 페이지 접근 실패/인증 요구 처리
         if (detailResponse.statusCode < 200 || detailResponse.statusCode >= 300) {
-          results.push({
-            dept,
-            position,
-            staffName,
-            ok: false,
-            error: `원본 페이지 조회 실패 (HTTP ${detailResponse.statusCode})`,
-            promotion: [],
-            vacation: [],
-            special: [],
-            printUrl,
-          });
+          results.push(
+            buildAnalyzeResult({
+              dept,
+              position,
+              staffName,
+              ok: false,
+              error: `원본 페이지 조회 실패 (HTTP ${detailResponse.statusCode})`,
+              printUrl,
+            }),
+          );
           continue;
         }
 
         if (detectAuthRequiredHtml(detailHtml)) {
           logger.warn('target auth required', 'index', i, 'dept', dept, 'elapsed', toMsText(nowMs() - targetStartedAt));
-          results.push({
-            dept,
-            position,
-            staffName,
-            ok: false,
-            error: '로그인이 필요합니다.',
-            promotion: [],
-            vacation: [],
-            special: [],
-            printUrl,
-          });
+          results.push(
+            buildAnalyzeResult({
+              dept,
+              position,
+              staffName,
+              ok: false,
+              error: '로그인이 필요합니다.',
+              printUrl,
+            }),
+          );
           continue;
         }
 
+        // 3-2) 본문(doc_text) 추출 및 텍스트 정규화
         const extractStartedAt = nowMs();
         const docInnerHtml =
           extractDivInnerHtmlByClasses(detailHtml, ['doc_text', 'editor']) ||
           extractDivInnerHtmlByClasses(detailHtml, ['doc_text']);
         const docText = htmlToText(docInnerHtml);
+        const sourceHash = hashText(docText);
         logger.info(
           'doc_text extracted',
           'index',
@@ -457,6 +620,8 @@ routerAdd(
           String(docInnerHtml ?? '').length,
           'docTextLength',
           docText.length,
+          'sourceHash',
+          sourceHash,
           'elapsed',
           toMsText(nowMs() - extractStartedAt),
         );
@@ -471,17 +636,16 @@ routerAdd(
             'elapsed',
             toMsText(nowMs() - targetStartedAt),
           );
-          results.push({
-            dept,
-            position,
-            staffName,
-            ok: false,
-            error: `본문 영역(doc_text)을 찾지 못했습니다. (HTTP ${detailResponse.statusCode})`,
-            promotion: [],
-            vacation: [],
-            special: [],
-            printUrl,
-          });
+          results.push(
+            buildAnalyzeResult({
+              dept,
+              position,
+              staffName,
+              ok: false,
+              error: `본문 영역(doc_text)을 찾지 못했습니다. (HTTP ${detailResponse.statusCode})`,
+              printUrl,
+            }),
+          );
           continue;
         }
 
@@ -493,23 +657,53 @@ routerAdd(
           docText.length > 240 ? `${docText.slice(0, 240)}...` : docText,
         );
 
-        const prompt =
-          '아래는 업무일지 본문 텍스트야. 부서별로 "홍보", "휴가", "특이사항"을 최대한 빠짐없이 추출해.\n' +
-          '반드시 코드펜스 없이 JSON 객체만 반환해.\n' +
-          '추출할 내용이 없으면 해당 배열은 빈 배열([])로 반환.\n' +
-          '\n' +
-          '응답 스키마:\n' +
-          '{\n' +
-          '  "promotion": ["string"],\n' +
-          '  "vacation": ["string"],\n' +
-          '  "special": ["string"]\n' +
-          '}\n' +
-          '\n' +
-          `부서: ${dept}\n` +
-          (staffName ? `성명: ${staffName}\n` : '') +
-          '\n' +
-          '본문:\n' +
-          docText;
+        // 3-3) 동일 원문 캐시 hit 시 AI 호출 없이 즉시 반환
+        const cachedRecord = findSuccessCache({
+          reportDate,
+          dept,
+          printUrl,
+          sourceHash,
+        });
+        if (cachedRecord) {
+          const cachedPromotion = normalizeJsonArrayField(cachedRecord.get('promotion'));
+          const cachedVacation = normalizeJsonArrayField(cachedRecord.get('vacation'));
+          const cachedSpecial = normalizeJsonArrayField(cachedRecord.get('special'));
+          logger.info(
+            'cache hit',
+            'index',
+            i,
+            'dept',
+            dept,
+            'reportDate',
+            reportDate,
+            'promotionCount',
+            cachedPromotion.length,
+            'vacationCount',
+            cachedVacation.length,
+            'specialCount',
+            cachedSpecial.length,
+          );
+          results.push(
+            buildAnalyzeResult({
+              dept,
+              position,
+              staffName,
+              ok: true,
+              promotion: cachedPromotion,
+              vacation: cachedVacation,
+              special: cachedSpecial,
+              printUrl,
+            }),
+          );
+          continue;
+        }
+
+        // 3-4) AI 분석 요청
+        const prompt = buildPrompt({
+          dept,
+          staffName,
+          docText,
+        });
 
         const geminiPayload = {
           contents: [
@@ -525,7 +719,7 @@ routerAdd(
 
         const geminiStartedAt = nowMs();
         const geminiResponse = $http.send({
-          url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
+          url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`,
           method: 'POST',
           body: JSON.stringify(geminiPayload),
           headers: {
@@ -540,15 +734,7 @@ routerAdd(
         const geminiError = parsedErrorBody?.error ?? {};
         const geminiErrorStatus = String(geminiError?.status ?? '').trim();
         const geminiErrorMessage = String(geminiError?.message ?? '').trim();
-        const geminiErrorDetailsText = Array.isArray(geminiError?.details)
-          ? geminiError.details
-              .map((detail) => {
-                if (detail === null || detail === undefined) return '';
-                const text = `${detail}`;
-                return text === '[object Object]' ? JSON.stringify(detail) : text;
-              })
-              .join(' | ')
-          : '';
+        const geminiErrorDetailsText = stringifyGeminiErrorDetails(geminiError?.details);
         const retryAfter = getHeaderValues(geminiResponse.headers, 'Retry-After')[0] ?? '';
         const rateLimitRelatedHeaders = {
           retryAfter,
@@ -608,18 +794,18 @@ routerAdd(
           );
         }
 
+        // 3-5) 실패 시 중단 조건(쿼터 소진) 확인
         if (!isSuccess) {
-          results.push({
-            dept,
-            position,
-            staffName,
-            ok: false,
-            error: `AI 요청 실패 (HTTP ${geminiResponse.statusCode})`,
-            promotion: [],
-            vacation: [],
-            special: [],
-            printUrl,
-          });
+          results.push(
+            buildAnalyzeResult({
+              dept,
+              position,
+              staffName,
+              ok: false,
+              error: `AI 요청 실패 (HTTP ${geminiResponse.statusCode})`,
+              printUrl,
+            }),
+          );
 
           if (rateLimitCauseGuess === 'quota-or-billing-limit') {
             stoppedReason = 'quota-exceeded';
@@ -640,11 +826,15 @@ routerAdd(
           continue;
         }
 
+        // 3-6) AI 응답 파싱/정규화 후 캐시 저장
         const parseStartedAt = nowMs();
         const geminiPayloadJson = parseJsonSafely(responseBody, {});
         const geminiText = geminiPayloadJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
         const normalizedJsonText = extractJsonObjectText(geminiText);
         const parsed = parseJsonSafely(normalizedJsonText, {});
+        const promotion = normalizeStringArray(parsed?.promotion);
+        const vacation = normalizeStringArray(parsed?.vacation);
+        const special = normalizeStringArray(parsed?.special);
         logger.info(
           'gemini parsed',
           'index',
@@ -652,23 +842,37 @@ routerAdd(
           'elapsed',
           toMsText(nowMs() - parseStartedAt),
           'promotionCount',
-          Array.isArray(parsed?.promotion) ? parsed.promotion.length : 0,
+          promotion.length,
           'vacationCount',
-          Array.isArray(parsed?.vacation) ? parsed.vacation.length : 0,
+          vacation.length,
           'specialCount',
-          Array.isArray(parsed?.special) ? parsed.special.length : 0,
+          special.length,
         );
 
-        results.push({
+        upsertSuccessCache({
+          reportDate,
           dept,
           position,
           staffName,
-          ok: true,
-          promotion: normalizeStringArray(parsed?.promotion),
-          vacation: normalizeStringArray(parsed?.vacation),
-          special: normalizeStringArray(parsed?.special),
           printUrl,
+          sourceHash,
+          promotion,
+          vacation,
+          special,
         });
+
+        results.push(
+          buildAnalyzeResult({
+            dept,
+            position,
+            staffName,
+            ok: true,
+            promotion,
+            vacation,
+            special,
+            printUrl,
+          }),
+        );
 
         logger.info('target completed', 'index', i, 'dept', dept, 'elapsed', toMsText(nowMs() - targetStartedAt));
       }

@@ -26,9 +26,8 @@
           <div class="flex flex-col gap-4">
             <div class="text-sm font-semibold">조회 조건</div>
 
-            <div class="grid grid-cols-2 gap-3">
-              <sl-input v-model="scDayStart" label="조회 시작일" type="date"></sl-input>
-              <sl-input v-model="scDayEnd" label="조회 종료일" type="date"></sl-input>
+            <div class="grid grid-cols-1 gap-3">
+              <sl-input v-model="scDay" label="조회일" type="date"></sl-input>
             </div>
 
             <div class="flex items-center justify-between gap-3">
@@ -221,8 +220,7 @@ import { readShoelaceChecked } from '@packages/ui';
 const router = useRouter();
 const { authRecord, isSignedIn, signOut } = useAuth();
 const { fetchStaffAuthProbe, fetchStaffDiaryAnalyze } = useKjca();
-const scDayStart = ref(buildTodayText());
-const scDayEnd = ref(buildTodayText());
+const scDay = ref(buildTodayText());
 const lastDiaryAccessible = ref<boolean | null>(null);
 const teamLeadRows = ref<Array<{ dept: string; position: string; staffName: string; printUrl: string }>>([]);
 const isAnalyzing = ref(false);
@@ -306,8 +304,7 @@ const onClickSignOut = () => {
 
 const onClickCallStaffAuthProbe = async () => {
   const response = await fetchStaffAuthProbe({
-    scDayStart: scDayStart.value,
-    scDayEnd: scDayEnd.value,
+    scDay: scDay.value,
   });
 
   lastDiaryAccessible.value = response.isDiaryAccessible;
@@ -331,7 +328,9 @@ const onClickAnalyzeDiary = async () => {
 
   try {
     const targets = testAnalyzeOneOnly.value ? teamLeadRows.value.slice(0, 1) : teamLeadRows.value;
+    const reportDate = String(scDay.value || buildTodayText()).trim();
     const response = await fetchStaffDiaryAnalyze({
+      reportDate,
       targets: targets.map((row) => ({
         dept: row.dept,
         position: row.position,

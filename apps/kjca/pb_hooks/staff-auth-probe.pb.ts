@@ -13,8 +13,7 @@ routerAdd(
     const staffAuthUrl = `${host}/staff/auth`;
 
     const payload = new DynamicModel({
-      scDayStart: '',
-      scDayEnd: '',
+      scDay: '',
     });
     e.bindBody(payload);
 
@@ -235,8 +234,7 @@ routerAdd(
     };
 
     try {
-      const scDayStart = String(payload.scDayStart ?? '').trim();
-      const scDayEnd = String(payload.scDayEnd ?? '').trim();
+      const scDay = String(payload.scDay ?? '').trim();
 
       if (!e.auth) {
         return e.error(401, '인증이 필요합니다.', {});
@@ -265,7 +263,7 @@ routerAdd(
       let loginSetCookieCount = 0;
       let loginRedirectTo = '';
 
-      logger.info('request started', 'scDayStart', scDayStart, 'scDayEnd', scDayEnd);
+      logger.info('request started', 'scDay', scDay);
 
       // 브라우저처럼 먼저 /staff/auth로 진입해서 기본 세션 쿠키를 확보한다.
       const staffAuthInitResponse = $http.send({
@@ -332,14 +330,14 @@ routerAdd(
         return e.error(500, '세션 쿠키를 확보하지 못했습니다.', {});
       }
 
-      if (!scDayStart || !scDayEnd) {
-        return e.error(400, '조회 날짜(scDayStart, scDayEnd)가 필요합니다.', {});
+      if (!scDay) {
+        return e.error(400, '조회 날짜(scDay)가 필요합니다.', {});
       }
 
       const diaryListUrl =
         `${host}/diary/?site=groupware&mn=1450&bd_type=1&sc_sort=bd_insert_date&sc_ord=desc` +
-        `&sc_day_start=${encodeURIComponent(scDayStart)}` +
-        `&sc_day_end=${encodeURIComponent(scDayEnd)}` +
+        `&sc_day_start=${encodeURIComponent(scDay)}` +
+        `&sc_day_end=${encodeURIComponent(scDay)}` +
         '&sc_my_insert=Y&sc_my_appr=Y&sc_appr_type1=&sc_appr_type2=&sc_appr_type3=&sc_sf_name=';
 
       const diaryResponse = $http.send({

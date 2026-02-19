@@ -11,6 +11,7 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	StaffDiaryAnalysisCache = "staff_diary_analysis_cache",
 	Users = "users",
 }
 
@@ -92,6 +93,28 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum StaffDiaryAnalysisCacheStatusOptions {
+	"success" = "success",
+	"failed" = "failed",
+}
+export type StaffDiaryAnalysisCacheRecord<Tpromotion = unknown, Tspecial = unknown, Tvacation = unknown> = {
+	created: IsoAutoDateString
+	dept: string
+	errorMessage?: string
+	id: string
+	model?: string
+	printUrl: string
+	promotion?: null | Tpromotion
+	promptVersion?: number
+	reportDate: IsoDateString
+	sourceHash: string
+	special?: null | Tspecial
+	staffName?: string
+	status?: StaffDiaryAnalysisCacheStatusOptions
+	updated: IsoAutoDateString
+	vacation?: null | Tvacation
+}
+
 export type UsersRecord = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
@@ -112,6 +135,7 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type StaffDiaryAnalysisCacheResponse<Tpromotion = unknown, Tspecial = unknown, Tvacation = unknown, Texpand = unknown> = Required<StaffDiaryAnalysisCacheRecord<Tpromotion, Tspecial, Tvacation>> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -122,6 +146,7 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	staff_diary_analysis_cache: StaffDiaryAnalysisCacheRecord
 	users: UsersRecord
 }
 
@@ -131,6 +156,7 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	staff_diary_analysis_cache: StaffDiaryAnalysisCacheResponse
 	users: UsersResponse
 }
 
