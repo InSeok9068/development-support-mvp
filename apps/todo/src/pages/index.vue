@@ -82,11 +82,12 @@
         @update:model-value="onUpdateWorkList"
         @end="onDropWork"
       >
-        <TransitionGroup tag="ul" name="list" class="sort-target mt-4 space-y-3 sm:space-y-4">
+        <TransitionGroup tag="ul" name="list" class="sort-target mt-4">
           <li
-            v-for="work in works"
+            v-for="(work, index) in works"
             :key="work.id"
-            class="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow dark:border-slate-700 dark:bg-slate-900"
+            class="rounded-lg border bg-white px-4 py-3 shadow-sm transition hover:shadow dark:bg-slate-900"
+            :class="buildWorkCardClass(work, index)"
           >
             <div class="flex items-start justify-between gap-4">
               <div class="min-w-0">
@@ -121,9 +122,7 @@
                   <div
                     class="flex items-center justify-between gap-3"
                     :class="{
-                      'animate-pulse font-bold text-red-500': dayjs(work.dueDate).isBefore(
-                        dayjs().add(setting.daysBefore, 'd'),
-                      ),
+                      'animate-pulse font-bold text-red-500': isUrgentWork(work),
                     }"
                   >
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">마감일자</span>
@@ -221,6 +220,23 @@ const onInputWorkTitle = (event: Event) => {
 const onClickSelectDeveloper = (developer: DevelopersResponse | string) => {
   selectDeveloper.value = developer;
   fetchWorkFullListFilterDeveloper(developer);
+};
+
+const isUrgentWork = (work: WorksResponse) => {
+  if (!work.dueDate) {
+    return false;
+  }
+
+  return dayjs(work.dueDate).isBefore(dayjs().add(setting.value.daysBefore, 'd'));
+};
+
+const buildWorkCardClass = (work: WorksResponse, index: number) => {
+  const urgent = isUrgentWork(work);
+  return {
+    'mt-3 sm:mt-4': index > 0,
+    'border-slate-200 dark:border-slate-700': !urgent,
+    'border-red-400 dark:border-red-500': urgent,
+  };
 };
 
 const fetchWorkFullListFilterDeveloper = (developer: DevelopersResponse | string | undefined) => {
