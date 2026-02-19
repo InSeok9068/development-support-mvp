@@ -132,10 +132,6 @@ routerAdd(
         .replace(/&#39;/g, "'");
     };
 
-    const stripTags = (html) => {
-      return decodeHtmlEntities(String(html ?? '').replace(/<[^>]*>/g, '')).trim();
-    };
-
     const toAbsoluteUrl = (maybeRelativeUrl) => {
       const url = String(maybeRelativeUrl ?? '').trim();
       if (!url) return '';
@@ -216,11 +212,20 @@ routerAdd(
 
     const htmlToText = (html) => {
       const normalized = String(html ?? '')
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
         .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(td|th)>/gi, '\t')
+        .replace(/<\/tr>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
         .replace(/<\/div>/gi, '\n')
-        .replace(/<\/li>/gi, '\n');
-      return stripTags(normalized)
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<li\b[^>]*>/gi, '- ');
+      return decodeHtmlEntities(normalized.replace(/<[^>]*>/g, ' '))
+        .replace(/\r/g, '')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n[ \t]+/g, '\n')
+        .replace(/\t+/g, ' | ')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
     };
