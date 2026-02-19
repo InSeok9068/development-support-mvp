@@ -254,18 +254,27 @@
                 </sl-button>
                 <input id="fileInput" ref="fileInput" type="file" class="hidden" @change="onChangeFileInput" />
               </div>
-              <div v-show="selectedFileName" class="mt-3">
-                <sl-tag size="small">선택한 파일: {{ selectedFileName }}</sl-tag>
+              <div v-show="selectedFileName" class="mt-3 grid gap-2">
+                <div class="flex items-center gap-2 rounded-md border p-2">
+                  <sl-tag size="small">선택파일</sl-tag>
+                  <span class="min-w-0 flex-1 text-sm font-semibold">
+                    {{ selectedFileName }}
+                  </span>
+                </div>
               </div>
-              <div v-show="work.file" class="mt-3 flex items-center gap-2">
-                <a :href="getWorkFileUrl(work, work.file)" target="_blank">
-                  {{ work.originalFileName || work.file }}
-                </a>
-                <sl-icon
-                  name="trash"
-                  class="cursor-pointer"
-                  @click.stop.prevent="onClickDeleteWorkFile(work)"
-                ></sl-icon>
+              <div v-show="!work.file" class="mt-3">
+                <sl-tag size="small">등록된 파일이 없습니다</sl-tag>
+              </div>
+              <div v-show="work.file" class="mt-3 grid gap-2">
+                <div class="flex items-center gap-2 rounded-md border p-2">
+                  <sl-tag size="small">첨부파일</sl-tag>
+                  <a :href="getWorkFileUrl(work, work.file)" target="_blank" class="min-w-0 flex-1 text-sm font-semibold">
+                    {{ work.originalFileName || work.file }}
+                  </a>
+                  <sl-button size="small" variant="text" @click.stop.prevent="onClickDeleteWorkFile(work)">
+                    삭제
+                  </sl-button>
+                </div>
               </div>
             </div>
 
