@@ -100,33 +100,33 @@
                   </h6>
                 </div>
                 <div
-                  class="mt-2 grid gap-y-2 text-xs text-slate-600 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 dark:text-slate-300"
+                  class="mt-2 grid gap-y-2 text-xs text-slate-600 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_11rem] dark:text-slate-300"
                 >
-                  <div class="flex items-center justify-between gap-3">
+                  <div class="grid grid-cols-[3.75rem_minmax(0,1fr)] items-center gap-2">
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">개발자</span>
-                    <span class="text-right">
-                      {{ developers.find((developer: DevelopersResponse) => developer.id === work.developer)?.name }}
+                    <span class="min-w-0 text-right">
+                      {{ getDeveloperName(work.developer) }}
                     </span>
                   </div>
-                  <div class="flex items-center justify-between gap-3">
+                  <div class="grid grid-cols-[3.75rem_minmax(0,1fr)] items-center gap-2">
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">상태</span>
-                    <span class="text-right">
-                      <sl-icon :name="getCodeClass('workState', work.state)"> </sl-icon>
-                      {{ getCodeDesc('workState', work.state) }}
+                    <span class="inline-flex min-w-0 items-center justify-end gap-1">
+                      <sl-icon v-show="getWorkStateClass(work.state)" :name="getWorkStateClass(work.state)"> </sl-icon>
+                      <span class="truncate">{{ getWorkStateDesc(work.state) }}</span>
                     </span>
                   </div>
-                  <div class="hidden items-center justify-between gap-3 sm:flex">
+                  <div class="hidden grid-cols-[3.75rem_minmax(0,1fr)] items-center gap-2 sm:grid">
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">등록일자</span>
                     <span class="text-right">{{ dayjs(work.created).format('YYYY-MM-DD') }}</span>
                   </div>
                   <div
-                    class="flex items-center justify-between gap-3"
+                    class="grid grid-cols-[3.75rem_minmax(0,1fr)] items-center gap-2"
                     :class="{
                       'animate-pulse font-bold text-red-500': isUrgentWork(work),
                     }"
                   >
                     <span class="min-w-15 font-semibold text-slate-500 dark:text-slate-400">마감일자</span>
-                    <span class="text-right">{{ work.dueDate && dayjs(work.dueDate).format('YYYY-MM-DD') }}</span>
+                    <span class="text-right">{{ work.dueDate ? dayjs(work.dueDate).format('YYYY-MM-DD') : '-' }}</span>
                   </div>
                 </div>
               </div>
@@ -229,6 +229,13 @@ const isUrgentWork = (work: WorksResponse) => {
 
   return dayjs(work.dueDate).isBefore(dayjs().add(setting.value.daysBefore, 'd'));
 };
+
+const getDeveloperName = (developerId: string | undefined) =>
+  developers.value.find((developer: DevelopersResponse) => developer.id === developerId)?.name ?? '-';
+
+const getWorkStateClass = (state: string | undefined) => getCodeClass('workState', state ?? '') ?? '';
+
+const getWorkStateDesc = (state: string | undefined) => getCodeDesc('workState', state ?? '') ?? '-';
 
 const buildWorkCardClass = (work: WorksResponse, index: number) => {
   const urgent = isUrgentWork(work);
