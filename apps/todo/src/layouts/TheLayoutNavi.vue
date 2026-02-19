@@ -4,7 +4,6 @@
       <RouterLink to="/" class="text-lg font-semibold tracking-tight">업무관리</RouterLink>
       <div class="sm:hidden">
         <sl-dropdown placement="bottom-start">
-          <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
           <sl-button slot="trigger" variant="text">
             <sl-icon name="list-ul"></sl-icon>
           </sl-button>
@@ -42,7 +41,6 @@
 
     <div class="flex items-center gap-2">
       <sl-dropdown placement="bottom-end">
-        <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
         <sl-button slot="trigger" size="small" variant="text">
           <sl-icon name="gear-fill"></sl-icon>
         </sl-button>

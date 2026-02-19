@@ -40,7 +40,6 @@
                     <template v-for="state in getCodesByType('workState')" :key="state.value">
                       <sl-radio-button :value="state.value">
                         {{ state.desc }}
-                        <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
                         <sl-icon slot="suffix" :name="state.class"></sl-icon>
                       </sl-radio-button>
                     </template>
@@ -61,21 +60,22 @@
 
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
-                <div>
-                  <h5 class="font-semibold">레드마인</h5>
-                  <a href="https://pms.kpcard.co.kr/projects/palrago/issues/new" target="_blank" class="text-xs">
-                    (+)일감 생성
-                  </a>
+                <h5 class="font-semibold">레드마인</h5>
+                <div class="ml-auto flex items-center gap-1">
+                  <sl-button
+                    size="small"
+                    variant="text"
+                    href="https://pms.kpcard.co.kr/projects/palrago/issues/new"
+                    target="_blank"
+                  >
+                    <sl-icon slot="prefix" name="plus-lg"></sl-icon>
+                    일감 생성
+                  </sl-button>
+                  <sl-button v-show="work.redmine" size="small" variant="text" @click="onClickRedmine(work.redmine)">
+                    <sl-icon slot="prefix" name="box-arrow-up-right"></sl-icon>
+                    열기
+                  </sl-button>
                 </div>
-                <sl-button
-                  v-show="work.redmine"
-                  class="ml-auto"
-                  size="small"
-                  variant="text"
-                  @click="onClickRedmine(work.redmine)"
-                >
-                  열기
-                </sl-button>
               </div>
               <div class="grid gap-3">
                 <sl-input v-model="work.redmine" type="url" placeholder="레드마인 URL"></sl-input>
@@ -248,7 +248,6 @@
               <h5 class="mb-3 font-semibold">첨부파일</h5>
               <div class="flex flex-wrap items-center gap-2">
                 <sl-button size="small" variant="default" @click="onClickSelectFile">
-                  <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
                   <sl-icon slot="prefix" name="paperclip"></sl-icon>
                   파일 선택
                 </sl-button>

@@ -13,7 +13,6 @@
         <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep1" :key="code.value">
             <sl-card class="w-full md:min-w-0 md:flex-1">
-              <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
@@ -89,7 +88,6 @@
         <div class="flex flex-col gap-4 md:flex-row md:pb-2">
           <template v-for="code in workStateCodesStep2" :key="code.value">
             <sl-card class="w-full md:min-w-0 md:flex-1">
-              <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
               <div slot="header">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">

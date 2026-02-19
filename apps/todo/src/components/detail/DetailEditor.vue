@@ -66,13 +66,11 @@
       </sl-button-group>
 
       <sl-dropdown class="ml-auto" placement="bottom-end">
-        <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
         <sl-button slot="trigger" size="small" :disabled="!editor" caret>
           <sl-icon name="three-dots"></sl-icon>
           더보기
         </sl-button>
         <sl-menu class="editor-more-actions-menu" @sl-select="onSlSelectMoreActions">
-          <!-- eslint-disable vue/no-deprecated-slot-attribute -->
           <sl-menu-item value="paragraph">
             <sl-icon slot="prefix" name="paragraph"></sl-icon>
             본문
@@ -120,7 +118,6 @@
             <sl-icon slot="prefix" name="eraser"></sl-icon>
             서식 지우기
           </sl-menu-item>
-          <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         </sl-menu>
       </sl-dropdown>
 

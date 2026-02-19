@@ -26,7 +26,6 @@
           </div>
 
           <sl-dropdown>
-            <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
             <sl-icon-button slot="trigger" name="list" label="메뉴"></sl-icon-button>
             <sl-menu>
               <sl-menu-item v-if="!isAuth" @click="onClickGoSignin"> 로그인 </sl-menu-item>
@@ -68,7 +67,6 @@
                 {{ selectedFileName || '선택된 파일 없음' }}
               </div>
               <sl-button variant="default" size="small" @click="onClickSelectFile">
-                <!-- eslint-disable-next-line vue/no-deprecated-slot-attribute -->
                 <sl-icon slot="prefix" name="upload"></sl-icon>
                 파일 선택
               </sl-button>

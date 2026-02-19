@@ -26,7 +26,7 @@ export default defineConfig(
   },
   ...eslintCustomRuleConfig,
   {
-    files: ['apps/*/src/pages/**/*.vue', 'packages/src/**/*.vue'],
+    files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
       'vue/no-deprecated-slot-attribute': 'off', // shoelace
       'vue/multi-word-component-names': 'off', // unplugin-vue-router
