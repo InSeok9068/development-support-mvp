@@ -151,6 +151,11 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 - Realtime subscribe는 PocketBase 규칙이며 `#### Realtime subscribe 규칙` 섹션을 참고한다.
 - 스키마 정보는 pocketbase-types.ts를 통해 타입으로 추론할 수 있다.
 - 스키마 변경이 필요한 경우 사전 리뷰를 거친다.
+- PocketBase 작업 시 참고 문서는 아래 기준으로 사용한다.
+  - 클라이언트 SDK 작업: `.docs/pocketbase-sdk.md`
+  - `pb_hooks` 서버 확장 작업 또는 API 사용/레퍼런스 확인: `.docs/pocketbase-llms-full.md`
+- 위 두 문서는 전체를 한 번에 읽지 않는다.
+  - 현재 작업에서 이해가 필요한 주제만 키워드/헤더로 찾아 해당 구간만 부분 조회한다.
 
 #### PocketBase JS Hook (`pb_hooks`) 작성 규칙
 
