@@ -16,7 +16,6 @@
     "lint:format": "pnpm -C apps/todo lint:format",
     "test": "pnpm -C apps/todo test",
     "test:ui": "pnpm -C apps/todo test:ui",
-
     "todo:dev": "pnpm --filter @apps/todo dev",
     "todo:build": "pnpm --filter @apps/todo build",
     "todo:preview": "pnpm --filter @apps/todo preview",
@@ -28,7 +27,6 @@
     "todo:test:ui": "pnpm --filter @apps/todo test:ui",
     "todo:pb:dev": "pnpm --filter @apps/todo pb:dev",
     "todo:pb:hook": "pnpm --filter @apps/todo pb:hook",
-
     "portfolio:dev": "pnpm --filter @apps/portfolio dev",
     "portfolio:build": "pnpm --filter @apps/portfolio build",
     "portfolio:preview": "pnpm --filter @apps/portfolio preview",
@@ -40,7 +38,6 @@
     "portfolio:test:ui": "pnpm --filter @apps/portfolio test:ui",
     "portfolio:pb:dev": "pnpm --filter @apps/portfolio pb:dev",
     "portfolio:pb:hook": "pnpm --filter @apps/portfolio pb:hook",
-
     "kjca:dev": "pnpm --filter @apps/kjca dev",
     "kjca:build": "pnpm --filter @apps/kjca build",
     "kjca:preview": "pnpm --filter @apps/kjca preview",
@@ -52,7 +49,6 @@
     "kjca:test:ui": "pnpm --filter @apps/kjca test:ui",
     "kjca:pb:dev": "pnpm --filter @apps/kjca pb:dev",
     "kjca:pb:hook": "pnpm --filter @apps/kjca pb:hook",
-
     "stylemate:dev": "pnpm --filter @apps/stylemate dev",
     "stylemate:build": "pnpm --filter @apps/stylemate build",
     "stylemate:preview": "pnpm --filter @apps/stylemate preview",
@@ -101,7 +97,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^9.39.3",
     "@tailwindcss/vite": "^4.2.0",
     "@tanstack/vue-query-devtools": "^6.1.5",
     "@types/node": "^25.3.0",
@@ -111,7 +107,7 @@
     "@vitest/ui": "^4.0.18",
     "@vue/tsconfig": "^0.7.0",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.3.0",
@@ -129,6 +125,6 @@
     "vite-plugin-vue-devtools": "^8.0.6",
     "vitest": "^4.0.18",
     "vue-eslint-parser": "^10.4.0",
-    "vue-tsc": "^3.2.4"
+    "vue-tsc": "^3.2.5"
   }
 }
