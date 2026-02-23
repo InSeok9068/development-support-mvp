@@ -379,9 +379,10 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 
 | 제목                   | 기능             |
 | :--------------------- | :--------------- |
+| @formkit/auto-animate  | 자동 애니메이션  |
 | vueuse                 | Vue 유틸         |
 | es-toolkit             | JS 유틸          |
-| ag-grid-vue            | 테이블           |
+| ag-grid-vue3           | 테이블           |
 | chart.js + vue-chartjs | 차트             |
 | dayjs                  | 날짜 유틸        |
 | dhtmlx-gantt           | Gantt 차트       |
@@ -389,6 +390,7 @@ onMounted(() => subscribeTodosRealtime(() => toast('변경됨')));
 | tiptap                 | 텍스트 에디터    |
 | tippy.js               | 툴팁             |
 | turndown               | HTML To Markdown |
+| vue-draggable-plus     | 드래그 앤 드롭   |
 | validator              | 문자열 검증      |
 
 > 단, 기본 원칙은 다음과 같다.
