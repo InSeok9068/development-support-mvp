@@ -121,3 +121,16 @@ firebase deploy
 | 제목         | 기능                  |
 | :----------- | :-------------------- |
 | vee-validate | 폼 입력 검증 컴포지션 |
+
+---
+
+## PWA 푸시 옵션
+
+- PWA 푸시 알림은 `OneSignal` 또는 `Firebase Cloud Messaging(FCM)`을 활용한다.
+
+---
+
+## 앱/데스크톱 배포 선택지
+
+- 웹앱을 모바일 앱으로 배포하고 싶다면 `Capacitor` 도입을 우선 검토한다.
+- 웹앱을 데스크톱 도구로 배포하고 싶다면 `Electron` 도입을 우선 검토한다.
