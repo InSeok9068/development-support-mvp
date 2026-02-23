@@ -90,36 +90,20 @@ firebase deploy
 
 #### UI
 
-| 제목       | 기능                      |
-| :--------- | :------------------------ |
-| picocss    | Minimal CSS Framework ⭐  |
-| primevue   | UI Component Framework ⭐ |
-| shacdn/vue | UI Component Framework    |
-| beercss    | CSS Framework ⭐          |
-| bootstrap  | CSS Framework             |
-| bulma      | CSS Framework             |
-| daisyui    | CSS Framework             |
-| open-props | CSS Variables             |
-
-**※ 고려사항** </br>
-
-- CSS Framework
-  - 자바스크립트 프레임워크랑 강결합 되어있지 않아 지속성 항샹
-  - 컴포넌트의 선택지가 `UI Component Framework`보다 적음
-  - 자바스크립트 종속성이 없어 단순한 UI 영역만 디자인되어짐
-  - UI에 대한 제어권을 가지고 있음
-- UI Component Framework :
-  - 자바스크립트 프레임워크랑 강결합 되어있어 생산성 향상
-  - 컴포넌트에 대해서 더 많은 선택지 존재
-  - 컴포넌트 자체로 뛰어난 기능이 결합되어있음
+| 제목                            | 기능                   |
+| :------------------------------ | :--------------------- |
+| shoelace                        | UI Component (기본 UI) |
+| tailwind css                    | Layout Utility         |
+| shoelace icon (bootstrap icons) | 아이콘                 |
 
 #### Util
 
 | 제목                   | 기능             |
 | :--------------------- | :--------------- |
+| @formkit/auto-animate  | 자동 애니메이션  |
 | vueuse                 | Vue 유틸         |
 | es-toolkit             | JS 유틸          |
-| ag-grid-vue            | 테이블           |
+| ag-grid-vue3           | 테이블           |
 | chart.js + vue-chartjs | 차트             |
 | dayjs                  | 날짜 유틸        |
 | dhtmlx-gantt           | Gantt 차트       |
@@ -127,6 +111,7 @@ firebase deploy
 | tiptap                 | 텍스트 에디터    |
 | tippy.js               | 툴팁             |
 | turndown               | HTML To Markdown |
+| vue-draggable-plus     | 드래그 앤 드롭   |
 | validator              | 문자열 검증      |
 
 ### 2. 추가 검토 라이브러리
@@ -139,4 +124,3 @@ firebase deploy
 | typebox      | 스키마 검증 (옵션2)   |
 | typia        | 스키마 검증 (옵션3)   |
 | vee-validate | 폼 입력 검증 컴포지션 |
-| formkit      | 폼 입력 검증 + UI     |
