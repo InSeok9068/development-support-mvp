@@ -25,6 +25,14 @@
 
 ---
 
+## npm global packages
+
+```shell
+npm i -g @google/gemini-cli @openai/codex firebase-tools gemini-commit-assistant pnpm tsx
+```
+
+---
+
 ## 로컬 실행 (pb_hooks 리로드)
 
 ```powershell
