@@ -22,8 +22,8 @@ export const useSetting = () => {
       filter: `user = "${userId}"`,
     });
 
-    if (0 < settingList.items.length) {
-      const record = settingList.items[0];
+    const [record] = settingList.items;
+    if (record) {
       return { id: record.id, data: record.data as SettingJson };
     }
 

@@ -267,7 +267,11 @@
               <div v-show="work.file" class="mt-3 grid gap-2">
                 <div class="flex items-center gap-2 rounded-md border p-2">
                   <sl-tag size="small">첨부파일</sl-tag>
-                  <a :href="getWorkFileUrl(work, work.file)" target="_blank" class="min-w-0 flex-1 text-sm font-semibold">
+                  <a
+                    :href="getWorkFileUrl(work, work.file)"
+                    target="_blank"
+                    class="min-w-0 flex-1 text-sm font-semibold"
+                  >
                     {{ work.originalFileName || work.file }}
                   </a>
                   <sl-button size="small" variant="text" @click.stop.prevent="onClickDeleteWorkFile(work)">
@@ -377,7 +381,10 @@ const markdownContent = computed(() => {
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
-watch(keys.alt_s, (v) => v && updateWorkDetail());
+watch(
+  () => keys.alt_s?.value ?? false,
+  (v) => v && updateWorkDetail(),
+);
 watch(
   () => workDetail.value,
   (data) => {

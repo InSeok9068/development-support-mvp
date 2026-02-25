@@ -404,15 +404,7 @@ routerAdd(
         targetRecord.set('promptVersion', 1);
         $app.save(targetRecord);
       } catch (error) {
-        logger.warn(
-          'cache upsert skipped',
-          'dept',
-          params.dept,
-          'reportDate',
-          params.reportDate,
-          'error',
-          `${error}`,
-        );
+        logger.warn('cache upsert skipped', 'dept', params.dept, 'reportDate', params.reportDate, 'error', `${error}`);
       }
     };
 

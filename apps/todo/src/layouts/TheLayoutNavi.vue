@@ -84,12 +84,30 @@ const { global, toggleTheme } = useGlobal();
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
-watch(keys.alt_1, (v) => v && router.push('/'));
-watch(keys.alt_2, (v) => v && router.push('/kanban'));
-watch(keys.alt_3, (v) => v && router.push('/list'));
-watch(keys.alt_4, (v) => v && router.push('/calendar'));
-watch(keys.alt_5, (v) => v && router.push('/dashboard'));
-watch(keys.alt_6, (v) => v && router.push('/project-gantt'));
+watch(
+  () => keys.alt_1?.value ?? false,
+  (v) => v && router.push('/'),
+);
+watch(
+  () => keys.alt_2?.value ?? false,
+  (v) => v && router.push('/kanban'),
+);
+watch(
+  () => keys.alt_3?.value ?? false,
+  (v) => v && router.push('/list'),
+);
+watch(
+  () => keys.alt_4?.value ?? false,
+  (v) => v && router.push('/calendar'),
+);
+watch(
+  () => keys.alt_5?.value ?? false,
+  (v) => v && router.push('/dashboard'),
+);
+watch(
+  () => keys.alt_6?.value ?? false,
+  (v) => v && router.push('/project-gantt'),
+);
 /* ======================= 감시자 ======================= */
 
 /* ======================= 메서드 ======================= */

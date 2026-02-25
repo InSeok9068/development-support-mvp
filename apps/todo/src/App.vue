@@ -37,21 +37,27 @@ const notificationPermission = computed(() => global.value.notificationPermissio
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
-watch(keys.escape, (v) => {
-  if (v) {
-    if (modal.value) {
-      clearModal();
+watch(
+  () => keys.escape?.value ?? false,
+  (v) => {
+    if (v) {
+      if (modal.value) {
+        clearModal();
+      }
     }
-  }
-});
+  },
+);
 
-watch(keys.enter, (v) => {
-  if (v) {
-    if (modal.value) {
-      clearModal();
+watch(
+  () => keys.enter?.value ?? false,
+  (v) => {
+    if (v) {
+      if (modal.value) {
+        clearModal();
+      }
     }
-  }
-});
+  },
+);
 /* ======================= 감시자 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
