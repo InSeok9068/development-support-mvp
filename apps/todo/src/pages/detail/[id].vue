@@ -172,7 +172,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-fit lg:w-80 lg:flex-shrink-0">
+          <div class="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-fit lg:w-80 lg:shrink-0">
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div class="mb-3 flex flex-wrap items-center gap-2">
                 <h5 class="font-semibold">담당 정보</h5>
@@ -312,10 +312,10 @@
 import type { ScheduledNotificationsResponse, WorksResponse } from '@/api/pocketbase-types';
 import DetailEditor from '@/components/detail/DetailEditor.vue';
 import { useCode } from '@/composables/code';
+import { useToast } from '@/composables/toast';
 import { useDeveloper } from '@/composables/todo/developer';
 import { useWork } from '@/composables/todo/work';
 import { useWorkDetail } from '@/composables/todo/work-detail';
-import { useToast } from '@/composables/toast';
 import { useSign } from '@/composables/user/sign';
 import { readShoelaceChecked, readShoelaceSingleValue, useModal } from '@packages/ui';
 import { useMagicKeys } from '@vueuse/core';
