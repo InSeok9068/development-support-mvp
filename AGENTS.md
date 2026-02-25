@@ -17,45 +17,10 @@ Agent는 아래 규칙을 창의적으로 해석하거나 확장하지 않으며
 
 ## 프로젝트 구성
 
-- 언어 : TypeScript
-- 프론트엔드 프레임워크 : Vue 3 (Composition API + Script Setup)
-- CSS 라이브러리 : Shoelace(Web Component) + Tailwind CSS (Layout Utility) + Shoelace icon (Bootstrap Icons)
-- 백엔드 BaaS 서비스 : PocketBase
-- 데이터 CRUD : Tanstack Query
-- 상태관리 : Pinia
-- 빌드도구 : Vite
-- 패키지 매니저 : pnpm
-- 프로젝트 구조 : Monorepo (pnpm)
-  ```text
-  ├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
-  │  ├─ todo/                         # todo 서비스
-  │  │   ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
-  │  │   │  ├─ __tests__/              # 프론트엔드 테스트
-  │  │   │  ├─ api/                    # API / 네트워크 레이어
-  │  │   │  │   ├─ pocketbase-types.ts # PocketBase Types
-  │  │   │  ├─ assets/                 # 정적 리소스
-  │  │   │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
-  │  │   │  │   ├─ app                 # 전역 컴포넌트
-  │  │   │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
-  │  │   │  ├─ layouts/                # 공통 레이아웃
-  │  │   │  ├─ pages/                  # 라우트 단위 페이지
-  │  │   │  ├─ stores/                 # 전역 상태 관리
-  │  │   │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
-  │  │   │
-  │  │   ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
-  │  └─ portfolio/                     # portfolio 서비스
-  │      ├─ ....
-  ├─ packages/                        # 재사용 패키지 영역
-  │  ├─ src
-  │  │  └─ ui/                        # 공용 UI
-  │  │  └─ auth/                      # 공용 인증
-  ```
-
-### MVP 서비스 목록
-
-- todo : 할일 관리 도구
-- portfolio : 자산 포트 폴리오
-- kjca : 국제 커리어
+- 기술 스택 요약: TypeScript, Vue 3 (Composition API + Script Setup), Vite, pnpm monorepo
+- UI: Shoelace(Web Component + icon) + Tailwind CSS(Layout Utility)
+- 데이터/상태: PocketBase, TanStack Query, Pinia
+- 앱 구조: `apps/*`가 서비스 실행 단위, `packages/*`는 공용 패키지
 
 ---
 

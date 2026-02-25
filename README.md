@@ -4,26 +4,48 @@
 > Agent 작업 기준 문서는 `AGENTS.md`입니다.
 > `README.md` 내용은 Agent의 구현/검토 기준으로 사용하지 않습니다.
 
-## 기술 스펙
+## 프로젝트 구성
 
-### 1. 프론트엔드
+- 언어 : TypeScript
+- 프론트엔드 프레임워크 : Vue 3 (Composition API + Script Setup)
+- CSS 라이브러리 : Shoelace(Web Component) + Tailwind CSS (Layout Utility) + Shoelace icon (Bootstrap Icons)
+- 백엔드 BaaS 서비스 : PocketBase
+- 데이터 CRUD : Tanstack Query
+- 상태관리 : Pinia
+- 빌드도구 : Vite
+- 패키지 매니저 : pnpm
+- 프로젝트 구조 : Monorepo (pnpm)
+  ```text
+  ├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
+  │  ├─ todo/                         # todo 서비스
+  │  │   ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
+  │  │   │  ├─ __tests__/              # 프론트엔드 테스트
+  │  │   │  ├─ api/                    # API / 네트워크 레이어
+  │  │   │  │   ├─ pocketbase-types.ts # PocketBase Types
+  │  │   │  ├─ assets/                 # 정적 리소스
+  │  │   │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
+  │  │   │  │   ├─ app                 # 전역 컴포넌트
+  │  │   │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
+  │  │   │  ├─ layouts/                # 공통 레이아웃
+  │  │   │  ├─ pages/                  # 라우트 단위 페이지
+  │  │   │  ├─ stores/                 # 전역 상태 관리
+  │  │   │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
+  │  │   │
+  │  │   ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
+  │  └─ portfolio/                     # portfolio 서비스
+  │      ├─ ....
+  ├─ packages/                        # 재사용 패키지 영역
+  │  ├─ src
+  │  │  └─ ui/                        # 공용 UI
+  │  │  └─ auth/                      # 공용 인증
+  ```
 
-- Typescript
-- Vue
-- Vite
-- Tailwind CSS
+### MVP 서비스 목록
 
-#### Vue Ecosystem
-
-- Pinia (+ pinia-plugin-persistedstate)
-- Vue router (+ unplugin-vue-router)
-- VueUse
-
-### 2. 백엔드
-
-- Pocketbase (BaaS)
-
----
+- todo : 할일 관리 도구
+- portfolio : 자산 포트 폴리오
+- kjca : 국제 커리어
+- stylemate : 스타일 메이트
 
 ## npm global packages
 
