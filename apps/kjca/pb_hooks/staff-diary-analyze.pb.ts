@@ -218,6 +218,169 @@ routerAdd(
     const cacheCollectionName = 'staff_diary_analysis_cache';
     const geminiModelName = 'gemini-2.5-flash-lite';
     const promptVersion = 4;
+    const geminiMaxAttempts = 3;
+
+    const parseRetryAfterMs = (value) => {
+      const text = String(value ?? '').trim();
+      if (!text) return 0;
+      const parsed = Number(text);
+      if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+      return Math.trunc(parsed * 1000);
+    };
+
+    const computeRetryDelayMs = (attempt, retryAfterHeader = '') => {
+      const retryAfterMs = parseRetryAfterMs(retryAfterHeader);
+      if (retryAfterMs > 0) return retryAfterMs;
+      const step = Math.max(0, Number(attempt) - 1);
+      const backoffMs = 1500 * (2 ** step);
+      const jitterMs = Math.trunc(Math.random() * 400);
+      return backoffMs + jitterMs;
+    };
+
+    const isRetryableGeminiHttp = (statusCode, rateLimitCauseGuess = '') => {
+      if (statusCode === 429 && rateLimitCauseGuess === 'quota-or-billing-limit') return false;
+      return statusCode === 429 || statusCode === 500 || statusCode === 502 || statusCode === 503 || statusCode === 504;
+    };
+
+    const isRetryableGeminiTransportError = (errorText) => {
+      const text = String(errorText ?? '').toLowerCase();
+      if (!text) return false;
+      return (
+        text.includes('timeout') ||
+        text.includes('deadline') ||
+        text.includes('temporarily unavailable') ||
+        text.includes('connection reset') ||
+        text.includes('connection refused') ||
+        text.includes('eof')
+      );
+    };
+
+    const requestGeminiWithRetry = (geminiPayload, context) => {
+      let lastStatusCode = 0;
+      let lastResponseBody = '';
+      let lastHeaders = {};
+      let lastTransportError = '';
+      let attempts = 0;
+
+      while (attempts < geminiMaxAttempts) {
+        attempts += 1;
+        const attemptStartedAt = nowMs();
+
+        try {
+          const response = $http.send({
+            url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`,
+            method: 'POST',
+            timeout: 60,
+            body: JSON.stringify(geminiPayload),
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+
+          const elapsedMs = nowMs() - attemptStartedAt;
+          const statusCode = Number(response.statusCode || 0);
+          const responseBody = toString(response.body);
+          const headers = response.headers ?? {};
+          const retryAfter = getHeaderValues(headers, 'Retry-After')[0] ?? '';
+          const parsedErrorBody = parseJsonSafely(responseBody, {});
+          const geminiError = parsedErrorBody?.error ?? {};
+          const geminiErrorMessage = String(geminiError?.message ?? '').trim();
+          const geminiErrorDetailsText = stringifyGeminiErrorDetails(geminiError?.details);
+          const rateLimitCauseGuess =
+            statusCode === 429 ? inferGemini429Cause(geminiErrorMessage, geminiErrorDetailsText) : '';
+
+          lastStatusCode = statusCode;
+          lastResponseBody = responseBody;
+          lastHeaders = headers;
+          lastTransportError = '';
+
+          const isSuccess = statusCode >= 200 && statusCode < 300;
+          if (isSuccess) {
+            return {
+              statusCode,
+              responseBody,
+              headers,
+              attempts,
+              elapsedMs,
+              transportError: '',
+            };
+          }
+
+          const canRetry = attempts < geminiMaxAttempts && isRetryableGeminiHttp(statusCode, rateLimitCauseGuess);
+          if (!canRetry) {
+            return {
+              statusCode,
+              responseBody,
+              headers,
+              attempts,
+              elapsedMs,
+              transportError: '',
+            };
+          }
+
+          const delayMs = computeRetryDelayMs(attempts, retryAfter);
+          logger.warn(
+            'gemini retry scheduled',
+            'index',
+            context.index,
+            'dept',
+            context.dept,
+            'attempt',
+            attempts,
+            'statusCode',
+            statusCode,
+            'delay',
+            toMsText(delayMs),
+          );
+          sleep(delayMs);
+        } catch (error) {
+          const elapsedMs = nowMs() - attemptStartedAt;
+          const errorText = String(error ?? '').trim();
+
+          lastStatusCode = 0;
+          lastResponseBody = '';
+          lastHeaders = {};
+          lastTransportError = errorText;
+
+          const canRetry = attempts < geminiMaxAttempts && isRetryableGeminiTransportError(errorText);
+          if (!canRetry) {
+            return {
+              statusCode: 0,
+              responseBody: '',
+              headers: {},
+              attempts,
+              elapsedMs,
+              transportError: errorText,
+            };
+          }
+
+          const delayMs = computeRetryDelayMs(attempts);
+          logger.warn(
+            'gemini retry scheduled (transport)',
+            'index',
+            context.index,
+            'dept',
+            context.dept,
+            'attempt',
+            attempts,
+            'error',
+            errorText,
+            'delay',
+            toMsText(delayMs),
+          );
+          sleep(delayMs);
+        }
+      }
+
+      return {
+        statusCode: lastStatusCode,
+        responseBody: lastResponseBody,
+        headers: lastHeaders,
+        attempts,
+        elapsedMs: 0,
+        transportError: lastTransportError,
+      };
+    };
 
     // ---------- 캐시 조회 키(일자+부서+원본+해시+프롬프트버전) 구성 ----------
     const buildCacheIdentityFilter = (params) => {
@@ -581,48 +744,49 @@ routerAdd(
         };
 
         const geminiStartedAt = nowMs();
-        const geminiResponse = $http.send({
-          url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`,
-          method: 'POST',
-          timeout: 60,
-          body: JSON.stringify(geminiPayload),
-          headers: {
-            'content-type': 'application/json',
-          },
+        const geminiAttemptResult = requestGeminiWithRetry(geminiPayload, {
+          index: i,
+          dept,
         });
         const geminiElapsedMs = nowMs() - geminiStartedAt;
 
-        const responseBody = toString(geminiResponse.body);
-        const isSuccess = geminiResponse.statusCode >= 200 && geminiResponse.statusCode < 300;
+        const responseBody = String(geminiAttemptResult.responseBody ?? '');
+        const geminiStatusCode = Number(geminiAttemptResult.statusCode || 0);
+        const geminiHeaders = geminiAttemptResult.headers ?? {};
+        const isSuccess = geminiStatusCode >= 200 && geminiStatusCode < 300;
         const parsedErrorBody = parseJsonSafely(responseBody, {});
         const geminiError = parsedErrorBody?.error ?? {};
         const geminiErrorStatus = String(geminiError?.status ?? '').trim();
         const geminiErrorMessage = String(geminiError?.message ?? '').trim();
         const geminiErrorDetailsText = stringifyGeminiErrorDetails(geminiError?.details);
-        const retryAfter = getHeaderValues(geminiResponse.headers, 'Retry-After')[0] ?? '';
+        const retryAfter = getHeaderValues(geminiHeaders, 'Retry-After')[0] ?? '';
         const rateLimitRelatedHeaders = {
           retryAfter,
-          xRateLimitLimit: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Limit')[0] ?? '',
-          xRateLimitRemaining: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Remaining')[0] ?? '',
-          xRateLimitReset: getHeaderValues(geminiResponse.headers, 'X-RateLimit-Reset')[0] ?? '',
-          xRatelimitLimitRequests: getHeaderValues(geminiResponse.headers, 'x-ratelimit-limit-requests')[0] ?? '',
+          xRateLimitLimit: getHeaderValues(geminiHeaders, 'X-RateLimit-Limit')[0] ?? '',
+          xRateLimitRemaining: getHeaderValues(geminiHeaders, 'X-RateLimit-Remaining')[0] ?? '',
+          xRateLimitReset: getHeaderValues(geminiHeaders, 'X-RateLimit-Reset')[0] ?? '',
+          xRatelimitLimitRequests: getHeaderValues(geminiHeaders, 'x-ratelimit-limit-requests')[0] ?? '',
           xRatelimitRemainingRequests:
-            getHeaderValues(geminiResponse.headers, 'x-ratelimit-remaining-requests')[0] ?? '',
-          xRatelimitLimitTokens: getHeaderValues(geminiResponse.headers, 'x-ratelimit-limit-tokens')[0] ?? '',
-          xRatelimitRemainingTokens: getHeaderValues(geminiResponse.headers, 'x-ratelimit-remaining-tokens')[0] ?? '',
+            getHeaderValues(geminiHeaders, 'x-ratelimit-remaining-requests')[0] ?? '',
+          xRatelimitLimitTokens: getHeaderValues(geminiHeaders, 'x-ratelimit-limit-tokens')[0] ?? '',
+          xRatelimitRemainingTokens: getHeaderValues(geminiHeaders, 'x-ratelimit-remaining-tokens')[0] ?? '',
         };
         logger.info(
           'gemini completed',
           'index',
           i,
           'statusCode',
-          geminiResponse.statusCode,
+          geminiStatusCode,
+          'attempts',
+          geminiAttemptResult.attempts,
           'elapsed',
           toMsText(geminiElapsedMs),
           'responseLength',
           responseBody.length,
           'retryAfter',
           retryAfter,
+          'transportError',
+          String(geminiAttemptResult.transportError ?? ''),
         );
 
         if (!isSuccess) {
@@ -631,22 +795,24 @@ routerAdd(
             'index',
             i,
             'statusCode',
-            geminiResponse.statusCode,
+            geminiStatusCode,
             'errorStatus',
             geminiErrorStatus,
             'errorMessage',
             geminiErrorMessage,
             'errorDetails',
             geminiErrorDetailsText,
+            'transportError',
+            String(geminiAttemptResult.transportError ?? ''),
             'rateLimitHeaders',
             JSON.stringify(rateLimitRelatedHeaders),
           );
         }
 
         const rateLimitCauseGuess =
-          geminiResponse.statusCode === 429 ? inferGemini429Cause(geminiErrorMessage, geminiErrorDetailsText) : '';
+          geminiStatusCode === 429 ? inferGemini429Cause(geminiErrorMessage, geminiErrorDetailsText) : '';
 
-        if (geminiResponse.statusCode === 429) {
+        if (geminiStatusCode === 429) {
           logger.warn(
             'gemini rate limit classified',
             'index',
@@ -660,13 +826,18 @@ routerAdd(
 
         // 3-5) 실패 시 중단 조건(쿼터 소진) 확인
         if (!isSuccess) {
+          const errorText =
+            geminiStatusCode > 0
+              ? `AI 요청 실패 (HTTP ${geminiStatusCode})`
+              : `AI 요청 실패 (네트워크/타임아웃) ${String(geminiAttemptResult.transportError ?? '').trim()}`;
+
           results.push(
             buildAnalyzeResult({
               dept,
               position,
               staffName,
               ok: false,
-              error: `AI 요청 실패 (HTTP ${geminiResponse.statusCode})`,
+              error: errorText,
               printUrl,
             }),
           );

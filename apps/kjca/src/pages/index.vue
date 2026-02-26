@@ -108,29 +108,38 @@
                 open
               >
                 <div class="min-w-0 overflow-x-auto">
-                  <table class="w-full min-w-[1300px] border-2 border-solid text-base">
+                  <table class="w-full min-w-[980px] table-fixed border-2 border-solid text-sm">
+                    <colgroup>
+                      <col class="w-[72px]" />
+                      <col class="w-[180px]" />
+                      <col class="w-[210px]" />
+                      <col class="w-[130px]" />
+                      <col class="w-[110px]" />
+                      <col class="w-[110px]" />
+                      <col class="w-[120px]" />
+                    </colgroup>
                     <thead>
                       <tr>
-                        <th colspan="7" class="border-2 border-solid px-4 py-3 text-left font-semibold">
+                        <th colspan="7" class="border-2 border-solid px-3 py-2.5 text-left text-base font-semibold">
                           {{ buildDeptSummaryText(table.dept) }}
                         </th>
                       </tr>
                       <tr>
-                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">요일</th>
-                        <th colspan="3" class="border border-solid px-4 py-3 text-left font-semibold">주간 홍보계획</th>
-                        <th class="border border-solid px-4 py-3 text-left font-semibold">결과</th>
-                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">
+                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">요일</th>
+                        <th colspan="3" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">주간 홍보계획</th>
+                        <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">결과</th>
+                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">
                           담당자
                           <br />
                           (홍보)
                         </th>
-                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">비고</th>
+                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">비고</th>
                       </tr>
                       <tr>
-                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집홍보처</th>
-                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집 홍보내용</th>
-                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집목표</th>
-                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집 건수</th>
+                        <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">모집홍보처</th>
+                        <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">모집 홍보내용</th>
+                        <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">모집목표</th>
+                        <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">모집 건수</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -140,16 +149,16 @@
                           :key="`weekday-row-data-${table.dept}-${weekday}-${rowIndex}`"
                         >
                           <tr :class="{ 'font-semibold': isFocusWeekday(weekday, table.todayWeekday) }">
-                            <td class="border border-solid px-4 py-3 text-left align-middle">
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">
                               {{ weekdayLabelMap[weekday] }}
                               <sl-badge v-if="isFocusWeekday(weekday, table.todayWeekday)" variant="primary" pill>오늘</sl-badge>
                             </td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.channelName || '' }}</td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.promotionContent || '' }}</td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.targetText || '' }}</td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.recruitCountText || '' }}</td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.ownerName || '' }}</td>
-                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.note || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.channelName || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.promotionContent || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.targetText || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.recruitCountText || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.ownerName || '' }}</td>
+                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.note || '' }}</td>
                           </tr>
                         </template>
                       </template>

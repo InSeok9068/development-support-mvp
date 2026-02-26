@@ -183,6 +183,34 @@ routerAdd(
         .filter((row) => !!row.dept && !!row.printUrl);
     };
 
+    const normalizeAnalyzeResults = (value) => {
+      const rows = Array.isArray(value) ? value : [];
+      return rows.map((item) => ({
+        dept: String(item?.dept ?? '').trim(),
+        position: String(item?.position ?? '').trim(),
+        staffName: String(item?.staffName ?? '').trim(),
+        ok: item?.ok !== false,
+        error: String(item?.error ?? '').trim(),
+        promotion: Array.isArray(item?.promotion) ? item.promotion : [],
+        vacation: Array.isArray(item?.vacation) ? item.vacation : [],
+        special: Array.isArray(item?.special) ? item.special : [],
+        recruiting: normalizeRecruitingExtract(item?.recruiting),
+        printUrl: String(item?.printUrl ?? '').trim(),
+      }));
+    };
+
+    const shouldRetryAnalyzeError = (errorText) => {
+      const text = String(errorText ?? '').toLowerCase();
+      if (!text) return false;
+      return (
+        text.includes('http 503') ||
+        text.includes('http 429') ||
+        text.includes('timeout') ||
+        text.includes('temporarily unavailable') ||
+        text.includes('connection reset')
+      );
+    };
+
     const buildUniqueTargets = (rows) => {
       const map = new Map();
       rows.forEach((row) => {
@@ -786,20 +814,62 @@ routerAdd(
         reportDate,
         targets: collectTargets,
       });
+      let finalAlertMessage = String(todayAnalyze.alertMessage ?? '').trim();
+      let finalStoppedReason = String(todayAnalyze.stoppedReason ?? '').trim();
+      let analysisResults = normalizeAnalyzeResults(todayAnalyze.results);
 
-      const rawResults = Array.isArray(todayAnalyze.results) ? todayAnalyze.results : [];
-      const analysisResults = rawResults.map((item) => ({
-        dept: String(item?.dept ?? '').trim(),
-        position: String(item?.position ?? '').trim(),
-        staffName: String(item?.staffName ?? '').trim(),
-        ok: item?.ok !== false,
-        error: String(item?.error ?? '').trim(),
-        promotion: Array.isArray(item?.promotion) ? item.promotion : [],
-        vacation: Array.isArray(item?.vacation) ? item.vacation : [],
-        special: Array.isArray(item?.special) ? item.special : [],
-        recruiting: normalizeRecruitingExtract(item?.recruiting),
-        printUrl: String(item?.printUrl ?? '').trim(),
-      }));
+      const targetKeyMap = new Map();
+      collectTargets.forEach((target) => {
+        const dept = String(target?.dept ?? '').trim();
+        const printUrl = String(target?.printUrl ?? '').trim();
+        if (!dept || !printUrl) return;
+        targetKeyMap.set(`${dept}||${printUrl}`, {
+          dept,
+          position: String(target?.position ?? '').trim(),
+          staffName: String(target?.staffName ?? '').trim(),
+          printUrl,
+        });
+      });
+
+      const retryTargets = analysisResults
+        .filter((item) => !item.ok && shouldRetryAnalyzeError(item.error))
+        .map((item) => targetKeyMap.get(`${item.dept}||${item.printUrl}`))
+        .filter((item, index, array) => {
+          if (!item) return false;
+          return array.findIndex((candidate) => `${candidate.dept}||${candidate.printUrl}` === `${item.dept}||${item.printUrl}`) === index;
+        });
+
+      if (retryTargets.length > 0) {
+        warnings.push(`AI 재시도 시작: ${retryTargets.length}건`);
+        sleep(1200);
+        try {
+          const retryAnalyze = callInternalApi('/api/staff-diary/analyze', {
+            reportDate,
+            targets: retryTargets,
+          });
+          const retriedResults = normalizeAnalyzeResults(retryAnalyze.results);
+          const retriedMap = new Map(retriedResults.map((item) => [`${item.dept}||${item.printUrl}`, item]));
+          let recoveredCount = 0;
+
+          analysisResults = analysisResults.map((item) => {
+            const key = `${item.dept}||${item.printUrl}`;
+            const retried = retriedMap.get(key);
+            if (!retried) return item;
+            if (retried.ok) recoveredCount += 1;
+            return retried;
+          });
+
+          warnings.push(`AI 재시도 완료: 성공 ${recoveredCount}건 / 대상 ${retryTargets.length}건`);
+          if (!finalAlertMessage) {
+            finalAlertMessage = String(retryAnalyze.alertMessage ?? '').trim();
+          }
+          if (!finalStoppedReason) {
+            finalStoppedReason = String(retryAnalyze.stoppedReason ?? '').trim();
+          }
+        } catch (error) {
+          warnings.push(`AI 재시도 호출 실패: ${String(error)}`);
+        }
+      }
 
       analysisResults
         .filter((item) => item.ok)
@@ -957,8 +1027,8 @@ routerAdd(
         analysisResults,
         deptSnapshots,
         deptWeekTables,
-        alertMessage: String(todayAnalyze.alertMessage ?? '').trim(),
-        stoppedReason: String(todayAnalyze.stoppedReason ?? '').trim(),
+        alertMessage: finalAlertMessage,
+        stoppedReason: finalStoppedReason,
         warnings,
       });
     } catch (error) {
