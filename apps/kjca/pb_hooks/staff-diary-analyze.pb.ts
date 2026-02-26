@@ -217,6 +217,7 @@ routerAdd(
 
     const cacheCollectionName = 'staff_diary_analysis_cache';
     const geminiModelName = 'gemini-2.5-flash-lite';
+    const geminiApiKey = process.env.GEMINI_API_KEY ?? process.env.GEMINI_AI_KEY;
     const promptVersion = 4;
     const geminiMaxAttempts = 3;
 
@@ -472,7 +473,6 @@ routerAdd(
         return e.error(400, 'KJCA 계정 정보가 필요합니다. (users.name=mng_id, users.kjcaPw=mng_pw)', {});
       }
 
-      const geminiApiKey = process.env.GEMINI_API_KEY ?? process.env.GEMINI_AI_KEY;
       if (!geminiApiKey) {
         return e.error(500, 'GEMINI_API_KEY (또는 GEMINI_AI_KEY)가 설정되지 않았습니다.', {});
       }

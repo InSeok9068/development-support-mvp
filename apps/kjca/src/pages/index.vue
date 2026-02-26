@@ -107,6 +107,18 @@
                 :summary="table.dept"
                 open
               >
+                <div class="mb-2 flex items-center justify-end">
+                  <sl-button
+                    variant="default"
+                    size="small"
+                    :loading="cacheClearingDept === table.dept"
+                    :disabled="!isSignedIn || isAutoRunning || !!cacheClearingDept"
+                    @click="onClickClearDeptCacheButton(table.dept)"
+                  >
+                    해당 부서 캐시 지우기
+                  </sl-button>
+                </div>
+
                 <div class="min-w-0 overflow-x-auto">
                   <table class="w-full min-w-[980px] table-fixed border-2 border-solid text-sm">
                     <colgroup>
@@ -309,7 +321,7 @@ const weekdayLabelMap: Record<RecruitingWeekday, string> = {
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { authRecord, isSignedIn, signOut } = useAuth();
-const { fetchStaffDiaryCollectWeekly } = useKjca();
+const { fetchStaffDiaryCollectWeekly, fetchStaffDiaryAnalyzeCacheClear } = useKjca();
 
 const scDay = ref(buildTodayText());
 const testOneOnly = ref(false);
@@ -317,6 +329,7 @@ const isAutoRunning = ref(false);
 const autoNoticeMessage = ref('');
 const autoErrorMessage = ref('');
 const autoWarnings = ref<string[]>([]);
+const cacheClearingDept = ref('');
 
 const lastDiaryAccessible = ref<boolean | null>(null);
 const teamLeadRows = ref<TeamLeadRow[]>([]);
@@ -390,6 +403,37 @@ const onClickRunAutoAnalyze = async () => {
       : `${error}`;
   } finally {
     isAutoRunning.value = false;
+  }
+};
+
+const onClickClearDeptCacheButton = async (dept: string) => {
+  const safeDept = String(dept ?? '').trim();
+  if (!safeDept) return;
+  if (cacheClearingDept.value) return;
+
+  autoNoticeMessage.value = '';
+  autoErrorMessage.value = '';
+  cacheClearingDept.value = safeDept;
+
+  try {
+    const reportDate = String(scDay.value || buildTodayText()).trim();
+    const clearResult = await fetchStaffDiaryAnalyzeCacheClear({
+      reportDate,
+      dept: safeDept,
+    });
+
+    analysisResults.value = analysisResults.value.filter((item) => String(item.dept ?? '').trim() !== safeDept);
+
+    const deletedCount = Math.max(0, Math.trunc(Number(clearResult.deletedCount ?? 0)));
+    autoNoticeMessage.value = deletedCount > 0
+      ? `${safeDept} 캐시 ${deletedCount}건을 삭제했습니다.`
+      : `${safeDept} 캐시가 없어 삭제할 항목이 없습니다.`;
+  } catch (error) {
+    autoErrorMessage.value = (error as { message?: string })?.message
+      ? String((error as { message?: string }).message)
+      : `${error}`;
+  } finally {
+    cacheClearingDept.value = '';
   }
 };
 /* ======================= 메서드 ======================= */

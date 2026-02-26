@@ -5,6 +5,7 @@ import {
   Collections,
   RecruitingDailyResultsSourceTypeOptions,
   RecruitingDailyResultsWeekdayOptions,
+  type StaffDiaryAnalysisCacheResponse,
   RecruitingWeekPlanItemsWeekdayOptions,
   RecruitingWeekPlansStatusOptions,
   type Create,
@@ -73,6 +74,18 @@ type StaffDiaryAnalyzeResponse = {
 type StaffDiaryCollectWeeklyPayload = {
   reportDate?: string;
   testOneOnly?: boolean;
+};
+
+type StaffDiaryAnalyzeCacheClearPayload = {
+  reportDate?: string;
+  dept: string;
+};
+
+type StaffDiaryAnalyzeCacheClearResponse = {
+  ok: boolean;
+  reportDate: string;
+  dept: string;
+  deletedCount: number;
 };
 
 type StaffDiaryCollectWeeklyResponse = {
@@ -417,6 +430,34 @@ export const useKjca = () => {
     });
   };
 
+  const fetchStaffDiaryAnalyzeCacheClear = (payload: StaffDiaryAnalyzeCacheClearPayload) => {
+    const reportDate = String(payload.reportDate ?? '').trim();
+    const dept = String(payload.dept ?? '').trim();
+
+    if (!reportDate) {
+      throw new Error('조회일(reportDate)이 필요합니다.');
+    }
+    if (!dept) {
+      throw new Error('부서(dept)가 필요합니다.');
+    }
+
+    return pb.collection(Collections.StaffDiaryAnalysisCache).getFullList<StaffDiaryAnalysisCacheResponse>({
+      filter: `reportDate = '${escapeFilterValue(reportDate)}' && dept = '${escapeFilterValue(dept)}'`,
+      sort: 'created',
+    }).then(async (rows) => {
+      await Promise.all(
+        rows.map((row) => pb.collection(Collections.StaffDiaryAnalysisCache).delete(row.id)),
+      );
+
+      return {
+        ok: true,
+        reportDate,
+        dept,
+        deletedCount: rows.length,
+      } satisfies StaffDiaryAnalyzeCacheClearResponse;
+    });
+  };
+
   const fetchRecruitingWeekPlan = (payload: FetchRecruitingWeekPlanPayload) => {
     return queryClient.fetchQuery({
       queryKey: ['recruitings', 'week-plan', payload],
@@ -460,6 +501,7 @@ export const useKjca = () => {
     fetchStaffAuthProbe,
     fetchStaffDiaryAnalyze,
     fetchStaffDiaryCollectWeekly,
+    fetchStaffDiaryAnalyzeCacheClear,
     fetchRecruitingWeekPlan,
     fetchRecruitingDailyResult,
     fetchRecruitingWeekResults,
