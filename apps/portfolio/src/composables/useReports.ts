@@ -49,7 +49,7 @@ export const useReports = () => {
       formData.append('image', file);
       formData.append('baseCurrency', 'KRW');
 
-      return pb.send<CreateReportResponse>('/api/report', {
+      return pb.send<CreateReportResponse>('/api/public/report', {
         method: 'POST',
         body: formData,
       });

@@ -258,9 +258,16 @@ const pbHooksRoutingRecommendationRules = [
     "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
     '커스텀 라우트 path는 /api/... prefix를 권장합니다.',
   ),
-  pbHooksRecommend(
-    "CallExpression[callee.name='routerAdd']:has([arguments.0.type='Literal'][arguments.0.value=/^(POST|PUT|PATCH|DELETE)$/]):not(:has([arguments.3]))",
-    '상태 변경 라우트는 requireAuth/requireSuperuserAuth 등 미들웨어 검토를 권장합니다.',
+];
+
+const pbHooksRoutingSafetyRules = [
+  pbHooksForbid(
+    "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\//]):not(:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//])):not(:has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/]))",
+    '인증/내부 API(/api/*, /api/public/* 제외)는 $apis.requireAuth() 또는 $apis.requireSuperuserAuth()를 사용하세요.',
+  ),
+  pbHooksForbid(
+    "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//]):has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/])",
+    '공개 API(/api/public/*)에는 $apis.requireAuth()/requireSuperuserAuth()를 사용하지 마세요.',
   ),
 ];
 
@@ -271,7 +278,7 @@ const pbHooksHttpRecommendationRules = [
   ),
 ];
 
-const pbHooksRules = [...pbHooksRuntimeRules, ...pbHooksDataSafetyRules];
+const pbHooksRules = [...pbHooksRuntimeRules, ...pbHooksDataSafetyRules, ...pbHooksRoutingSafetyRules];
 const pbHooksRecommendationRules = [...pbHooksRoutingRecommendationRules, ...pbHooksHttpRecommendationRules];
 /* ======================= PB_HOOKS 전용 규칙 ======================= */
 

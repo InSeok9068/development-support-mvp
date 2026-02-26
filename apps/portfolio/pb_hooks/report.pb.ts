@@ -2,7 +2,7 @@
 // @ts-nocheck
 /// <reference path="types.d.ts" />
 
-routerAdd('POST', '/api/report', (e) => {
+routerAdd('POST', '/api/public/report', (e) => {
   const logger = $app.logger().with('hook', 'report');
   logger.info('request started');
 

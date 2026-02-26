@@ -2,21 +2,26 @@
 // @ts-nocheck
 /// <reference path="types.d.ts" />
 
-routerAdd('GET', `/api/redmine-data/{id}`, (e) => {
-  const host = 'https://pms.kpcard.co.kr';
-  const apiKey = '03e7fa8ea3f2966eae1bc84f54bf8792a128fe0f';
-  const timeout = 20000;
-  const id = e.request?.pathValue('id');
-  const res = $http.send({
-    url: `${host}/issues/${id}.json`,
-    timeout,
-    headers: {
-      'x-redmine-api-key': apiKey,
-    },
-  });
+routerAdd(
+  'GET',
+  `/api/redmine-data/{id}`,
+  (e) => {
+    const host = 'https://pms.kpcard.co.kr';
+    const apiKey = '03e7fa8ea3f2966eae1bc84f54bf8792a128fe0f';
+    const timeout = 20000;
+    const id = e.request?.pathValue('id');
+    const res = $http.send({
+      url: `${host}/issues/${id}.json`,
+      timeout,
+      headers: {
+        'x-redmine-api-key': apiKey,
+      },
+    });
 
-  return e.json(200, res.json);
-});
+    return e.json(200, res.json);
+  },
+  $apis.requireAuth(),
+);
 
 routerAdd(
   'POST',

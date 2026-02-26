@@ -126,6 +126,11 @@ UI 요구사항을 구현할 때는 아래 순서를 반드시 따른다.
 
 - `pb_hooks/types.d.ts`는 Hook API 타입 힌트의 기준 파일이므로, Hook 개발 시 우선 참조하여 적극적으로 활용한다.
 - `pb_hooks`의 JavaScript 런타임은 Node.js/브라우저가 아니다. (`window`, `fetch`, `fs`, `buffer` 등 런타임 의존 API 전제 금지)
+- Route 경로 패턴은 아래를 기본으로 사용한다.
+  - 공개 API: `/api/public/*` (인증 미들웨어 없음)
+  - 인증/내부 API: `/api/*` (단, `/api/public/*` 제외)
+- 인증/내부 API는 `routerAdd(..., handler, $apis.requireAuth())` 또는 `routerAdd(..., handler, $apis.requireSuperuserAuth())` 형태로 등록한다.
+- 게스트 전용 API는 필요할 때만 `$apis.requireGuestOnly()`를 사용한다.
 - Hook/Route/Middleware 핸들러는 각각 격리된 컨텍스트에서 실행되므로, 핸들러 바깥 변수/함수 참조를 전제로 작성하지 않는다.
 - 핸들러 간 공통 로직 재사용은 로컬 모듈로 분리하고, 핸들러 내부에서 `require()`로 로드한다.
 - `pb_hooks` 내부 파일 로드는 상대경로 대신 `__hooks` 절대경로를 기본으로 사용한다.
