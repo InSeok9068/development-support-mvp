@@ -78,53 +78,7 @@ routerAdd('POST', '/api/match-failure/suggest', (e) => {
     etc: 'real',
   };
 
-  const normalizeEnum = (value, allowed, fallback) => {
-    const normalized = String(value ?? '')
-      .trim()
-      .toLowerCase();
-    return allowed.includes(normalized) ? normalized : fallback;
-  };
-
-  const normalizeArrayEnum = (values, allowed, maxSelect) => {
-    if (!Array.isArray(values)) {
-      return [];
-    }
-    const seen = new Set();
-    const normalized = [];
-    values.forEach((value) => {
-      if (normalized.length >= maxSelect) {
-        return;
-      }
-      const item = normalizeEnum(value, allowed, '');
-      if (!item || seen.has(item)) {
-        return;
-      }
-      seen.add(item);
-      normalized.push(item);
-    });
-    return normalized;
-  };
-
-  const parseJsonSafely = (text, fallback) => {
-    try {
-      return JSON.parse(text);
-    } catch {
-      return fallback;
-    }
-  };
-
-  const extractJsonObjectText = (text) => {
-    const normalized = String(text ?? '')
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/```$/i, '')
-      .trim();
-    const objectStart = normalized.indexOf('{');
-    const objectEnd = normalized.lastIndexOf('}');
-    if (objectStart === -1 || objectEnd === -1 || objectEnd <= objectStart) {
-      return '{}';
-    }
-    return normalized.slice(objectStart, objectEnd + 1).trim();
-  };
+  const { normalizeEnum, normalizeArrayEnum, parseJsonSafely, extractJsonObjectText } = require(`${__hooks}/utils.ts`);
 
   const requestInfo = e.requestInfo();
   const rawName = String(requestInfo.body?.rawName ?? '').trim();

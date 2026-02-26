@@ -6,29 +6,7 @@ routerAdd('POST', '/api/public/report', (e) => {
   const logger = $app.logger().with('hook', 'report');
   logger.info('request started');
 
-  // PocketBase 환경에서는 Buffer가 없어서 직접 Base64 인코딩을 구현한다.
-  const encodeBase64 = (bytes) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    const output = new Array(Math.ceil(bytes.length / 3) * 4);
-    let outIndex = 0;
-    for (let i = 0; i < bytes.length; i += 3) {
-      const b1 = bytes[i] ?? 0;
-      const b2 = bytes[i + 1] ?? 0;
-      const b3 = bytes[i + 2] ?? 0;
-
-      const hasB2 = i + 1 < bytes.length;
-      const hasB3 = i + 2 < bytes.length;
-
-      const triplet = (b1 << 16) | (b2 << 8) | b3;
-
-      output[outIndex++] = chars[(triplet >> 18) & 63];
-      output[outIndex++] = chars[(triplet >> 12) & 63];
-      output[outIndex++] = hasB2 ? chars[(triplet >> 6) & 63] : '=';
-      output[outIndex++] = hasB3 ? chars[triplet & 63] : '=';
-    }
-
-    return output.join('');
-  };
+  const { encodeBase64, normalizeAssetCategory, parseNumber, normalizeKey } = require(`${__hooks}/utils.ts`);
 
   const request = e.request;
   // 업로드 필수: image 필드만 허용
@@ -68,43 +46,6 @@ routerAdd('POST', '/api/public/report', (e) => {
   reportRecord.set('status', 'processing');
   $app.save(reportRecord);
   logger.info('report created', 'reportId', reportRecord.id);
-
-  // 카테고리는 허용된 enum 범위로만 정규화
-  const normalizeCategory = (value) => {
-    const lower = String(value ?? '').toLowerCase();
-    const allowed = [
-      'cash',
-      'deposit',
-      'stock',
-      'etf',
-      'bond',
-      'fund',
-      'pension',
-      'crypto',
-      'real_estate',
-      'reits',
-      'commodity_gold',
-      'insurance',
-      'car',
-      'etc',
-    ];
-    return allowed.includes(lower) ? lower : 'etc';
-  };
-
-  const parseNumber = (value) => {
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return value;
-    }
-    const normalized = String(value ?? '').replace(/[^0-9.-]/g, '');
-    if (!normalized) {
-      return null;
-    }
-    const parsed = Number(normalized);
-    if (!Number.isFinite(parsed)) {
-      return null;
-    }
-    return parsed;
-  };
 
   const findExtractedRecordsByReportId = (sourceReportId) => {
     const BATCH_SIZE = 200;
@@ -148,7 +89,7 @@ routerAdd('POST', '/api/public/report', (e) => {
     const cachedExtractedRecords = findExtractedRecordsByReportId(cachedReport.id);
     items = cachedExtractedRecords.map((record) => {
       const rawName = String(record.get('rawName') ?? '').trim();
-      const category = normalizeCategory(record.get('category'));
+      const category = normalizeAssetCategory(record.get('category'));
       const amount = parseNumber(record.get('amount')) ?? 0;
       const profit = parseNumber(record.get('profit'));
       const profitRate = parseNumber(record.get('profitRate'));
@@ -268,7 +209,7 @@ routerAdd('POST', '/api/public/report', (e) => {
     items = Array.isArray(parsedItems)
       ? parsedItems.map((item) => {
           const rawName = String(item.name ?? item['자산명'] ?? item['종목명'] ?? '').trim();
-          const category = normalizeCategory(item.category ?? item['카테고리'] ?? item['자산카테고리']);
+          const category = normalizeAssetCategory(item.category ?? item['카테고리'] ?? item['자산카테고리']);
           const amount = parseNumber(item.amount ?? item['금액'] ?? item['자산금액']) ?? 0;
           const profit = parseNumber(item.profit ?? item['손익'] ?? item['손익금액']);
           const profitRate = parseNumber(item.profitRate ?? item['손익률']);
@@ -298,10 +239,6 @@ routerAdd('POST', '/api/public/report', (e) => {
   );
 
   // 관리자 자산 매칭: 이름/별명(1~3) 기준으로 단순 매칭
-  const normalizeKey = (value) =>
-    String(value ?? '')
-      .trim()
-      .toLowerCase();
   const adminAssets = $app.findAllRecords('admin_assets') || [];
   const adminNameMap = new Map();
   const adminAliasMap = new Map();

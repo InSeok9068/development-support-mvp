@@ -33,6 +33,7 @@ export default defineConfig(
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/triple-slash-reference': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   ...eslintCustomRuleConfig,
