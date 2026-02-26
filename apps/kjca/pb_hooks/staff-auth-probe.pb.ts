@@ -265,7 +265,7 @@ routerAdd(
       const staffAuthInitResponse = $http.send({
         url: staffAuthUrl,
         method: 'GET',
-        timeout: 20000,
+        timeout: 20,
         headers: buildBrowserLikeHeaders('', `${host}/`),
       });
       sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, staffAuthInitResponse.headers);
@@ -285,7 +285,7 @@ routerAdd(
         const loginResponse = $http.send({
           url: loginUrl,
           method: 'POST',
-          timeout: 20000,
+          timeout: 20,
           body: loginBody,
           headers: {
             ...buildBrowserLikeHeaders(sessionCookie, staffAuthUrl),
@@ -341,7 +341,7 @@ routerAdd(
       const diaryResponse = $http.send({
         url: diaryListUrl,
         method: 'GET',
-        timeout: 20000,
+        timeout: 20,
         headers: buildBrowserLikeHeaders(sessionCookie, diaryListUrl),
       });
 

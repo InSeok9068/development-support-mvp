@@ -458,7 +458,7 @@ routerAdd(
       const staffAuthInitResponse = $http.send({
         url: staffAuthUrl,
         method: 'GET',
-        timeout: 20000,
+        timeout: 20,
         headers: buildBrowserLikeHeaders('', `${host}/`),
       });
       sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, staffAuthInitResponse.headers);
@@ -481,7 +481,7 @@ routerAdd(
       const loginResponse = $http.send({
         url: loginUrl,
         method: 'POST',
-        timeout: 20000,
+        timeout: 20,
         body: loginBody,
         headers: {
           ...buildBrowserLikeHeaders(sessionCookie, staffAuthUrl),
@@ -544,7 +544,7 @@ routerAdd(
         const detailResponse = $http.send({
           url: printUrl,
           method: 'GET',
-          timeout: 20000,
+          timeout: 20,
           headers: buildBrowserLikeHeaders(sessionCookie, printUrl),
         });
         sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, detailResponse.headers);
@@ -712,7 +712,7 @@ routerAdd(
         const geminiResponse = $http.send({
           url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`,
           method: 'POST',
-          timeout: 60000,
+          timeout: 60,
           body: JSON.stringify(geminiPayload),
           headers: {
             'content-type': 'application/json',
