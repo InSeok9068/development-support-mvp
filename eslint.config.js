@@ -7,14 +7,14 @@ import globals from 'globals';
 import tslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['*.d.ts', 'apps/*/src/api/pocketbase*'] },
+  { ignores: ['*.d.ts', 'apps/*/src/api/pocketbase*', 'apps/*/pb_hooks/types.d.ts'] },
   {
     extends: [
       eslint.configs.recommended,
       ...tslint.configs.recommended,
       ...eslintPluginVue.configs['flat/recommended'],
     ],
-    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
+    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}', 'apps/*/pb_hooks/**/*.pb.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -22,6 +22,17 @@ export default defineConfig(
       parserOptions: {
         parser: tslint.parser,
       },
+    },
+  },
+  {
+    files: ['apps/*/pb_hooks/**/*.pb.ts'],
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
+    },
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/triple-slash-reference': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   ...eslintCustomRuleConfig,

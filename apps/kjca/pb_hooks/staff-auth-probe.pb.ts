@@ -236,10 +236,6 @@ routerAdd(
     try {
       const scDay = String(payload.scDay ?? '').trim();
 
-      if (!e.auth) {
-        return e.error(401, '인증이 필요합니다.', {});
-      }
-
       const superuserEmail = String(e.auth.getString('email') ?? '').trim();
       if (!superuserEmail) {
         return e.error(400, '슈퍼유저 이메일 정보를 확인할 수 없습니다.', {});
@@ -269,6 +265,7 @@ routerAdd(
       const staffAuthInitResponse = $http.send({
         url: staffAuthUrl,
         method: 'GET',
+        timeout: 20000,
         headers: buildBrowserLikeHeaders('', `${host}/`),
       });
       sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, staffAuthInitResponse.headers);
@@ -288,6 +285,7 @@ routerAdd(
         const loginResponse = $http.send({
           url: loginUrl,
           method: 'POST',
+          timeout: 20000,
           body: loginBody,
           headers: {
             ...buildBrowserLikeHeaders(sessionCookie, staffAuthUrl),
@@ -343,6 +341,7 @@ routerAdd(
       const diaryResponse = $http.send({
         url: diaryListUrl,
         method: 'GET',
+        timeout: 20000,
         headers: buildBrowserLikeHeaders(sessionCookie, diaryListUrl),
       });
 

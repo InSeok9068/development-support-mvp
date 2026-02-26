@@ -413,10 +413,6 @@ routerAdd(
       const requestStartedAt = nowMs();
 
       // 1) 요청/권한/필수 설정값 검증
-      if (!e.auth) {
-        return e.error(401, '인증이 필요합니다.', {});
-      }
-
       const targets = Array.isArray(payload.targets) ? payload.targets : [];
       const reportDate = normalizeReportDate(payload.reportDate);
       if (!targets.length) {
@@ -462,6 +458,7 @@ routerAdd(
       const staffAuthInitResponse = $http.send({
         url: staffAuthUrl,
         method: 'GET',
+        timeout: 20000,
         headers: buildBrowserLikeHeaders('', `${host}/`),
       });
       sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, staffAuthInitResponse.headers);
@@ -484,6 +481,7 @@ routerAdd(
       const loginResponse = $http.send({
         url: loginUrl,
         method: 'POST',
+        timeout: 20000,
         body: loginBody,
         headers: {
           ...buildBrowserLikeHeaders(sessionCookie, staffAuthUrl),
@@ -546,6 +544,7 @@ routerAdd(
         const detailResponse = $http.send({
           url: printUrl,
           method: 'GET',
+          timeout: 20000,
           headers: buildBrowserLikeHeaders(sessionCookie, printUrl),
         });
         sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, detailResponse.headers);
@@ -713,6 +712,7 @@ routerAdd(
         const geminiResponse = $http.send({
           url: `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`,
           method: 'POST',
+          timeout: 60000,
           body: JSON.stringify(geminiPayload),
           headers: {
             'content-type': 'application/json',

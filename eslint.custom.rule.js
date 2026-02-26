@@ -17,12 +17,19 @@ const AGENTS_REF = {
   shoelaceChangeParsing:
     'AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked를 기본값으로 사용한다.',
   sfcMethodNaming: 'AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Vue SFC 메서드 명명 규칙.',
+  pbHooksRuntime:
+    'AGENTS.md > PocketBase JS Hook (pb_hooks) 작성 규칙 > Node.js/브라우저 런타임 의존 API(window/fetch/fs/buffer 등) 전제 금지.',
+  pbHooksModuleLoad:
+    'AGENTS.md > PocketBase JS Hook (pb_hooks) 작성 규칙 > pb_hooks 내부 파일 로드는 __hooks 절대경로를 기본으로 사용한다.',
+  pbHooksCjs: 'AGENTS.md > PocketBase JS Hook (pb_hooks) 작성 규칙 > 모듈 로딩은 CommonJS(require/module.exports)만 사용한다.',
 };
 
 /* ======================= 공통 유틸 ======================= */
 const rule = (selector, message) => ({ selector, message });
 const forbid = (selector, message) => rule(selector, `[금지] ${message}`);
 const recommend = (selector, message) => rule(selector, `[권장] ${message}`);
+const pbHooksForbid = (selector, message) => rule(selector, `[PB_HOOKS 전용][금지] ${message}`);
+const pbHooksRecommend = (selector, message) => rule(selector, `[PB_HOOKS 전용][권장] ${message}`);
 
 const syntaxBlock = (files, restrictedSyntaxRules, ignores = []) => ({
   files,
@@ -195,6 +202,79 @@ const shoelaceChangeHandlerNamingRecommendationRules = [
 ];
 /* ======================= Shoelace 규칙 ======================= */
 
+/* ======================= PB_HOOKS 전용 규칙 ======================= */
+const pbHooksRuntimeRules = [
+  pbHooksForbid('ImportDeclaration', `${AGENTS_REF.pbHooksCjs} ESM import를 사용하지 마세요.`),
+  pbHooksForbid('ExportNamedDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export를 사용하지 마세요.`),
+  pbHooksForbid('ExportDefaultDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export default를 사용하지 마세요.`),
+  pbHooksForbid('ExportAllDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export * 를 사용하지 마세요.`),
+  pbHooksForbid('ImportExpression', `${AGENTS_REF.pbHooksCjs} dynamic import()를 사용하지 마세요.`),
+  pbHooksForbid(
+    "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(\\.\\.?\\/)/]",
+    `${AGENTS_REF.pbHooksModuleLoad} require('__hooks/...') 절대경로를 사용하세요.`,
+  ),
+  pbHooksForbid(
+    "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(fs|path|buffer|crypto|child_process|stream|http|https)$/]",
+    `${AGENTS_REF.pbHooksRuntime} Node 내장 모듈 require를 사용하지 마세요.`,
+  ),
+  pbHooksForbid("CallExpression[callee.name='fetch']", `${AGENTS_REF.pbHooksRuntime} fetch를 사용하지 마세요.`),
+  pbHooksForbid(
+    "CallExpression[callee.name='setTimeout']",
+    `${AGENTS_REF.pbHooksRuntime} setTimeout 대신 PocketBase hook 흐름으로 제어하세요.`,
+  ),
+  pbHooksForbid(
+    "CallExpression[callee.name='setInterval']",
+    `${AGENTS_REF.pbHooksRuntime} setInterval 대신 cronAdd를 사용하세요.`,
+  ),
+  pbHooksForbid("Identifier[name='window']", `${AGENTS_REF.pbHooksRuntime} window를 사용하지 마세요.`),
+  pbHooksForbid("Identifier[name='document']", `${AGENTS_REF.pbHooksRuntime} document를 사용하지 마세요.`),
+  pbHooksForbid("Identifier[name='navigator']", `${AGENTS_REF.pbHooksRuntime} navigator를 사용하지 마세요.`),
+  pbHooksForbid("Identifier[name='localStorage']", `${AGENTS_REF.pbHooksRuntime} localStorage를 사용하지 마세요.`),
+  pbHooksForbid("Identifier[name='sessionStorage']", `${AGENTS_REF.pbHooksRuntime} sessionStorage를 사용하지 마세요.`),
+  pbHooksForbid("Identifier[name='Buffer']", `${AGENTS_REF.pbHooksRuntime} Buffer를 사용하지 마세요.`),
+];
+
+const pbHooksDataSafetyRules = [
+  pbHooksForbid(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
+    'newQuery SQL 문자열에 템플릿 리터럴 보간을 사용하지 마세요. 바인딩 파라미터를 사용하세요.',
+  ),
+  pbHooksForbid(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name='findRecordsByFilter'][arguments.1.type='TemplateLiteral']",
+    'findRecordsByFilter filter 문자열에 템플릿 리터럴 보간을 사용하지 마세요. {:param} + params를 사용하세요.',
+  ),
+  pbHooksForbid(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name='findFirstRecordByFilter'][arguments.1.type='TemplateLiteral']",
+    'findFirstRecordByFilter filter 문자열에 템플릿 리터럴 보간을 사용하지 마세요. {:param} + params를 사용하세요.',
+  ),
+];
+
+const pbHooksRoutingRecommendationRules = [
+  pbHooksRecommend(
+    "CallExpression[callee.name='routerAdd'][arguments.0.type='Literal'][arguments.0.value=/^(get|post|put|patch|delete|options|head)$/]",
+    'routerAdd HTTP method는 대문자(GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD)를 권장합니다.',
+  ),
+  pbHooksRecommend(
+    "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
+    '커스텀 라우트 path는 /api/... prefix를 권장합니다.',
+  ),
+  pbHooksRecommend(
+    "CallExpression[callee.name='routerAdd']:has([arguments.0.type='Literal'][arguments.0.value=/^(POST|PUT|PATCH|DELETE)$/]):not(:has([arguments.3]))",
+    '상태 변경 라우트는 requireAuth/requireSuperuserAuth 등 미들웨어 검토를 권장합니다.',
+  ),
+];
+
+const pbHooksHttpRecommendationRules = [
+  pbHooksRecommend(
+    "CallExpression[callee.object.name='$http'][callee.property.name='send'][arguments.0.type='ObjectExpression']:not(:has(Property[key.name='timeout']))",
+    '$http.send 요청에는 timeout 명시를 권장합니다.',
+  ),
+];
+
+const pbHooksRules = [...pbHooksRuntimeRules, ...pbHooksDataSafetyRules];
+const pbHooksRecommendationRules = [...pbHooksRoutingRecommendationRules, ...pbHooksHttpRecommendationRules];
+/* ======================= PB_HOOKS 전용 규칙 ======================= */
+
 /* ======================= 레이어 경계 규칙 ======================= */
 const boundaryBaseRules = [
   pbCollectionLiteralRule,
@@ -281,6 +361,8 @@ const eslintCustomRuleConfig = [
   syntaxBlock(['apps/*/src/components/**/*.{js,ts,vue}'], componentBoundaryRules),
   // composables 적용 규칙
   syntaxBlock(['apps/*/src/composables/**/*.{js,ts,vue}'], composableRules),
+  // PB_HOOKS 전용 규칙
+  syntaxBlock(['apps/*/pb_hooks/**/*.pb.ts'], pbHooksRules),
   // 기타 src/packages 적용 규칙
   syntaxBlock(['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'], commonRules, [
     'apps/*/src/pages/**/*.{js,ts,vue}',
@@ -305,6 +387,13 @@ const eslintCustomRuleConfig = [
         ...shoelaceHelperRecommendationRules,
         ...shoelaceChangeHandlerNamingRecommendationRules,
       ],
+    },
+  },
+  // PB_HOOKS 전용 권장 규칙 (warning)
+  {
+    files: ['apps/*/pb_hooks/**/*.pb.ts'],
+    rules: {
+      '@/no-restricted-syntax': ['warn', ...pbHooksRecommendationRules],
     },
   },
 ];

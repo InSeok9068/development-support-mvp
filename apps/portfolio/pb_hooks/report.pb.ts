@@ -224,6 +224,7 @@ routerAdd('POST', '/api/report', (e) => {
     const geminiResponse = $http.send({
       url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
       method: 'POST',
+      timeout: 60000,
       body: JSON.stringify(geminiPayload),
       headers: {
         'content-type': 'application/json',

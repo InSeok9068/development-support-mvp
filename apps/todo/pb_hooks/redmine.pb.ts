@@ -5,9 +5,11 @@
 routerAdd('GET', `/api/redmine-data/{id}`, (e) => {
   const host = 'https://pms.kpcard.co.kr';
   const apiKey = '03e7fa8ea3f2966eae1bc84f54bf8792a128fe0f';
+  const timeout = 20000;
   const id = e.request?.pathValue('id');
   const res = $http.send({
     url: `${host}/issues/${id}.json`,
+    timeout,
     headers: {
       'x-redmine-api-key': apiKey,
     },
@@ -16,9 +18,13 @@ routerAdd('GET', `/api/redmine-data/{id}`, (e) => {
   return e.json(200, res.json);
 });
 
-routerAdd('POST', '/api/redmine-data', (e) => {
+routerAdd(
+  'POST',
+  '/api/redmine-data',
+  (e) => {
   const host = 'https://pms.kpcard.co.kr';
   const apiKey = '03e7fa8ea3f2966eae1bc84f54bf8792a128fe0f';
+  const timeout = 20000;
   const data = new DynamicModel({
     id: '',
     startDate: '',
@@ -77,6 +83,7 @@ routerAdd('POST', '/api/redmine-data', (e) => {
   const res = $http.send({
     url: `${host}/issues/${data['id']}.json`,
     method: 'PUT',
+    timeout,
     body: JSON.stringify(redmineData),
     headers: {
       'x-redmine-api-key': apiKey,
@@ -89,6 +96,7 @@ routerAdd('POST', '/api/redmine-data', (e) => {
       $http.send({
         url: `${host}/issues/${data['id']}/watchers.json`,
         method: 'POST',
+        timeout,
         body: JSON.stringify({ user_id: watcher }),
         headers: {
           'x-redmine-api-key': apiKey,
@@ -99,4 +107,6 @@ routerAdd('POST', '/api/redmine-data', (e) => {
   }
 
   return e.noContent(res.statusCode);
-});
+  },
+  $apis.requireAuth(),
+);
