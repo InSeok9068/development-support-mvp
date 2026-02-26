@@ -76,8 +76,8 @@
 
             <div v-if="teamLeadRows.length === 0" class="text-sm">조회 결과가 없습니다.</div>
 
-            <div v-else class="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-auto">
-              <div class="grid min-w-[320px] grid-cols-[220px_72px_80px] gap-2 text-sm">
+            <div v-else class="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden">
+              <div class="grid grid-cols-[minmax(0,1fr)_48px_56px] gap-2 text-sm">
                 <div class="font-semibold">부서</div>
                 <div class="font-semibold">직책</div>
                 <div class="font-semibold">성명</div>
@@ -120,15 +120,15 @@
                 </div>
 
                 <div class="min-w-0 overflow-x-auto">
-                  <table class="w-full min-w-[980px] table-fixed border-2 border-solid text-sm">
+                  <table class="w-full table-fixed border-2 border-solid text-sm">
                     <colgroup>
-                      <col class="w-[72px]" />
-                      <col class="w-[180px]" />
-                      <col class="w-[210px]" />
-                      <col class="w-[130px]" />
-                      <col class="w-[110px]" />
-                      <col class="w-[110px]" />
+                      <col class="w-[68px]" />
+                      <col class="w-[170px]" />
+                      <col class="w-[190px]" />
                       <col class="w-[120px]" />
+                      <col class="w-[100px]" />
+                      <col class="w-[100px]" />
+                      <col class="w-[110px]" />
                     </colgroup>
                     <thead>
                       <tr>
