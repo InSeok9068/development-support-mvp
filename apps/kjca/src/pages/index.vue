@@ -398,9 +398,7 @@ const onClickRunAutoAnalyze = async () => {
     const alertMessage = String(collectResult.alertMessage ?? '').trim();
     autoNoticeMessage.value = alertMessage || `자동 취합 완료 (${deptWeekTables.value.length}개 부서)`;
   } catch (error) {
-    autoErrorMessage.value = (error as { message?: string })?.message
-      ? String((error as { message?: string }).message)
-      : `${error}`;
+    autoErrorMessage.value = readErrorMessage(error);
   } finally {
     isAutoRunning.value = false;
   }
@@ -429,14 +427,17 @@ const onClickClearDeptCacheButton = async (dept: string) => {
       ? `${safeDept} 캐시 ${deletedCount}건을 삭제했습니다.`
       : `${safeDept} 캐시가 없어 삭제할 항목이 없습니다.`;
   } catch (error) {
-    autoErrorMessage.value = (error as { message?: string })?.message
-      ? String((error as { message?: string }).message)
-      : `${error}`;
+    autoErrorMessage.value = readErrorMessage(error);
   } finally {
     cacheClearingDept.value = '';
   }
 };
 /* ======================= 메서드 ======================= */
+
+function readErrorMessage(error: unknown): string {
+  const message = (error as { message?: string } | null)?.message;
+  return message ? String(message) : `${error}`;
+}
 
 function buildTodayText() {
   const now = new Date();

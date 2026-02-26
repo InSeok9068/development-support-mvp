@@ -19,8 +19,6 @@ routerAdd(
 
     const {
       getHeaderValues,
-      normalizeCookieHeader,
-      extractCookieHeaderFromSetCookie,
       mergeSetCookieIntoCookieHeader,
       detectAuthRequiredHtml,
       parseTeamLeadRowsFromDiaryHtml,
@@ -47,6 +45,9 @@ routerAdd(
 
       const mngId = String(userRecord.getString('name') ?? '').trim();
       const mngPw = String(userRecord.getString('kjcaPw') ?? '').trim();
+      if (!mngId || !mngPw) {
+        return e.error(400, 'KJCA 계정 정보가 필요합니다. (users.name=mng_id, users.kjcaPw=mng_pw)', {});
+      }
 
       let sessionCookie = '';
       let loginStatusCode = null;
@@ -64,59 +65,47 @@ routerAdd(
       });
       sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, staffAuthInitResponse.headers);
 
-      const loginAndUpdateCookie = () => {
-        if (!mngId || !mngPw) {
-          return e.error(400, 'KJCA 계정 정보가 필요합니다. (users.name=mng_id, users.kjcaPw=mng_pw)', {});
-        }
+      const loginBody =
+        `url=${encodeURIComponent('/board/admin')}` +
+        '&sf_mobile_key=' +
+        '&sf_alarm_key=' +
+        `&mng_id=${encodeURIComponent(mngId)}` +
+        `&mng_pw=${encodeURIComponent(mngPw)}`;
 
-        const loginBody =
-          `url=${encodeURIComponent('/board/admin')}` +
-          '&sf_mobile_key=' +
-          '&sf_alarm_key=' +
-          `&mng_id=${encodeURIComponent(mngId)}` +
-          `&mng_pw=${encodeURIComponent(mngPw)}`;
+      const loginResponse = $http.send({
+        url: loginUrl,
+        method: 'POST',
+        timeout: 20,
+        body: loginBody,
+        headers: {
+          ...buildBrowserLikeHeaders(host, sessionCookie, staffAuthUrl),
+          'content-type': 'application/x-www-form-urlencoded',
+          Origin: host,
+        },
+      });
 
-        const loginResponse = $http.send({
-          url: loginUrl,
-          method: 'POST',
-          timeout: 20,
-          body: loginBody,
-          headers: {
-            ...buildBrowserLikeHeaders(host, sessionCookie, staffAuthUrl),
-            'content-type': 'application/x-www-form-urlencoded',
-            Origin: host,
-          },
-        });
+      loginStatusCode = loginResponse.statusCode;
+      const loginResponseBody = toString(loginResponse.body);
+      loginSetCookieCount = getHeaderValues(loginResponse.headers, 'Set-Cookie').length;
+      sessionCookie = mergeSetCookieIntoCookieHeader(sessionCookie, loginResponse.headers);
 
-        loginStatusCode = loginResponse.statusCode;
-        const loginResponseBody = toString(loginResponse.body);
+      if (/location\.href\s*=\s*(?:'|")\s*\/\?site=groupware\s*(?:'|")/i.test(loginResponseBody)) {
+        loginRedirectTo = '/?site=groupware';
+      } else if (/location\.href\s*=\s*(?:'|")\s*\/staff\/auth\s*(?:'|")/i.test(loginResponseBody)) {
+        loginRedirectTo = '/staff/auth';
+      } else {
+        loginRedirectTo = '';
+      }
 
-        const setCookieHeaders = getHeaderValues(loginResponse.headers, 'Set-Cookie');
-        loginSetCookieCount = setCookieHeaders.length;
-        const cookieFromLogin = normalizeCookieHeader(extractCookieHeaderFromSetCookie(setCookieHeaders));
-        sessionCookie = normalizeCookieHeader(sessionCookie ? `${sessionCookie}; ${cookieFromLogin}` : cookieFromLogin);
-
-        if (/location\.href\s*=\s*(?:'|")\s*\/\?site=groupware\s*(?:'|")/i.test(loginResponseBody)) {
-          loginRedirectTo = '/?site=groupware';
-        } else if (/location\.href\s*=\s*(?:'|")\s*\/staff\/auth\s*(?:'|")/i.test(loginResponseBody)) {
-          loginRedirectTo = '/staff/auth';
-        } else {
-          loginRedirectTo = '';
-        }
-
-        logger.info(
-          'login_check completed',
-          'statusCode',
-          loginStatusCode,
-          'setCookieCount',
-          loginSetCookieCount,
-          'redirectTo',
-          loginRedirectTo,
-        );
-      };
-
-      const maybeErrorResponse = loginAndUpdateCookie();
-      if (maybeErrorResponse) return maybeErrorResponse;
+      logger.info(
+        'login_check completed',
+        'statusCode',
+        loginStatusCode,
+        'setCookieCount',
+        loginSetCookieCount,
+        'redirectTo',
+        loginRedirectTo,
+      );
 
       if (!sessionCookie) {
         return e.error(500, '세션 쿠키를 확보하지 못했습니다.', {});

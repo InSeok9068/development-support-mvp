@@ -219,6 +219,16 @@ export type RecruitingWeekPlanData = {
   items: RecruitingWeekPlanItemsResponse[];
 };
 
+const sendPostJson = <TResponse, TPayload>(path: string, payload: TPayload) => {
+  return pb.send<TResponse>(path, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: {
+      'content-type': 'application/json',
+    },
+  });
+};
+
 const escapeFilterValue = (value: string) => String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
 const isNotFoundError = (error: unknown) => {
@@ -401,36 +411,21 @@ export const useKjca = () => {
 
   /* ======================= 메서드 ======================= */
   const fetchStaffAuthProbe = (payload: StaffAuthProbePayload) => {
-    return pb.send<StaffAuthProbeResponse>('/api/staff-auth-probe', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
+    return sendPostJson<StaffAuthProbeResponse, StaffAuthProbePayload>('/api/staff-auth-probe', payload);
   };
 
   const fetchStaffDiaryAnalyze = (payload: StaffDiaryAnalyzePayload) => {
-    return pb.send<StaffDiaryAnalyzeResponse>('/api/staff-diary/analyze', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
+    return sendPostJson<StaffDiaryAnalyzeResponse, StaffDiaryAnalyzePayload>('/api/staff-diary/analyze', payload);
   };
 
   const fetchStaffDiaryCollectWeekly = (payload: StaffDiaryCollectWeeklyPayload) => {
-    return pb.send<StaffDiaryCollectWeeklyResponse>('/api/staff-diary/collect-weekly', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
+    return sendPostJson<StaffDiaryCollectWeeklyResponse, StaffDiaryCollectWeeklyPayload>(
+      '/api/staff-diary/collect-weekly',
+      payload,
+    );
   };
 
-  const fetchStaffDiaryAnalyzeCacheClear = (payload: StaffDiaryAnalyzeCacheClearPayload) => {
+  const fetchStaffDiaryAnalyzeCacheClear = async (payload: StaffDiaryAnalyzeCacheClearPayload) => {
     const reportDate = String(payload.reportDate ?? '').trim();
     const dept = String(payload.dept ?? '').trim();
 
@@ -441,23 +436,23 @@ export const useKjca = () => {
       throw new Error('부서(dept)가 필요합니다.');
     }
 
-    return pb.collection(Collections.StaffDiaryAnalysisCache).getFullList<StaffDiaryAnalysisCacheResponse>({
+    const rows = await pb.collection(Collections.StaffDiaryAnalysisCache).getFullList<StaffDiaryAnalysisCacheResponse>({
       filter:
         `(reportDate = '${escapeFilterValue(reportDate)}' || reportDate ~ '${escapeFilterValue(`${reportDate}%`)}')` +
         ` && dept = '${escapeFilterValue(dept)}'`,
       sort: 'created',
-    }).then(async (rows) => {
-      await Promise.all(
-        rows.map((row) => pb.collection(Collections.StaffDiaryAnalysisCache).delete(row.id)),
-      );
-
-      return {
-        ok: true,
-        reportDate,
-        dept,
-        deletedCount: rows.length,
-      } satisfies StaffDiaryAnalyzeCacheClearResponse;
     });
+
+    await Promise.all(
+      rows.map((row) => pb.collection(Collections.StaffDiaryAnalysisCache).delete(row.id)),
+    );
+
+    return {
+      ok: true,
+      reportDate,
+      dept,
+      deletedCount: rows.length,
+    } satisfies StaffDiaryAnalyzeCacheClearResponse;
   };
 
   const fetchRecruitingWeekPlan = (payload: FetchRecruitingWeekPlanPayload) => {

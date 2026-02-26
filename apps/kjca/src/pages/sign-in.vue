@@ -72,12 +72,15 @@ const onClickSignIn = async () => {
     successMessage.value = '로그인 완료';
     await router.push('/');
   } catch (error) {
-    errorMessage.value = (error as { message?: string })?.message
-      ? String((error as { message?: string }).message)
-      : `${error}`;
+    errorMessage.value = readErrorMessage(error);
   } finally {
     isSubmitting.value = false;
   }
 };
 /* ======================= 메서드 ======================= */
+
+function readErrorMessage(error: unknown): string {
+  const message = (error as { message?: string } | null)?.message;
+  return message ? String(message) : `${error}`;
+}
 </script>
