@@ -141,6 +141,13 @@ routerAdd(
         if (!text) return normalizeRecruitingExtract({});
         return normalizeRecruitingExtract(parseJsonSafely(text, {}));
       }
+      if (Array.isArray(value)) {
+        const isNumericByteArray = value.every((item) => Number.isInteger(item) && item >= 0 && item <= 255);
+        if (!isNumericByteArray) return normalizeRecruitingExtract({});
+        const text = String(toString(value) ?? '').trim();
+        if (!text) return normalizeRecruitingExtract({});
+        return normalizeRecruitingExtract(parseJsonSafely(text, {}));
+      }
       return normalizeRecruitingExtract(value);
     };
 
@@ -385,8 +392,10 @@ routerAdd(
 
     // ---------- 캐시 조회 키(일자+부서+원본+해시+프롬프트버전) 구성 ----------
     const buildCacheIdentityFilter = (params) => {
+      const reportDateExact = String(params.reportDate ?? '').trim();
+      const reportDateLike = `${reportDateExact}%`;
       return (
-        `reportDate = '${escapeFilterValue(params.reportDate)}'` +
+        `(reportDate = '${escapeFilterValue(reportDateExact)}' || reportDate ~ '${escapeFilterValue(reportDateLike)}')` +
         ` && dept = '${escapeFilterValue(params.dept)}'` +
         ` && printUrl = '${escapeFilterValue(params.printUrl)}'` +
         ` && sourceHash = '${escapeFilterValue(params.sourceHash)}'` +
@@ -419,7 +428,6 @@ routerAdd(
         const targetRecord = record || new Record(collection);
         targetRecord.set('reportDate', params.reportDate);
         targetRecord.set('dept', params.dept);
-        targetRecord.set('position', params.position);
         targetRecord.set('staffName', params.staffName);
         targetRecord.set('printUrl', params.printUrl);
         targetRecord.set('sourceHash', params.sourceHash);

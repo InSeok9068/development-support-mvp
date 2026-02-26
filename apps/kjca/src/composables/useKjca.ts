@@ -442,7 +442,9 @@ export const useKjca = () => {
     }
 
     return pb.collection(Collections.StaffDiaryAnalysisCache).getFullList<StaffDiaryAnalysisCacheResponse>({
-      filter: `reportDate = '${escapeFilterValue(reportDate)}' && dept = '${escapeFilterValue(dept)}'`,
+      filter:
+        `(reportDate = '${escapeFilterValue(reportDate)}' || reportDate ~ '${escapeFilterValue(`${reportDate}%`)}')` +
+        ` && dept = '${escapeFilterValue(dept)}'`,
       sort: 'created',
     }).then(async (rows) => {
       await Promise.all(

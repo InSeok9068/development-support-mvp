@@ -334,8 +334,23 @@ const normalizeStringArray = (value) => {
   return value.map((v) => String(v ?? '').trim()).filter((v) => !!v);
 };
 
+const isNumericByteArray = (value) => {
+  if (!Array.isArray(value)) return false;
+  if (!value.length) return false;
+  return value.every((item) => Number.isInteger(item) && item >= 0 && item <= 255);
+};
+
 const normalizeJsonArrayField = (value) => {
-  if (Array.isArray(value)) return normalizeStringArray(value);
+  if (Array.isArray(value)) {
+    if (isNumericByteArray(value)) {
+      const text = String(toString(value) ?? '').trim();
+      if (!text) return [];
+      const parsedFromBytes = parseJsonSafely(text, null);
+      if (Array.isArray(parsedFromBytes)) return normalizeStringArray(parsedFromBytes);
+      return [];
+    }
+    return normalizeStringArray(value);
+  }
   if (value === null || value === undefined) return [];
   if (typeof value === 'string') {
     const trimmed = value.trim();
