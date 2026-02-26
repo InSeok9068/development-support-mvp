@@ -11,6 +11,11 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	RecruitingDailyResults = "recruiting_daily_results",
+	RecruitingWeekPlanItems = "recruiting_week_plan_items",
+	RecruitingWeekPlans = "recruiting_week_plans",
+	RecruitingWeekTextPlans = "recruiting_week_text_plans",
+	RecruitingWeekTextRows = "recruiting_week_text_rows",
 	StaffDiaryAnalysisCache = "staff_diary_analysis_cache",
 	Users = "users",
 }
@@ -93,11 +98,112 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum RecruitingDailyResultsWeekdayOptions {
+	"mon" = "mon",
+	"tue" = "tue",
+	"wed" = "wed",
+	"thu" = "thu",
+	"fri" = "fri",
+}
+
+export enum RecruitingDailyResultsSourceTypeOptions {
+	"manual" = "manual",
+	"ai" = "ai",
+}
+export type RecruitingDailyResultsRecord = {
+	actualCount: number
+	created: IsoAutoDateString
+	createdBy?: RecordIdString
+	dept: string
+	id: string
+	memo?: string
+	reportDate: IsoDateString
+	sourceType: RecruitingDailyResultsSourceTypeOptions
+	updated: IsoAutoDateString
+	weekStartDate: IsoDateString
+	weekday: RecruitingDailyResultsWeekdayOptions
+}
+
+export enum RecruitingWeekPlanItemsWeekdayOptions {
+	"mon" = "mon",
+	"tue" = "tue",
+	"wed" = "wed",
+	"thu" = "thu",
+	"fri" = "fri",
+}
+export type RecruitingWeekPlanItemsRecord = {
+	channelName?: string
+	created: IsoAutoDateString
+	id: string
+	note?: string
+	ownerName?: string
+	planId: RecordIdString
+	promotionContent?: string
+	sortOrder?: number
+	targetCount?: number
+	updated: IsoAutoDateString
+	weekday: RecruitingWeekPlanItemsWeekdayOptions
+}
+
+export enum RecruitingWeekPlansStatusOptions {
+	"draft" = "draft",
+	"confirmed" = "confirmed",
+}
+export type RecruitingWeekPlansRecord = {
+	created: IsoAutoDateString
+	createdBy?: RecordIdString
+	dept: string
+	id: string
+	monthTarget?: number
+	status: RecruitingWeekPlansStatusOptions
+	updated: IsoAutoDateString
+	weekStartDate: IsoDateString
+	weekTarget?: number
+}
+
+export enum RecruitingWeekTextPlansStatusOptions {
+	"draft" = "draft",
+	"confirmed" = "confirmed",
+}
+export type RecruitingWeekTextPlansRecord = {
+	created: IsoAutoDateString
+	createdBy?: RecordIdString
+	dept: string
+	id: string
+	status: RecruitingWeekTextPlansStatusOptions
+	updated: IsoAutoDateString
+	weekStartDate: IsoDateString
+}
+
+export enum RecruitingWeekTextRowsWeekdayOptions {
+	"mon" = "mon",
+	"tue" = "tue",
+	"wed" = "wed",
+	"thu" = "thu",
+	"fri" = "fri",
+}
+export type RecruitingWeekTextRowsRecord = {
+	channelName?: string
+	created: IsoAutoDateString
+	id: string
+	note?: string
+	ownerName?: string
+	planId: RecordIdString
+	promotionContent?: string
+	recruitCountText?: string
+	resultText?: string
+	sortOrder?: number
+	targetText?: string
+	updated: IsoAutoDateString
+	weekday: RecruitingWeekTextRowsWeekdayOptions
+	weeklyPlan?: string
+}
+
 export enum StaffDiaryAnalysisCacheStatusOptions {
 	"success" = "success",
 	"failed" = "failed",
 }
-export type StaffDiaryAnalysisCacheRecord<Tpromotion = unknown, Tspecial = unknown, Tvacation = unknown> = {
+export type StaffDiaryAnalysisCacheRecord<Tpromotion = unknown, Trecruiting = unknown, Tspecial = unknown, Tvacation = unknown> = {
 	created: IsoAutoDateString
 	dept: string
 	errorMessage?: string
@@ -106,6 +212,7 @@ export type StaffDiaryAnalysisCacheRecord<Tpromotion = unknown, Tspecial = unkno
 	printUrl: string
 	promotion?: null | Tpromotion
 	promptVersion?: number
+	recruiting?: null | Trecruiting
 	reportDate: IsoDateString
 	sourceHash: string
 	special?: null | Tspecial
@@ -135,7 +242,12 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
-export type StaffDiaryAnalysisCacheResponse<Tpromotion = unknown, Tspecial = unknown, Tvacation = unknown, Texpand = unknown> = Required<StaffDiaryAnalysisCacheRecord<Tpromotion, Tspecial, Tvacation>> & BaseSystemFields<Texpand>
+export type RecruitingDailyResultsResponse<Texpand = unknown> = Required<RecruitingDailyResultsRecord> & BaseSystemFields<Texpand>
+export type RecruitingWeekPlanItemsResponse<Texpand = unknown> = Required<RecruitingWeekPlanItemsRecord> & BaseSystemFields<Texpand>
+export type RecruitingWeekPlansResponse<Texpand = unknown> = Required<RecruitingWeekPlansRecord> & BaseSystemFields<Texpand>
+export type RecruitingWeekTextPlansResponse<Texpand = unknown> = Required<RecruitingWeekTextPlansRecord> & BaseSystemFields<Texpand>
+export type RecruitingWeekTextRowsResponse<Texpand = unknown> = Required<RecruitingWeekTextRowsRecord> & BaseSystemFields<Texpand>
+export type StaffDiaryAnalysisCacheResponse<Tpromotion = unknown, Trecruiting = unknown, Tspecial = unknown, Tvacation = unknown, Texpand = unknown> = Required<StaffDiaryAnalysisCacheRecord<Tpromotion, Trecruiting, Tspecial, Tvacation>> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -146,6 +258,11 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	recruiting_daily_results: RecruitingDailyResultsRecord
+	recruiting_week_plan_items: RecruitingWeekPlanItemsRecord
+	recruiting_week_plans: RecruitingWeekPlansRecord
+	recruiting_week_text_plans: RecruitingWeekTextPlansRecord
+	recruiting_week_text_rows: RecruitingWeekTextRowsRecord
 	staff_diary_analysis_cache: StaffDiaryAnalysisCacheRecord
 	users: UsersRecord
 }
@@ -156,6 +273,11 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	recruiting_daily_results: RecruitingDailyResultsResponse
+	recruiting_week_plan_items: RecruitingWeekPlanItemsResponse
+	recruiting_week_plans: RecruitingWeekPlansResponse
+	recruiting_week_text_plans: RecruitingWeekTextPlansResponse
+	recruiting_week_text_rows: RecruitingWeekTextRowsResponse
 	staff_diary_analysis_cache: StaffDiaryAnalysisCacheResponse
 	users: UsersResponse
 }

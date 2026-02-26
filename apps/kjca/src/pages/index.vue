@@ -1,206 +1,210 @@
 <template>
-  <main class="mx-auto min-h-screen max-w-7xl px-10 py-6">
-    <div class="flex items-start justify-between gap-6">
-      <div class="flex flex-col gap-1">
-        <div class="text-lg font-semibold">KJCA 업무일지</div>
-        <div class="text-sm">
+  <main class="mx-auto min-h-screen max-w-[1500px] px-4 py-6 xl:px-6">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex flex-col gap-1">
+        <div class="text-lg font-semibold">KJCA 업무일지 자동 취합</div>
+        <div class="truncate text-sm">
           PocketBase 로그인:
           <span v-if="isSignedIn && authRecord">{{ authRecord.email }}</span>
           <span v-else>미로그인</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex shrink-0 items-center gap-2">
         <sl-button v-if="!isSignedIn" variant="default" @click="onClickGoSignIn">로그인</sl-button>
         <sl-button v-if="isSignedIn" variant="default" @click="onClickSignOut">로그아웃</sl-button>
       </div>
     </div>
 
     <sl-alert v-if="!isSignedIn" class="mt-4" variant="warning" open>
-      먼저 PocketBase에 로그인한 뒤, 조회/분석을 진행해주세요.
+      먼저 PocketBase에 로그인한 뒤 자동 취합을 실행해주세요.
     </sl-alert>
 
-    <div class="mt-6 grid grid-cols-[460px_1fr] gap-6">
-      <div class="flex flex-col gap-6">
-        <sl-card>
+    <div class="mt-6 grid grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6">
+      <div class="min-w-0 flex flex-col gap-6">
+        <sl-card class="min-w-0">
           <div class="flex flex-col gap-4">
             <div class="text-sm font-semibold">조회 조건</div>
 
-            <div class="grid grid-cols-1 gap-3">
-              <sl-input v-model="scDay" label="조회일" type="date"></sl-input>
-            </div>
+            <sl-input v-model="scDay" label="조회일" type="date"></sl-input>
+            <sl-switch :checked="testOneOnly" @sl-change="onChangeTestOneOnly">
+              테스트 모드 (1건만 처리)
+            </sl-switch>
 
-            <div class="flex items-center justify-between gap-3">
-              <sl-button variant="primary" :disabled="!isSignedIn" @click="onClickCallStaffAuthProbe">
-                팀장 목록 조회
-              </sl-button>
+            <sl-button
+              variant="primary"
+              size="large"
+              :loading="isAutoRunning"
+              :disabled="!isSignedIn"
+              @click="onClickRunAutoAnalyze"
+            >
+              금일 자동 취합/비교 실행
+            </sl-button>
 
-              <div class="text-sm">
-                <sl-badge v-if="lastDiaryAccessible === true" variant="success">성공</sl-badge>
-                <sl-badge v-if="lastDiaryAccessible === false" variant="danger">실패</sl-badge>
+            <sl-alert v-if="isAutoRunning" variant="neutral" open>
+              <div class="flex items-center gap-2">
+                <sl-spinner></sl-spinner>
+                <div class="text-sm">팀장 일지 스크랩/분석/저장을 진행 중입니다.</div>
               </div>
-            </div>
+              <sl-progress-bar class="mt-2" indeterminate></sl-progress-bar>
+            </sl-alert>
+
+            <sl-alert v-if="autoNoticeMessage" variant="success" open>{{ autoNoticeMessage }}</sl-alert>
+            <sl-alert v-if="autoErrorMessage" variant="danger" open>{{ autoErrorMessage }}</sl-alert>
+            <sl-alert v-if="autoWarnings.length > 0" variant="warning" open>
+              <div class="text-sm">일부 항목은 자동 보정/스킵되었습니다.</div>
+              <div class="mt-2 flex max-h-40 flex-col gap-1 overflow-auto text-sm">
+                <div v-for="(warning, index) in autoWarnings" :key="`warning-${index}`">- {{ warning }}</div>
+              </div>
+            </sl-alert>
           </div>
         </sl-card>
 
-        <sl-card>
+        <sl-card class="min-w-0">
           <div class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3">
               <div class="text-sm font-semibold">팀장 목록</div>
               <div class="text-sm">총 {{ teamLeadRows.length }}건</div>
             </div>
 
+            <div class="text-sm">
+              접근 상태:
+              <sl-badge v-if="lastDiaryAccessible === true" variant="success">성공</sl-badge>
+              <sl-badge v-if="lastDiaryAccessible === false" variant="danger">실패</sl-badge>
+              <span v-if="lastDiaryAccessible === null">-</span>
+            </div>
+
             <div v-if="teamLeadRows.length === 0" class="text-sm">조회 결과가 없습니다.</div>
 
-            <div v-else class="flex flex-col gap-3">
-              <div class="grid grid-cols-[1fr_72px_80px] gap-2 text-sm">
+            <div v-else class="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-auto">
+              <div class="grid min-w-[320px] grid-cols-[220px_72px_80px] gap-2 text-sm">
                 <div class="font-semibold">부서</div>
                 <div class="font-semibold">직책</div>
                 <div class="font-semibold">성명</div>
-              </div>
-
-              <sl-divider></sl-divider>
-
-              <div class="max-h-[calc(100vh-330px)] overflow-auto">
-                <div class="grid grid-cols-[1fr_72px_80px] gap-2 text-sm">
-                  <template v-for="row in teamLeadRows" :key="`${row.dept}-${row.staffName}`">
-                    <div>{{ row.dept }}</div>
-                    <div>{{ row.position }}</div>
-                    <div>{{ row.staffName }}</div>
-                  </template>
-                </div>
+                <template v-for="row in teamLeadRows" :key="`${row.dept}-${row.staffName}`">
+                  <div class="break-words">{{ row.dept }}</div>
+                  <div class="break-words">{{ row.position }}</div>
+                  <div class="break-words">{{ row.staffName }}</div>
+                </template>
               </div>
             </div>
           </div>
         </sl-card>
       </div>
 
-      <div class="flex flex-col gap-6">
-        <sl-card>
-          <div class="flex flex-col gap-4">
+      <div class="min-w-0 flex flex-col gap-6">
+        <sl-card v-if="deptWeekTables.length > 0" class="min-w-0">
+          <div class="min-w-0 flex flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
-              <div class="text-sm font-semibold">분석</div>
-              <sl-switch :checked="testAnalyzeOneOnly" @sl-change="onChangeTestAnalyzeOneOnly">
-                테스트 모드 (1건)
-              </sl-switch>
+              <div class="text-sm font-semibold">금주 모집 계획/결과</div>
+              <div class="text-sm">총 {{ deptWeekTables.length }}개 부서</div>
             </div>
 
-            <sl-button
-              variant="primary"
-              size="large"
-              :loading="isAnalyzing"
-              :disabled="!isSignedIn || teamLeadRows.length === 0"
-              @click="onClickAnalyzeDiary"
-            >
-              팀장 일지 분석 ({{ analyzeTargetCount }}건)
-            </sl-button>
-
-            <sl-alert v-if="isAnalyzing" variant="neutral" open>
-              <div class="flex items-center gap-2">
-                <sl-spinner></sl-spinner>
-                <div class="text-sm">AI가 분석 중입니다. 잠시만 기다려주세요.</div>
-              </div>
-              <sl-progress-bar class="mt-2" indeterminate></sl-progress-bar>
-            </sl-alert>
-
-            <sl-alert v-if="analysisNoticeMessage" variant="warning" open>{{ analysisNoticeMessage }}</sl-alert>
-            <sl-alert v-if="analysisErrorMessage" variant="danger" open>{{ analysisErrorMessage }}</sl-alert>
+            <div class="flex flex-col gap-3">
+              <sl-details
+                v-for="table in deptWeekTables"
+                :key="`table-${table.dept}`"
+                :summary="table.dept"
+                open
+              >
+                <div class="min-w-0 overflow-x-auto">
+                  <table class="w-full min-w-[1300px] border-2 border-solid text-base">
+                    <thead>
+                      <tr>
+                        <th colspan="7" class="border-2 border-solid px-4 py-3 text-left font-semibold">
+                          {{ buildDeptSummaryText(table.dept) }}
+                        </th>
+                      </tr>
+                      <tr>
+                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">요일</th>
+                        <th colspan="3" class="border border-solid px-4 py-3 text-left font-semibold">주간 홍보계획</th>
+                        <th class="border border-solid px-4 py-3 text-left font-semibold">결과</th>
+                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">
+                          담당자
+                          <br />
+                          (홍보)
+                        </th>
+                        <th rowspan="2" class="border border-solid px-4 py-3 text-left font-semibold">비고</th>
+                      </tr>
+                      <tr>
+                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집홍보처</th>
+                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집 홍보내용</th>
+                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집목표</th>
+                        <th class="border border-solid px-4 py-3 text-left font-semibold">모집 건수</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-for="weekday in WEEKDAY_ORDER" :key="`weekday-row-${table.dept}-${weekday}`">
+                        <template
+                          v-for="(row, rowIndex) in [getWeekdayMergedRow(table.rows, weekday)]"
+                          :key="`weekday-row-data-${table.dept}-${weekday}-${rowIndex}`"
+                        >
+                          <tr :class="{ 'font-semibold': isFocusWeekday(weekday, table.todayWeekday) }">
+                            <td class="border border-solid px-4 py-3 text-left align-middle">
+                              {{ weekdayLabelMap[weekday] }}
+                              <sl-badge v-if="isFocusWeekday(weekday, table.todayWeekday)" variant="primary" pill>오늘</sl-badge>
+                            </td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.channelName || '' }}</td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.promotionContent || '' }}</td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.targetText || '' }}</td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.recruitCountText || '' }}</td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.ownerName || '' }}</td>
+                            <td class="border border-solid px-4 py-3 text-left align-middle">{{ row.note || '' }}</td>
+                          </tr>
+                        </template>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </sl-details>
+            </div>
           </div>
         </sl-card>
 
-        <sl-card v-if="analysisResults.length > 0">
-          <div class="flex flex-col gap-4">
+        <sl-card v-if="analysisResults.length > 0" class="min-w-0">
+          <div class="min-w-0 flex flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
-              <div class="text-sm font-semibold">결과</div>
+              <div class="text-sm font-semibold">AI 분석 상세</div>
               <div class="text-sm">총 {{ analysisResults.length }}건</div>
             </div>
 
-            <sl-tab-group>
-              <sl-tab slot="nav" panel="merged">취합 버전</sl-tab>
-              <sl-tab slot="nav" panel="detail">부서별 상세</sl-tab>
+            <div class="flex flex-col gap-3">
+              <sl-details
+                v-for="item in analysisResults"
+                :key="`${item.dept}-${item.staffName}`"
+                :summary="`${item.dept} / ${item.staffName}${item.ok ? '' : ' (실패)'}`"
+              >
+                <div class="min-w-0 flex flex-col gap-3 text-sm">
+                  <div>
+                    <sl-button
+                      variant="text"
+                      size="medium"
+                      :href="item.printUrl"
+                      target="_blank"
+                      rel="noreferrer"
+                      @click.stop
+                    >
+                      원본링크
+                    </sl-button>
+                  </div>
 
-              <sl-tab-panel name="merged">
-                <sl-tab-group>
-                  <sl-tab slot="nav" panel="promo">홍보</sl-tab>
-                  <sl-tab slot="nav" panel="vac">휴가</sl-tab>
-                  <sl-tab slot="nav" panel="spec">특이사항</sl-tab>
+                  <sl-alert v-if="!item.ok" variant="danger" open>{{ item.error || '분석에 실패했습니다.' }}</sl-alert>
 
-                  <sl-tab-panel name="promo">
-                    <div v-if="mergedPromotionLines.length === 0" class="text-sm">-</div>
-                    <div v-else class="flex flex-col gap-1 text-sm">
-                      <div v-for="(v, idx) in mergedPromotionLines" :key="`mp-${idx}`">- {{ v }}</div>
+                  <div>
+                    <div class="font-semibold">모집/홍보</div>
+                    <div v-if="item.promotion.length === 0">-</div>
+                    <div v-else class="flex flex-col gap-1">
+                      <div v-for="(v, idx) in item.promotion" :key="`promotion-${idx}`" class="break-words">- {{ v }}</div>
                     </div>
-                  </sl-tab-panel>
+                  </div>
 
-                  <sl-tab-panel name="vac">
-                    <div v-if="mergedVacationLines.length === 0" class="text-sm">-</div>
-                    <div v-else class="flex flex-col gap-1 text-sm">
-                      <div v-for="(v, idx) in mergedVacationLines" :key="`mv-${idx}`">- {{ v }}</div>
-                    </div>
-                  </sl-tab-panel>
-
-                  <sl-tab-panel name="spec">
-                    <div v-if="mergedSpecialLines.length === 0" class="text-sm">-</div>
-                    <div v-else class="flex flex-col gap-1 text-sm">
-                      <div v-for="(v, idx) in mergedSpecialLines" :key="`ms-${idx}`">- {{ v }}</div>
-                    </div>
-                  </sl-tab-panel>
-                </sl-tab-group>
-              </sl-tab-panel>
-
-              <sl-tab-panel name="detail">
-                <div class="flex flex-col gap-3">
-                  <sl-details
-                    v-for="item in analysisResults"
-                    :key="`${item.dept}-${item.staffName}`"
-                    :summary="`${item.dept} / ${item.position} / ${item.staffName}${item.ok ? '' : ' (실패)'}`"
-                  >
-                    <div class="flex flex-col gap-3 text-sm">
-                      <div>
-                        <sl-button
-                          variant="text"
-                          size="medium"
-                          :href="item.printUrl"
-                          target="_blank"
-                          rel="noreferrer"
-                          @click.stop
-                        >
-                          원본링크
-                        </sl-button>
-                      </div>
-
-                      <sl-alert v-if="!item.ok" variant="danger" open>{{
-                        item.error || '분석에 실패했습니다.'
-                      }}</sl-alert>
-
-                      <div>
-                        <div class="font-semibold">홍보</div>
-                        <div v-if="item.promotion.length === 0">-</div>
-                        <div v-else class="flex flex-col gap-1">
-                          <div v-for="(v, idx) in item.promotion" :key="`p-${idx}`">- {{ v }}</div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div class="font-semibold">휴가</div>
-                        <div v-if="item.vacation.length === 0">-</div>
-                        <div v-else class="flex flex-col gap-1">
-                          <div v-for="(v, idx) in item.vacation" :key="`v-${idx}`">- {{ v }}</div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div class="font-semibold">특이사항</div>
-                        <div v-if="item.special.length === 0">-</div>
-                        <div v-else class="flex flex-col gap-1">
-                          <div v-for="(v, idx) in item.special" :key="`s-${idx}`">- {{ v }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </sl-details>
+                  <div>
+                    <div class="font-semibold">AI 추출 실적</div>
+                    <div>{{ item.recruiting.dailyActualCount === null ? '-' : `${item.recruiting.dailyActualCount}명` }}</div>
+                  </div>
                 </div>
-              </sl-tab-panel>
-            </sl-tab-group>
+              </sl-details>
+            </div>
           </div>
         </sl-card>
       </div>
@@ -209,82 +213,106 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/useAuth';
 import { useKjca } from '@/composables/useKjca';
 import { readShoelaceChecked } from '@packages/ui';
 
+type RecruitingWeekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+
+type TeamLeadRow = {
+  dept: string;
+  position: string;
+  staffName: string;
+  printUrl: string;
+};
+
+type RecruitingAnalyze = {
+  monthTarget: number | null;
+  monthAssignedCurrent: number | null;
+  weekTarget: number | null;
+  dailyPlan: Array<{
+    weekday: RecruitingWeekday;
+    channelName: string;
+    promotionContent: string;
+    targetCount: number | null;
+    ownerName: string;
+    note: string;
+  }>;
+  dailyActualCount: number | null;
+};
+
+type AnalysisItem = {
+  dept: string;
+  position: string;
+  staffName: string;
+  ok: boolean;
+  error?: string;
+  promotion: string[];
+  vacation: string[];
+  special: string[];
+  recruiting: RecruitingAnalyze;
+  printUrl: string;
+};
+
+type DeptWeekTableRow = {
+  weekday: RecruitingWeekday;
+  channelName: string;
+  weeklyPlan: string;
+  promotionContent: string;
+  targetText: string;
+  resultText: string;
+  recruitCountText: string;
+  ownerName: string;
+  note: string;
+  sortOrder: number;
+};
+
+type DeptWeekTable = {
+  dept: string;
+  todayWeekday: RecruitingWeekday;
+  rows: DeptWeekTableRow[];
+};
+
+type DeptWeekdayMergedRow = {
+  channelName: string;
+  weeklyPlan: string;
+  promotionContent: string;
+  targetText: string;
+  resultText: string;
+  recruitCountText: string;
+  ownerName: string;
+  note: string;
+};
+
+const WEEKDAY_ORDER: RecruitingWeekday[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
+
+const weekdayLabelMap: Record<RecruitingWeekday, string> = {
+  mon: '월',
+  tue: '화',
+  wed: '수',
+  thu: '목',
+  fri: '금',
+};
+
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { authRecord, isSignedIn, signOut } = useAuth();
-const { fetchStaffAuthProbe, fetchStaffDiaryAnalyze } = useKjca();
+const { fetchStaffDiaryCollectWeekly } = useKjca();
+
 const scDay = ref(buildTodayText());
+const testOneOnly = ref(false);
+const isAutoRunning = ref(false);
+const autoNoticeMessage = ref('');
+const autoErrorMessage = ref('');
+const autoWarnings = ref<string[]>([]);
+
 const lastDiaryAccessible = ref<boolean | null>(null);
-const teamLeadRows = ref<Array<{ dept: string; position: string; staffName: string; printUrl: string }>>([]);
-const isAnalyzing = ref(false);
-const testAnalyzeOneOnly = ref(false);
-const analysisNoticeMessage = ref('');
-const analysisErrorMessage = ref('');
-const analysisResults = ref<
-  Array<{
-    dept: string;
-    position: string;
-    staffName: string;
-    ok: boolean;
-    error?: string;
-    promotion: string[];
-    vacation: string[];
-    special: string[];
-    printUrl: string;
-  }>
->([]);
-
-const normalizeDeptPrefix = (dept: string) => {
-  const name = String(dept ?? '').trim();
-  if (!name) return '[부서미상]';
-  if (name.startsWith('[')) return name;
-  return `[${name}]`;
-};
-
-const mergedPromotionLines = computed(() => {
-  const lines: string[] = [];
-  analysisResults.value
-    .filter((item) => item.ok)
-    .forEach((item) => {
-      const prefix = normalizeDeptPrefix(item.dept);
-      (item.promotion ?? []).forEach((v) => lines.push(`${prefix} ${v}`));
-    });
-  return lines;
-});
-
-const mergedVacationLines = computed(() => {
-  const lines: string[] = [];
-  analysisResults.value
-    .filter((item) => item.ok)
-    .forEach((item) => {
-      const prefix = normalizeDeptPrefix(item.dept);
-      (item.vacation ?? []).forEach((v) => lines.push(`${prefix} ${v}`));
-    });
-  return lines;
-});
-
-const mergedSpecialLines = computed(() => {
-  const lines: string[] = [];
-  analysisResults.value
-    .filter((item) => item.ok)
-    .forEach((item) => {
-      const prefix = normalizeDeptPrefix(item.dept);
-      (item.special ?? []).forEach((v) => lines.push(`${prefix} ${v}`));
-    });
-  return lines;
-});
-
-const analyzeTargetCount = computed(() => {
-  if (testAnalyzeOneOnly.value) return Math.min(1, teamLeadRows.value.length);
-  return teamLeadRows.value.length;
-});
+const teamLeadRows = ref<TeamLeadRow[]>([]);
+const analysisResults = ref<AnalysisItem[]>([]);
+const deptWeekTables = ref<DeptWeekTable[]>([]);
 /* ======================= 변수 ======================= */
 
 /* ======================= 감시자 ======================= */
@@ -302,68 +330,58 @@ const onClickSignOut = () => {
   signOut();
 };
 
-const onClickCallStaffAuthProbe = async () => {
-  const response = await fetchStaffAuthProbe({
-    scDay: scDay.value,
-  });
-
-  lastDiaryAccessible.value = response.isDiaryAccessible;
-  analysisResults.value = [];
-  analysisNoticeMessage.value = '';
-  analysisErrorMessage.value = '';
-  testAnalyzeOneOnly.value = false;
-  // URL은 화면에 표시하지 않지만, 다음 단계에서 쓸 수 있도록 상태로 들고 있는다.
-  teamLeadRows.value = (response.teamLeadRows ?? []).map((row) => ({
-    dept: row.dept,
-    position: row.position,
-    staffName: row.staffName,
-    printUrl: row.printUrl,
-  }));
+const onChangeTestOneOnly = (event: Event) => {
+  testOneOnly.value = readShoelaceChecked(event);
 };
 
-const onClickAnalyzeDiary = async () => {
-  analysisNoticeMessage.value = '';
-  analysisErrorMessage.value = '';
-  isAnalyzing.value = true;
+const onClickRunAutoAnalyze = async () => {
+  autoNoticeMessage.value = '';
+  autoErrorMessage.value = '';
+  autoWarnings.value = [];
+  isAutoRunning.value = true;
 
   try {
-    const targets = testAnalyzeOneOnly.value ? teamLeadRows.value.slice(0, 1) : teamLeadRows.value;
     const reportDate = String(scDay.value || buildTodayText()).trim();
-    const response = await fetchStaffDiaryAnalyze({
+    const collectResult = await fetchStaffDiaryCollectWeekly({
       reportDate,
-      targets: targets.map((row) => ({
-        dept: row.dept,
-        position: row.position,
-        staffName: row.staffName,
-        printUrl: row.printUrl,
-      })),
+      testOneOnly: testOneOnly.value,
     });
 
-    analysisResults.value = (response.results ?? [])
-      .filter((item) => !!item)
-      .map((item) => ({
-        dept: item.dept,
-        position: item.position,
-        staffName: item.staffName,
-        ok: item.ok !== false,
-        error: item.error,
-        promotion: item.promotion ?? [],
-        vacation: item.vacation ?? [],
-        special: item.special ?? [],
-        printUrl: item.printUrl,
-      }));
-    analysisNoticeMessage.value = String(response.alertMessage ?? '').trim();
+    lastDiaryAccessible.value = collectResult.isDiaryAccessible;
+    teamLeadRows.value = (collectResult.teamLeadRows ?? []).map((row) => ({
+      dept: String(row.dept ?? '').trim(),
+      position: String(row.position ?? '').trim(),
+      staffName: String(row.staffName ?? '').trim(),
+      printUrl: String(row.printUrl ?? '').trim(),
+    }));
+
+    analysisResults.value = (collectResult.analysisResults ?? []).map((item) => ({
+      dept: item.dept,
+      position: item.position,
+      staffName: item.staffName,
+      ok: item.ok !== false,
+      error: item.error,
+      promotion: item.promotion ?? [],
+      vacation: item.vacation ?? [],
+      special: item.special ?? [],
+      recruiting: normalizeRecruiting(item.recruiting),
+      printUrl: item.printUrl,
+    }));
+
+    deptWeekTables.value = normalizeDeptWeekTables(collectResult.deptWeekTables);
+    autoWarnings.value = Array.isArray(collectResult.warnings)
+      ? collectResult.warnings.map((item) => String(item ?? '').trim()).filter((item) => !!item)
+      : [];
+
+    const alertMessage = String(collectResult.alertMessage ?? '').trim();
+    autoNoticeMessage.value = alertMessage || `자동 취합 완료 (${deptWeekTables.value.length}개 부서)`;
   } catch (error) {
-    analysisErrorMessage.value = (error as { message?: string })?.message
+    autoErrorMessage.value = (error as { message?: string })?.message
       ? String((error as { message?: string }).message)
       : `${error}`;
   } finally {
-    isAnalyzing.value = false;
+    isAutoRunning.value = false;
   }
-};
-
-const onChangeTestAnalyzeOneOnly = (event: Event) => {
-  testAnalyzeOneOnly.value = readShoelaceChecked(event);
 };
 /* ======================= 메서드 ======================= */
 
@@ -373,5 +391,163 @@ function buildTodayText() {
   const month = `${now.getMonth() + 1}`.padStart(2, '0');
   const day = `${now.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function normalizeWeekday(value: unknown): RecruitingWeekday | null {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (text === 'mon' || text === 'monday' || text === '월') return 'mon';
+  if (text === 'tue' || text === 'tuesday' || text === '화') return 'tue';
+  if (text === 'wed' || text === 'wednesday' || text === '수') return 'wed';
+  if (text === 'thu' || text === 'thursday' || text === '목') return 'thu';
+  if (text === 'fri' || text === 'friday' || text === '금') return 'fri';
+  return null;
+}
+
+function isFocusWeekday(weekday: RecruitingWeekday, todayWeekday: RecruitingWeekday): boolean {
+  return weekday === todayWeekday;
+}
+
+function buildMonthLabel(dateText: string): string {
+  const text = String(dateText ?? '').trim();
+  const matched = text.match(/^\d{4}-(\d{2})-\d{2}$/);
+  if (!matched) return '금월';
+  const month = Number(matched[1]);
+  if (!Number.isFinite(month) || month < 1 || month > 12) return '금월';
+  return `${month}월`;
+}
+
+function buildDeptSummaryText(dept: string): string {
+  const item = analysisResults.value.find((row) => row.dept === dept && row.ok);
+  const monthTarget = item?.recruiting?.monthTarget ?? null;
+  const monthAssignedCurrent = item?.recruiting?.monthAssignedCurrent ?? null;
+  const monthLabel = buildMonthLabel(scDay.value);
+
+  const monthTargetText = monthTarget === null ? '-' : `${monthTarget}건`;
+  const monthAssignedText = monthAssignedCurrent === null ? '-' : `${monthAssignedCurrent}명`;
+
+  return `월 배정목표 : ${monthTargetText} / ${monthLabel} 현재 달성 : 배정 ${monthAssignedText}`;
+}
+
+function getWeekdayMergedRow(rows: DeptWeekTableRow[], weekday: RecruitingWeekday): DeptWeekdayMergedRow {
+  const items = rows
+    .filter((row) => row.weekday === weekday)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const joinValues = (extractor: (row: DeptWeekTableRow) => string) =>
+    items
+      .map((row) => String(extractor(row) ?? '').trim())
+      .filter((text) => !!text)
+      .join(' / ');
+
+  return {
+    channelName: joinValues((row) => row.channelName),
+    weeklyPlan: joinValues((row) => row.weeklyPlan),
+    promotionContent: joinValues((row) => row.promotionContent),
+    targetText: joinValues((row) => row.targetText),
+    resultText: joinValues((row) => row.resultText),
+    recruitCountText: joinValues((row) => row.recruitCountText),
+    ownerName: joinValues((row) => row.ownerName),
+    note: joinValues((row) => row.note),
+  };
+}
+
+function normalizeNullableInt(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function normalizeRecruiting(value: unknown): RecruitingAnalyze {
+  const source = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  const rawDailyPlan = Array.isArray(source.dailyPlan) ? source.dailyPlan : [];
+
+  const dailyPlan = rawDailyPlan
+    .map((row) => {
+      const item = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
+      const weekday = normalizeWeekday(item.weekday);
+      if (!weekday) return null;
+
+      return {
+        weekday,
+        channelName: String(item.channelName ?? '').trim(),
+        promotionContent: String(item.promotionContent ?? '').trim(),
+        targetCount: normalizeNullableInt(item.targetCount),
+        ownerName: String(item.ownerName ?? '').trim(),
+        note: String(item.note ?? '').trim(),
+      };
+    })
+    .filter((row): row is RecruitingAnalyze['dailyPlan'][number] => !!row);
+
+  return {
+    monthTarget: normalizeNullableInt(source.monthTarget),
+    monthAssignedCurrent: normalizeNullableInt(source.monthAssignedCurrent),
+    weekTarget: normalizeNullableInt(source.weekTarget),
+    dailyPlan,
+    dailyActualCount: normalizeNullableInt(source.dailyActualCount),
+  };
+}
+
+function buildEmptyWeekTableRow(weekday: RecruitingWeekday): DeptWeekTableRow {
+  return {
+    weekday,
+    channelName: '',
+    weeklyPlan: '',
+    promotionContent: '',
+    targetText: '',
+    resultText: '',
+    recruitCountText: '',
+    ownerName: '',
+    note: '',
+    sortOrder: 0,
+  };
+}
+
+function normalizeDeptWeekTables(value: unknown): DeptWeekTable[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+      const todayWeekday = normalizeWeekday(source.todayWeekday) ?? 'fri';
+      const rowsSource = Array.isArray(source.rows) ? source.rows : [];
+
+      const normalizedRows = rowsSource
+        .map((row) => {
+          const rowData = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
+          const weekday = normalizeWeekday(rowData.weekday);
+          if (!weekday) return null;
+
+          return {
+            weekday,
+            channelName: String(rowData.channelName ?? '').trim(),
+            weeklyPlan: String(rowData.weeklyPlan ?? '').trim(),
+            promotionContent: String(rowData.promotionContent ?? '').trim(),
+            targetText: String(rowData.targetText ?? '').trim(),
+            resultText: String(rowData.resultText ?? '').trim(),
+            recruitCountText: String(rowData.recruitCountText ?? '').trim(),
+            ownerName: String(rowData.ownerName ?? '').trim(),
+            note: String(rowData.note ?? '').trim(),
+            sortOrder: Math.max(0, Math.trunc(Number(rowData.sortOrder || 0))),
+          } satisfies DeptWeekTableRow;
+        })
+        .filter((row): row is DeptWeekTableRow => !!row);
+
+      const rows = WEEKDAY_ORDER.flatMap((weekday) => {
+        const byWeekday = normalizedRows
+          .filter((row) => row.weekday === weekday)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        if (byWeekday.length === 0) return [buildEmptyWeekTableRow(weekday)];
+        return byWeekday;
+      });
+
+      return {
+        dept: String(source.dept ?? '').trim(),
+        todayWeekday,
+        rows,
+      } satisfies DeptWeekTable;
+    })
+    .filter((table) => !!table.dept)
+    .sort((a, b) => a.dept.localeCompare(b.dept, 'ko'));
 }
 </script>

@@ -4,6 +4,7 @@ import '@/assets/custom.css';
 import { setBasePath } from '@shoelace-style/shoelace';
 import '@shoelace-style/shoelace/dist/themes/dark.css';
 import '@shoelace-style/shoelace/dist/themes/light.css';
+import { VueQueryPlugin } from '@tanstack/vue-query';
 import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import { routes } from 'vue-router/auto-routes';
@@ -18,5 +19,6 @@ const router = createRouter({
   routes,
 });
 
+app.use(VueQueryPlugin);
 app.use(router);
 app.mount('#app');

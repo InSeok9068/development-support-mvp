@@ -43,6 +43,107 @@ routerAdd(
     } = require(`${__hooks}/utils.ts`);
 
     // ---------- 분석/결과 정규화 유틸 ----------
+    const normalizeNullableInt = (value) => {
+      if (value === null || value === undefined || value === '') return null;
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return null;
+      return Math.max(0, Math.trunc(parsed));
+    };
+
+    const normalizeRecruitingWeekday = (value) => {
+      const text = String(value ?? '').trim().toLowerCase();
+      if (text === 'mon' || text === 'monday' || text === '월') return 'mon';
+      if (text === 'tue' || text === 'tuesday' || text === '화') return 'tue';
+      if (text === 'wed' || text === 'wednesday' || text === '수') return 'wed';
+      if (text === 'thu' || text === 'thursday' || text === '목') return 'thu';
+      if (text === 'fri' || text === 'friday' || text === '금') return 'fri';
+      return '';
+    };
+
+    const normalizeRecruitingExtract = (value) => {
+      const source = value && typeof value === 'object' ? value : {};
+      const dailyPlanRaw = Array.isArray(source.dailyPlan) ? source.dailyPlan : [];
+      const dailyPlan = dailyPlanRaw
+        .map((item) => {
+          const row = item && typeof item === 'object' ? item : {};
+          const weekday = normalizeRecruitingWeekday(row.weekday);
+          if (!weekday) return null;
+          return {
+            weekday,
+            channelName: String(row.channelName ?? '').trim(),
+            promotionContent: String(row.promotionContent ?? '').trim(),
+            targetCount: normalizeNullableInt(row.targetCount),
+            ownerName: String(row.ownerName ?? '').trim(),
+            note: String(row.note ?? '').trim(),
+          };
+        })
+        .filter((row) => !!row);
+
+      const weekTableRowsRaw = Array.isArray(source.weekTableRows) ? source.weekTableRows : [];
+      const weekTableRowsNormalized = weekTableRowsRaw
+        .map((item) => {
+          const row = item && typeof item === 'object' ? item : {};
+          const weekday = normalizeRecruitingWeekday(row.weekday);
+          if (!weekday) return null;
+
+          return {
+            weekday,
+            channelName: String(row.channelName ?? row.promotionChannel ?? '').trim(),
+            weeklyPlan: String(row.weeklyPlan ?? row.plan ?? '').trim(),
+            promotionContent: String(row.promotionContent ?? '').trim(),
+            targetText: String(row.targetText ?? row.target ?? '').trim(),
+            resultText: String(row.resultText ?? row.result ?? '').trim(),
+            recruitCountText: String(row.recruitCountText ?? row.countText ?? '').trim(),
+            ownerName: String(row.ownerName ?? '').trim(),
+            note: String(row.note ?? '').trim(),
+          };
+        })
+        .filter((row) => !!row);
+
+      const weekTableRowsFallback = dailyPlan
+        .map((row) => ({
+          weekday: row.weekday,
+          channelName: String(row.channelName ?? '').trim(),
+          weeklyPlan: '',
+          promotionContent: String(row.promotionContent ?? '').trim(),
+          targetText: row.targetCount === null ? '' : String(row.targetCount),
+          resultText: '',
+          recruitCountText: '',
+          ownerName: String(row.ownerName ?? '').trim(),
+          note: String(row.note ?? '').trim(),
+        }))
+        .filter(
+          (row) =>
+            !!row.channelName ||
+            !!row.weeklyPlan ||
+            !!row.promotionContent ||
+            !!row.targetText ||
+            !!row.resultText ||
+            !!row.recruitCountText ||
+            !!row.ownerName ||
+            !!row.note,
+        );
+
+      return {
+        monthTarget: normalizeNullableInt(source.monthTarget),
+        monthAssignedCurrent: normalizeNullableInt(source.monthAssignedCurrent),
+        weekTarget: normalizeNullableInt(source.weekTarget),
+        dailyPlan,
+        dailyActualCount: normalizeNullableInt(source.dailyActualCount),
+        weekTableRows: weekTableRowsNormalized.length > 0 ? weekTableRowsNormalized : weekTableRowsFallback,
+      };
+    };
+
+    const normalizeCachedRecruitingField = (value) => {
+      if (value === null || value === undefined) return normalizeRecruitingExtract({});
+      if (typeof value === 'string') {
+        const text = value.trim();
+        if (!text) return normalizeRecruitingExtract({});
+        return normalizeRecruitingExtract(parseJsonSafely(text, {}));
+      }
+      return normalizeRecruitingExtract(value);
+    };
+
     const buildAnalyzeResult = (params) => {
       return {
         dept: params.dept,
@@ -53,13 +154,20 @@ routerAdd(
         promotion: params.promotion ?? [],
         vacation: params.vacation ?? [],
         special: params.special ?? [],
+        recruiting: normalizeRecruitingExtract(params.recruiting),
         printUrl: params.printUrl,
       };
     };
 
     const buildPrompt = (params) => {
       return (
-        '아래는 업무일지 본문 텍스트야. 부서별로 "홍보", "휴가", "특이사항"을 최대한 빠짐없이 추출해.\n' +
+        '아래는 업무일지 본문 텍스트야. 부서별로 "모집/홍보", "휴가", "특이사항"을 최대한 빠짐없이 추출해.\n' +
+        '"모집"과 "홍보"는 같은 범주로 보고 모두 promotion 배열에 넣어.\n' +
+        '추가로 모집/현황 비교에 필요한 구조화 정보(recruiting)도 함께 추출해.\n' +
+        'recruiting.dailyPlan은 요일별 계획표(월~금)를 읽어 배열로 만들어.\n' +
+        'recruiting.dailyActualCount는 당일 모집 실적(예: 모집 1명)을 숫자로 넣어.\n' +
+        'recruiting.weekTableRows에는 "요일, 주간 홍보계획, 결과, 담당자, 비고, 모집홍보처, 모집 홍보내용, 모집목표, 모집 건수"를 텍스트로 최대한 보존해.\n' +
+        '값이 없거나 판단 불가면 반드시 null을 넣어.\n' +
         '반드시 코드펜스 없이 JSON 객체만 반환해.\n' +
         '추출할 내용이 없으면 해당 배열은 빈 배열([])로 반환.\n' +
         '\n' +
@@ -67,7 +175,36 @@ routerAdd(
         '{\n' +
         '  "promotion": ["string"],\n' +
         '  "vacation": ["string"],\n' +
-        '  "special": ["string"]\n' +
+        '  "special": ["string"],\n' +
+        '  "recruiting": {\n' +
+        '    "monthTarget": number | null,\n' +
+        '    "monthAssignedCurrent": number | null,\n' +
+        '    "weekTarget": number | null,\n' +
+        '    "dailyPlan": [\n' +
+        '      {\n' +
+        '        "weekday": "mon" | "tue" | "wed" | "thu" | "fri",\n' +
+        '        "channelName": "string",\n' +
+        '        "promotionContent": "string",\n' +
+        '        "targetCount": number | null,\n' +
+        '        "ownerName": "string",\n' +
+        '        "note": "string"\n' +
+        '      }\n' +
+        '    ],\n' +
+        '    "dailyActualCount": number | null,\n' +
+        '    "weekTableRows": [\n' +
+        '      {\n' +
+        '        "weekday": "mon" | "tue" | "wed" | "thu" | "fri",\n' +
+        '        "channelName": "string",\n' +
+        '        "weeklyPlan": "string",\n' +
+        '        "promotionContent": "string",\n' +
+        '        "targetText": "string",\n' +
+        '        "resultText": "string",\n' +
+        '        "recruitCountText": "string",\n' +
+        '        "ownerName": "string",\n' +
+        '        "note": "string"\n' +
+        '      }\n' +
+        '    ]\n' +
+        '  }\n' +
         '}\n' +
         '\n' +
         `부서: ${params.dept}\n` +
@@ -80,14 +217,16 @@ routerAdd(
 
     const cacheCollectionName = 'staff_diary_analysis_cache';
     const geminiModelName = 'gemini-2.5-flash-lite';
+    const promptVersion = 4;
 
-    // ---------- 캐시 조회 키(일자+부서+원본+해시) 구성 ----------
+    // ---------- 캐시 조회 키(일자+부서+원본+해시+프롬프트버전) 구성 ----------
     const buildCacheIdentityFilter = (params) => {
       return (
         `reportDate = '${escapeFilterValue(params.reportDate)}'` +
         ` && dept = '${escapeFilterValue(params.dept)}'` +
         ` && printUrl = '${escapeFilterValue(params.printUrl)}'` +
-        ` && sourceHash = '${escapeFilterValue(params.sourceHash)}'`
+        ` && sourceHash = '${escapeFilterValue(params.sourceHash)}'` +
+        ` && promptVersion = ${Number(params.promptVersion) || 1}`
       );
     };
 
@@ -123,10 +262,11 @@ routerAdd(
         targetRecord.set('promotion', params.promotion ?? []);
         targetRecord.set('vacation', params.vacation ?? []);
         targetRecord.set('special', params.special ?? []);
+        targetRecord.set('recruiting', params.recruiting ?? {});
         targetRecord.set('status', 'success');
         targetRecord.set('errorMessage', '');
         targetRecord.set('model', geminiModelName);
-        targetRecord.set('promptVersion', 1);
+        targetRecord.set('promptVersion', params.promptVersion);
         $app.save(targetRecord);
       } catch (error) {
         logger.warn('cache upsert skipped', 'dept', params.dept, 'reportDate', params.reportDate, 'error', `${error}`);
@@ -379,11 +519,13 @@ routerAdd(
           dept,
           printUrl,
           sourceHash,
+          promptVersion,
         });
         if (cachedRecord) {
           const cachedPromotion = normalizeJsonArrayField(cachedRecord.get('promotion'));
           const cachedVacation = normalizeJsonArrayField(cachedRecord.get('vacation'));
           const cachedSpecial = normalizeJsonArrayField(cachedRecord.get('special'));
+          const cachedRecruiting = normalizeCachedRecruitingField(cachedRecord.get('recruiting'));
           logger.info(
             'cache hit',
             'index',
@@ -398,6 +540,10 @@ routerAdd(
             cachedVacation.length,
             'specialCount',
             cachedSpecial.length,
+            'dailyPlanCount',
+            cachedRecruiting.dailyPlan.length,
+            'dailyActualCount',
+            cachedRecruiting.dailyActualCount,
           );
           results.push(
             buildAnalyzeResult({
@@ -408,6 +554,7 @@ routerAdd(
               promotion: cachedPromotion,
               vacation: cachedVacation,
               special: cachedSpecial,
+              recruiting: cachedRecruiting,
               printUrl,
             }),
           );
@@ -552,6 +699,7 @@ routerAdd(
         const promotion = normalizeStringArray(parsed?.promotion);
         const vacation = normalizeStringArray(parsed?.vacation);
         const special = normalizeStringArray(parsed?.special);
+        const recruiting = normalizeRecruitingExtract(parsed?.recruiting);
         logger.info(
           'gemini parsed',
           'index',
@@ -564,6 +712,10 @@ routerAdd(
           vacation.length,
           'specialCount',
           special.length,
+          'dailyPlanCount',
+          recruiting.dailyPlan.length,
+          'dailyActualCount',
+          recruiting.dailyActualCount,
         );
 
         upsertSuccessCache({
@@ -573,9 +725,11 @@ routerAdd(
           staffName,
           printUrl,
           sourceHash,
+          promptVersion,
           promotion,
           vacation,
           special,
+          recruiting,
         });
 
         results.push(
@@ -587,6 +741,7 @@ routerAdd(
             promotion,
             vacation,
             special,
+            recruiting,
             printUrl,
           }),
         );
