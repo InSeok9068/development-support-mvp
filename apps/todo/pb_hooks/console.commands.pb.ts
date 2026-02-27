@@ -5,7 +5,7 @@
 $app.rootCmd?.addCommand(
   new Command({
     use: 'action',
-    run: (cmd, args) => {
+    run: () => {
       console.log('실행 확인');
     },
   }),
