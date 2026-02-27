@@ -546,7 +546,7 @@ const onChangeRedmineDoneRatio = (event: Event) => {
 const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line no-explicit-any
   const res: any = await requestFetchRedmineData(work.value.redmine.match(re)?.[1] ?? '');
 
   redmineData.value.startDate = res['issue']['start_date'];

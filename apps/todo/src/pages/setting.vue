@@ -78,7 +78,7 @@ const onClickSaveDeveloper = async () => {
     await updateDeveloper(developerArgs.value);
     showMessageModal('수정 완료');
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line no-explicit-any
     await createDeveloper(developerArgs.value as any);
     showMessageModal('등록 완료');
   }
