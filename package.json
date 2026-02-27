@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "format": "prettier . --write",
+    "format": "oxfmt",
     "lint:all": "oxlint && eslint",
     "pb:kill": "cmd /d /c \"taskkill /F /IM pbw.exe /T >NUL 2>&1 & taskkill /F /IM pocketbase.exe /T >NUL 2>&1 & exit /b 0\"",
     "dev": "pnpm -C apps/todo dev",
@@ -112,6 +112,7 @@
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.3.0",
     "jsdom": "^28.1.0",
+    "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "pocketbase-typegen": "^1.3.3",
     "prettier": "^3.8.1",
