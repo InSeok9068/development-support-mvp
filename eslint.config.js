@@ -1,13 +1,13 @@
 import eslint from '@eslint/js';
-import eslintCustomRuleConfig from './eslint.custom.rule.js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginVue from 'eslint-plugin-vue';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tslint from 'typescript-eslint';
+import eslintCustomRuleConfig from './eslint.custom.rule.js';
 
 export default defineConfig(
-  { ignores: ['*.d.ts', 'apps/*/src/api/pocketbase*', 'apps/*/pb_hooks/types.d.ts'] },
+  { ignores: ['.history', '*.d.ts', 'apps/*/src/api/pocketbase*', 'apps/*/pb_hooks/types.d.ts'] },
   {
     extends: [
       eslint.configs.recommended,
