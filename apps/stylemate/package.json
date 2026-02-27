@@ -8,7 +8,7 @@
     "build": "vue-tsc && vite build --emptyOutDir",
     "preview": "vite preview",
     "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
-    "lint": "eslint --no-error-on-unmatched-pattern \"src/**/*.{js,ts,vue}\" \"pb_hooks/**/*.pb.ts\"",
+    "lint": "eslint --cache --no-error-on-unmatched-pattern \"src/**/*.{js,ts,vue}\" \"pb_hooks/**/*.pb.ts\"",
     "lint:fix": "eslint --no-error-on-unmatched-pattern \"src/**/*.{js,ts,vue,css,html}\" \"pb_hooks/**/*.pb.ts\" --fix",
     "lint:format": "prettier --write .",
     "pb:dev": "pnpm run pb:hook && pnpm exec dotenv -e ../../.env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\stylemate && .\\pbw.exe pocketbase serve --dev\"",
