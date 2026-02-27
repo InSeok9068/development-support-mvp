@@ -1,5 +1,0 @@
-dist
-
-src/api/pocketbase.ts
-src/api/pocketbase-types.ts
-pb_schema.json
