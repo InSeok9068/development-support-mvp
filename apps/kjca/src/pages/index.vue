@@ -1,7 +1,7 @@
 <template>
   <main class="mx-auto min-h-screen max-w-[1500px] px-4 py-6 xl:px-6">
     <div class="flex items-start justify-between gap-4">
-      <div class="min-w-0 flex flex-col gap-1">
+      <div class="flex min-w-0 flex-col gap-1">
         <div class="text-lg font-semibold">KJCA 업무일지 자동 취합</div>
         <div class="truncate text-sm">
           PocketBase 로그인:
@@ -21,15 +21,13 @@
     </sl-alert>
 
     <div class="mt-6 grid grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6">
-      <div class="min-w-0 flex flex-col gap-6">
+      <div class="flex min-w-0 flex-col gap-6">
         <sl-card class="min-w-0">
           <div class="flex flex-col gap-4">
             <div class="text-sm font-semibold">조회 조건</div>
 
             <sl-input v-model="scDay" label="조회일" type="date"></sl-input>
-            <sl-switch :checked="testOneOnly" @sl-change="onChangeTestOneOnly">
-              테스트 모드 (1건만 처리)
-            </sl-switch>
+            <sl-switch :checked="testOneOnly" @sl-change="onChangeTestOneOnly"> 테스트 모드 (1건만 처리) </sl-switch>
 
             <sl-button
               variant="primary"
@@ -76,7 +74,7 @@
 
             <div v-if="teamLeadRows.length === 0" class="text-sm">조회 결과가 없습니다.</div>
 
-            <div v-else class="max-h-[calc(100vh-360px)] overflow-y-auto overflow-x-hidden">
+            <div v-else class="max-h-[calc(100vh-360px)] overflow-x-hidden overflow-y-auto">
               <div class="grid grid-cols-[minmax(0,1fr)_48px_56px] gap-2 text-sm">
                 <div class="font-semibold">부서</div>
                 <div class="font-semibold">직책</div>
@@ -92,21 +90,16 @@
         </sl-card>
       </div>
 
-      <div class="min-w-0 flex flex-col gap-6">
+      <div class="flex min-w-0 flex-col gap-6">
         <sl-card v-if="deptWeekTables.length > 0" class="min-w-0">
-          <div class="min-w-0 flex flex-col gap-4">
+          <div class="flex min-w-0 flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
               <div class="text-sm font-semibold">금주 모집 계획/결과</div>
               <div class="text-sm">총 {{ deptWeekTables.length }}개 부서</div>
             </div>
 
             <div class="flex flex-col gap-3">
-              <sl-details
-                v-for="table in deptWeekTables"
-                :key="`table-${table.dept}`"
-                :summary="table.dept"
-                open
-              >
+              <sl-details v-for="table in deptWeekTables" :key="`table-${table.dept}`" :summary="table.dept" open>
                 <div class="mb-2 flex items-center justify-end">
                   <sl-button
                     variant="default"
@@ -137,15 +130,21 @@
                         </th>
                       </tr>
                       <tr>
-                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">요일</th>
-                        <th colspan="3" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">주간 홍보계획</th>
+                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">
+                          요일
+                        </th>
+                        <th colspan="3" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">
+                          주간 홍보계획
+                        </th>
                         <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">결과</th>
                         <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">
                           담당자
                           <br />
                           (홍보)
                         </th>
-                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">비고</th>
+                        <th rowspan="2" class="border border-solid px-3 py-2.5 text-left text-base font-semibold">
+                          비고
+                        </th>
                       </tr>
                       <tr>
                         <th class="border border-solid px-3 py-2.5 text-left text-base font-semibold">모집홍보처</th>
@@ -161,16 +160,44 @@
                           :key="`weekday-row-data-${table.dept}-${weekday}-${rowIndex}`"
                         >
                           <tr :class="{ 'font-semibold': isFocusWeekday(weekday, table.todayWeekday) }">
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
                               {{ weekdayLabelMap[weekday] }}
-                              <sl-badge v-if="isFocusWeekday(weekday, table.todayWeekday)" variant="primary" pill>오늘</sl-badge>
+                              <sl-badge v-if="isFocusWeekday(weekday, table.todayWeekday)" variant="primary" pill
+                                >오늘</sl-badge
+                              >
                             </td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.channelName || '' }}</td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.promotionContent || '' }}</td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.targetText || '' }}</td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.recruitCountText || '' }}</td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.ownerName || '' }}</td>
-                            <td class="border border-solid px-3 py-2.5 text-left align-middle whitespace-normal break-words">{{ row.note || '' }}</td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.channelName || '' }}
+                            </td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.promotionContent || '' }}
+                            </td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.targetText || '' }}
+                            </td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.recruitCountText || '' }}
+                            </td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.ownerName || '' }}
+                            </td>
+                            <td
+                              class="border border-solid px-3 py-2.5 text-left align-middle break-words whitespace-normal"
+                            >
+                              {{ row.note || '' }}
+                            </td>
                           </tr>
                         </template>
                       </template>
@@ -183,7 +210,7 @@
         </sl-card>
 
         <sl-card v-if="analysisResults.length > 0" class="min-w-0">
-          <div class="min-w-0 flex flex-col gap-4">
+          <div class="flex min-w-0 flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
               <div class="text-sm font-semibold">AI 분석 상세</div>
               <div class="text-sm">총 {{ analysisResults.length }}건</div>
@@ -195,7 +222,7 @@
                 :key="`${item.dept}-${item.staffName}`"
                 :summary="`${item.dept} / ${item.staffName}${item.ok ? '' : ' (실패)'}`"
               >
-                <div class="min-w-0 flex flex-col gap-3 text-sm">
+                <div class="flex min-w-0 flex-col gap-3 text-sm">
                   <div>
                     <sl-button
                       variant="text"
@@ -215,13 +242,17 @@
                     <div class="font-semibold">모집/홍보</div>
                     <div v-if="item.promotion.length === 0">-</div>
                     <div v-else class="flex flex-col gap-1">
-                      <div v-for="(v, idx) in item.promotion" :key="`promotion-${idx}`" class="break-words">- {{ v }}</div>
+                      <div v-for="(v, idx) in item.promotion" :key="`promotion-${idx}`" class="break-words">
+                        - {{ v }}
+                      </div>
                     </div>
                   </div>
 
                   <div>
                     <div class="font-semibold">AI 추출 실적</div>
-                    <div>{{ item.recruiting.dailyActualCount === null ? '-' : `${item.recruiting.dailyActualCount}명` }}</div>
+                    <div>
+                      {{ item.recruiting.dailyActualCount === null ? '-' : `${item.recruiting.dailyActualCount}명` }}
+                    </div>
                   </div>
                 </div>
               </sl-details>
@@ -423,9 +454,10 @@ const onClickClearDeptCacheButton = async (dept: string) => {
     analysisResults.value = analysisResults.value.filter((item) => String(item.dept ?? '').trim() !== safeDept);
 
     const deletedCount = Math.max(0, Math.trunc(Number(clearResult.deletedCount ?? 0)));
-    autoNoticeMessage.value = deletedCount > 0
-      ? `${safeDept} 캐시 ${deletedCount}건을 삭제했습니다.`
-      : `${safeDept} 캐시가 없어 삭제할 항목이 없습니다.`;
+    autoNoticeMessage.value =
+      deletedCount > 0
+        ? `${safeDept} 캐시 ${deletedCount}건을 삭제했습니다.`
+        : `${safeDept} 캐시가 없어 삭제할 항목이 없습니다.`;
   } catch (error) {
     autoErrorMessage.value = readErrorMessage(error);
   } finally {
@@ -448,7 +480,9 @@ function buildTodayText() {
 }
 
 function normalizeWeekday(value: unknown): RecruitingWeekday | null {
-  const text = String(value ?? '').trim().toLowerCase();
+  const text = String(value ?? '')
+    .trim()
+    .toLowerCase();
   if (text === 'mon' || text === 'monday' || text === '월') return 'mon';
   if (text === 'tue' || text === 'tuesday' || text === '화') return 'tue';
   if (text === 'wed' || text === 'wednesday' || text === '수') return 'wed';
@@ -483,9 +517,7 @@ function buildDeptSummaryText(dept: string): string {
 }
 
 function getWeekdayMergedRow(rows: DeptWeekTableRow[], weekday: RecruitingWeekday): DeptWeekdayMergedRow {
-  const items = rows
-    .filter((row) => row.weekday === weekday)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const items = rows.filter((row) => row.weekday === weekday).sort((a, b) => a.sortOrder - b.sortOrder);
 
   const joinValues = (extractor: (row: DeptWeekTableRow) => string) =>
     items

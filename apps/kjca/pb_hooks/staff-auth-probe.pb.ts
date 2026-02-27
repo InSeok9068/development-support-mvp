@@ -134,7 +134,9 @@ routerAdd(
       const diaryAuthRequired = detectAuthRequiredHtml(diaryHtml);
       const isDiaryAccessible = diaryResponse.statusCode >= 200 && diaryResponse.statusCode < 300 && !diaryAuthRequired;
 
-      const parsed = isDiaryAccessible ? parseTeamLeadRowsFromDiaryHtml(diaryHtml, host) : { rows: [], departments: [] };
+      const parsed = isDiaryAccessible
+        ? parseTeamLeadRowsFromDiaryHtml(diaryHtml, host)
+        : { rows: [], departments: [] };
 
       logger.info(
         'request completed',
@@ -167,4 +169,3 @@ routerAdd(
   },
   $apis.requireSuperuserAuth(),
 );
-

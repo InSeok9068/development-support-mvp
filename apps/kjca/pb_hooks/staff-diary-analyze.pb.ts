@@ -51,7 +51,9 @@ routerAdd(
     };
 
     const normalizeRecruitingWeekday = (value) => {
-      const text = String(value ?? '').trim().toLowerCase();
+      const text = String(value ?? '')
+        .trim()
+        .toLowerCase();
       if (text === 'mon' || text === 'monday' || text === '월') return 'mon';
       if (text === 'tue' || text === 'tuesday' || text === '화') return 'tue';
       if (text === 'wed' || text === 'wednesday' || text === '수') return 'wed';
@@ -240,7 +242,7 @@ routerAdd(
       const retryAfterMs = parseRetryAfterMs(retryAfterHeader);
       if (retryAfterMs > 0) return retryAfterMs;
       const step = Math.max(0, Number(attempt) - 1);
-      const backoffMs = 1500 * (2 ** step);
+      const backoffMs = 1500 * 2 ** step;
       const jitterMs = Math.trunc(Math.random() * 400);
       return backoffMs + jitterMs;
     };
@@ -774,8 +776,7 @@ routerAdd(
           xRateLimitRemaining: getHeaderValues(geminiHeaders, 'X-RateLimit-Remaining')[0] ?? '',
           xRateLimitReset: getHeaderValues(geminiHeaders, 'X-RateLimit-Reset')[0] ?? '',
           xRatelimitLimitRequests: getHeaderValues(geminiHeaders, 'x-ratelimit-limit-requests')[0] ?? '',
-          xRatelimitRemainingRequests:
-            getHeaderValues(geminiHeaders, 'x-ratelimit-remaining-requests')[0] ?? '',
+          xRatelimitRemainingRequests: getHeaderValues(geminiHeaders, 'x-ratelimit-remaining-requests')[0] ?? '',
           xRatelimitLimitTokens: getHeaderValues(geminiHeaders, 'x-ratelimit-limit-tokens')[0] ?? '',
           xRatelimitRemainingTokens: getHeaderValues(geminiHeaders, 'x-ratelimit-remaining-tokens')[0] ?? '',
         };
@@ -943,4 +944,3 @@ routerAdd(
   },
   $apis.requireSuperuserAuth(),
 );
-

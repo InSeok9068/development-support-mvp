@@ -14,10 +14,7 @@ routerAdd(
     });
     e.bindBody(payload);
 
-    const {
-      parseJsonSafely,
-      normalizeReportDate,
-    } = require(`${__hooks}/utils.ts`);
+    const { parseJsonSafely, normalizeReportDate } = require(`${__hooks}/utils.ts`);
 
     const WEEKDAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri'];
 
@@ -54,7 +51,9 @@ routerAdd(
     };
 
     const normalizeWeekday = (value) => {
-      const text = String(value ?? '').trim().toLowerCase();
+      const text = String(value ?? '')
+        .trim()
+        .toLowerCase();
       if (text === 'mon' || text === 'monday' || text === '월') return 'mon';
       if (text === 'tue' || text === 'tuesday' || text === '화') return 'tue';
       if (text === 'wed' || text === 'wednesday' || text === '수') return 'wed';
@@ -86,7 +85,9 @@ routerAdd(
 
     const normalizeBool = (value) => {
       if (value === true || value === false) return value;
-      const text = String(value ?? '').trim().toLowerCase();
+      const text = String(value ?? '')
+        .trim()
+        .toLowerCase();
       if (text === 'true' || text === '1' || text === 'y' || text === 'yes') return true;
       return false;
     };
@@ -473,9 +474,7 @@ routerAdd(
 
       const rowCollection = $app.findCollectionByNameOrId('recruiting_week_text_rows');
       const rows = findWeekTextRows(plan.id);
-      rows
-        .filter((row) => normalizeWeekday(row.get('weekday')) === weekday)
-        .forEach((row) => $app.delete(row));
+      rows.filter((row) => normalizeWeekday(row.get('weekday')) === weekday).forEach((row) => $app.delete(row));
 
       const weekdayRows = normalizeWeekTextRows(params.rows).filter((row) => row.weekday === weekday);
       if (weekdayRows.length === 0) return { ok: true, reason: 'weekday-empty-rows' };
@@ -595,7 +594,7 @@ routerAdd(
             (!!item.channelName ||
               !!item.promotionContent ||
               !!item.ownerName ||
-            !!item.note ||
+              !!item.note ||
               Number(item.targetCount ?? 0) > 0),
         );
 
@@ -621,17 +620,17 @@ routerAdd(
       }
 
       nextItems.forEach((item) => {
-          const next = new Record(itemCollection);
-          next.set('planId', plan.id);
-          next.set('weekday', item.weekday);
-          next.set('channelName', item.channelName);
-          next.set('promotionContent', item.promotionContent);
-          next.set('targetCount', item.targetCount);
-          next.set('ownerName', item.ownerName);
-          next.set('note', item.note);
-          next.set('sortOrder', item.sortOrder);
-          $app.save(next);
-        });
+        const next = new Record(itemCollection);
+        next.set('planId', plan.id);
+        next.set('weekday', item.weekday);
+        next.set('channelName', item.channelName);
+        next.set('promotionContent', item.promotionContent);
+        next.set('targetCount', item.targetCount);
+        next.set('ownerName', item.ownerName);
+        next.set('note', item.note);
+        next.set('sortOrder', item.sortOrder);
+        $app.save(next);
+      });
 
       return { ok: true };
     };
@@ -698,7 +697,9 @@ routerAdd(
       .split(',')[0]
       .trim();
     const host = String(requestInfo.headers.host ?? e.request?.host ?? '').trim();
-    const fallbackBaseUrl = String(process.env.POCKETBASE_INTERNAL_URL ?? process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090').trim();
+    const fallbackBaseUrl = String(
+      process.env.POCKETBASE_INTERNAL_URL ?? process.env.POCKETBASE_URL ?? 'http://127.0.0.1:8090',
+    ).trim();
     const baseUrl = host ? `${forwardedProto || (e.isTLS() ? 'https' : 'http')}://${host}` : fallbackBaseUrl;
 
     const callInternalApi = (path, body, timeout = 120) => {
@@ -735,9 +736,13 @@ routerAdd(
 
       logger.info('collect started', 'reportDate', reportDate, 'weekStartDate', weekStartDate);
 
-      const todayProbe = callInternalApi('/api/staff-auth-probe', {
-        scDay: reportDate,
-      }, 60);
+      const todayProbe = callInternalApi(
+        '/api/staff-auth-probe',
+        {
+          scDay: reportDate,
+        },
+        60,
+      );
 
       const teamLeadRows = normalizeTeamLeadRows(todayProbe.teamLeadRows);
       const todayTargets = buildUniqueTargets(teamLeadRows);
@@ -755,16 +760,18 @@ routerAdd(
         let mondayTargetsSource = todayTargets;
 
         if (reportDate !== weekStartDate) {
-          const mondayProbe = callInternalApi('/api/staff-auth-probe', {
-            scDay: weekStartDate,
-          }, 60);
+          const mondayProbe = callInternalApi(
+            '/api/staff-auth-probe',
+            {
+              scDay: weekStartDate,
+            },
+            60,
+          );
           mondayTargetsSource = buildUniqueTargets(normalizeTeamLeadRows(mondayProbe.teamLeadRows));
         }
 
         const mondayTargetMap = new Map(mondayTargetsSource.map((target) => [target.dept, target]));
-        const bootstrapTargets = missingPlanDepts
-          .map((dept) => mondayTargetMap.get(dept))
-          .filter((target) => !!target);
+        const bootstrapTargets = missingPlanDepts.map((dept) => mondayTargetMap.get(dept)).filter((target) => !!target);
 
         if (bootstrapTargets.length > 0) {
           const mondayAnalyze = callInternalApi('/api/staff-diary/analyze', {
@@ -801,7 +808,9 @@ routerAdd(
                   rows: textRows,
                 });
                 if (!textPlanResult?.ok) {
-                  warnings.push(`weekTextPlan skip: ${String(item.dept ?? '-')} (${textPlanResult?.reason ?? 'unknown'})`);
+                  warnings.push(
+                    `weekTextPlan skip: ${String(item.dept ?? '-')} (${textPlanResult?.reason ?? 'unknown'})`,
+                  );
                 }
               } catch (error) {
                 warnings.push(`weekTextPlan error: ${String(item.dept ?? '-')} (${String(error)})`);
@@ -836,7 +845,11 @@ routerAdd(
         .map((item) => targetKeyMap.get(`${item.dept}||${item.printUrl}`))
         .filter((item, index, array) => {
           if (!item) return false;
-          return array.findIndex((candidate) => `${candidate.dept}||${candidate.printUrl}` === `${item.dept}||${item.printUrl}`) === index;
+          return (
+            array.findIndex(
+              (candidate) => `${candidate.dept}||${candidate.printUrl}` === `${item.dept}||${item.printUrl}`,
+            ) === index
+          );
         });
 
       if (retryTargets.length > 0) {

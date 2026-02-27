@@ -180,12 +180,7 @@ type FetchRecruitingWeekResultsPayload = {
   dept: string;
 };
 
-type RecruitingWeekday =
-  | 'mon'
-  | 'tue'
-  | 'wed'
-  | 'thu'
-  | 'fri';
+type RecruitingWeekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
 
 type UpsertRecruitingWeekPlanPayload = {
   weekStartDate: string;
@@ -229,7 +224,10 @@ const sendPostJson = <TResponse, TPayload>(path: string, payload: TPayload) => {
   });
 };
 
-const escapeFilterValue = (value: string) => String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+const escapeFilterValue = (value: string) =>
+  String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'");
 
 const isNotFoundError = (error: unknown) => {
   const maybeError = error as { status?: number } | undefined;
@@ -239,7 +237,9 @@ const isNotFoundError = (error: unknown) => {
 const buildWeekPlanFilter = (payload: FetchRecruitingWeekPlanPayload) =>
   `weekStartDate = '${escapeFilterValue(payload.weekStartDate)}' && dept = '${escapeFilterValue(payload.dept)}'`;
 
-const fetchRecruitingWeekPlanQuery = async (payload: FetchRecruitingWeekPlanPayload): Promise<RecruitingWeekPlanData> => {
+const fetchRecruitingWeekPlanQuery = async (
+  payload: FetchRecruitingWeekPlanPayload,
+): Promise<RecruitingWeekPlanData> => {
   let plan: RecruitingWeekPlansResponse | null = null;
 
   try {
@@ -326,9 +326,7 @@ export const useKjca = () => {
         filter: `planId = '${escapeFilterValue(savedPlan.id)}'`,
       });
 
-      await Promise.all(
-        oldItems.map((item) => pb.collection(Collections.RecruitingWeekPlanItems).delete(item.id)),
-      );
+      await Promise.all(oldItems.map((item) => pb.collection(Collections.RecruitingWeekPlanItems).delete(item.id)));
 
       const nextItems = payload.items
         .map((item, index) => ({
@@ -375,9 +373,9 @@ export const useKjca = () => {
       let record: RecruitingDailyResultsResponse | null = null;
 
       try {
-        record = await pb.collection(Collections.RecruitingDailyResults).getFirstListItem<RecruitingDailyResultsResponse>(
-          filter,
-        );
+        record = await pb
+          .collection(Collections.RecruitingDailyResults)
+          .getFirstListItem<RecruitingDailyResultsResponse>(filter);
       } catch (error) {
         if (!isNotFoundError(error)) throw error;
       }
@@ -443,9 +441,7 @@ export const useKjca = () => {
       sort: 'created',
     });
 
-    await Promise.all(
-      rows.map((row) => pb.collection(Collections.StaffDiaryAnalysisCache).delete(row.id)),
-    );
+    await Promise.all(rows.map((row) => pb.collection(Collections.StaffDiaryAnalysisCache).delete(row.id)));
 
     return {
       ok: true,
