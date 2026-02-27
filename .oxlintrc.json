@@ -1,9 +1,9 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["unicorn"],
-  "jsPlugins": ["./eslint-selector-bridge.ts"],
+  "jsPlugins": ["./eslint-selector-bridge.js"],
   "categories": {
-    "correctness": "off"
+    "correctness": "error"
   },
   "env": {
     "builtin": true

@@ -1,7 +1,7 @@
 // @ts-nocheck
 const encodeBase64 = (bytes) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  const output = new Array(Math.ceil(bytes.length / 3) * 4);
+  const output = Array.from({ length: Math.ceil(bytes.length / 3) * 4 });
   let outIndex = 0;
   for (let i = 0; i < bytes.length; i += 3) {
     const b1 = bytes[i] ?? 0;
