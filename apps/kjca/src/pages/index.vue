@@ -20,8 +20,11 @@
       먼저 PocketBase에 로그인한 뒤 자동 취합을 실행해주세요.
     </sl-alert>
 
-    <div class="mt-6 grid grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6">
-      <div class="flex min-w-0 flex-col gap-6">
+    <div
+      class="mt-6 grid gap-6"
+      :class="isLeftPanelExpanded ? 'grid-cols-[minmax(320px,380px)_minmax(0,1fr)]' : 'grid-cols-1'"
+    >
+      <div v-if="isLeftPanelExpanded" class="flex min-w-0 flex-col gap-6">
         <sl-card class="min-w-0">
           <div class="flex flex-col gap-4">
             <div class="text-sm font-semibold">조회 조건</div>
@@ -91,6 +94,12 @@
       </div>
 
       <div class="flex min-w-0 flex-col gap-6">
+        <div class="flex justify-end">
+          <sl-button variant="default" size="small" @click="onClickToggleLeftPanel">
+            {{ isLeftPanelExpanded ? '조회 영역 접기' : '조회 영역 펼치기' }}
+          </sl-button>
+        </div>
+
         <sl-card v-if="deptWeekTables.length > 0" class="min-w-0">
           <div class="flex min-w-0 flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
@@ -361,6 +370,7 @@ const autoNoticeMessage = ref('');
 const autoErrorMessage = ref('');
 const autoWarnings = ref<string[]>([]);
 const cacheClearingDept = ref('');
+const isLeftPanelExpanded = ref(true);
 
 const lastDiaryAccessible = ref<boolean | null>(null);
 const teamLeadRows = ref<TeamLeadRow[]>([]);
@@ -385,6 +395,10 @@ const onClickSignOut = () => {
 
 const onChangeTestOneOnly = (event: Event) => {
   testOneOnly.value = readShoelaceChecked(event);
+};
+
+const onClickToggleLeftPanel = () => {
+  isLeftPanelExpanded.value = !isLeftPanelExpanded.value;
 };
 
 const onClickRunAutoAnalyze = async () => {
