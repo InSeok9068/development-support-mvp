@@ -20,7 +20,7 @@
 
         <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
           <div class="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span>담당자 필터</span>
+            <span> 담당자 필터 </span>
             <span>{{ developers.length }}명</span>
           </div>
           <sl-button-group class="w-full">
