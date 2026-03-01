@@ -1,4 +1,5 @@
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import oxlint from 'eslint-plugin-oxlint';
 import eslintPluginVue from 'eslint-plugin-vue';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -7,7 +8,7 @@ import tslint from 'typescript-eslint';
 export default defineConfig(
   { ignores: ['.history', '*.d.ts', 'apps/*/src/api/pocketbase*', 'apps/*/pb_hooks/types.d.ts'] },
   {
-    extends: [...eslintPluginVue.configs['flat/recommended']],
+    extends: [...eslintPluginVue.configs['flat/recommended'], ...oxlint.configs['flat/recommended']],
     files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     languageOptions: {
       ecmaVersion: 'latest',
