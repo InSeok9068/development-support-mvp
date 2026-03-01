@@ -116,7 +116,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-oxlint": "^1.50.0",
     "eslint-plugin-vue": "^10.8.0",
-    "globals": "^17.3.0",
+    "globals": "^17.4.0",
     "jsdom": "^28.1.0",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
@@ -131,7 +131,7 @@
     "unplugin-vue-router": "^0.19.2",
     "vite": "^7.3.1",
     "vite-plugin-static-copy": "^3.2.0",
-    "vite-plugin-vue-devtools": "^8.0.6",
+    "vite-plugin-vue-devtools": "^8.0.7",
     "vitest": "^4.0.18",
     "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^3.2.5"
