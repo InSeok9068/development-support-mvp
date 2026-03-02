@@ -114,37 +114,51 @@
         </div>
 
         <div v-if="recommendationItems.length" class="flex flex-col gap-2">
-          <div v-for="item in recommendationItems" :key="item.itemId" class="rounded-xl p-3">
-            <div class="flex gap-3">
-              <img
-                v-if="fetchRecommendationItemImageUrl(item)"
-                class="h-20 w-20 rounded-xl object-contain"
-                :src="fetchRecommendationItemImageUrl(item)"
-                alt="추천 옷 이미지"
-              />
-              <div v-else class="flex h-20 w-20 items-center justify-center rounded-xl">
-                <span class="text-xs">이미지 없음</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div
+              v-for="category in recommendationCategoryOrder"
+              :key="category"
+              class="rounded-xl p-3"
+              @touchstart="onTouchStartRecommendationSlot(category, $event)"
+              @touchend="onTouchEndRecommendationSlot(category, $event)"
+            >
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
+                <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
               </div>
 
-              <div class="flex min-w-0 flex-1 flex-col gap-2">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-sm font-semibold">{{ fetchRecommendationCategoryLabel(item.category) }}</div>
-                  <span class="text-xs">유사도 {{ fetchRecommendationSimilarityLabel(item.similarity) }}</span>
+              <template v-if="fetchSelectedRecommendationCandidate(category)">
+                <img
+                  v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                  class="h-20 w-full rounded-xl object-contain"
+                  :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                  alt="추천 옷 이미지"
+                />
+                <div v-else class="flex h-20 w-full items-center justify-center rounded-xl">
+                  <span class="text-xs">이미지 없음</span>
                 </div>
 
-                <div class="text-sm">
-                  {{ fetchRecommendationSummaryLabel(item) }}
+                <div class="mt-2 flex items-center justify-between gap-1">
+                  <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
+                  <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
+                  <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                  <sl-switch size="small" :checked="item.isPinned" @sl-change="onChangeRecommendationPin(item.itemId, $event)">고정</sl-switch>
-                  <sl-button class="w-full" size="small" @click="onClickOpenRecommendationDetailButton(item)">상세 보기</sl-button>
+                <div class="mt-1">
+                  <sl-switch
+                    size="small"
+                    :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
+                    :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
+                    @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
+                  >
+                    고정
+                  </sl-switch>
                 </div>
-              </div>
+              </template>
+              <div v-else class="text-xs">해당 카테고리 후보가 없습니다.</div>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 gap-2">
             <sl-input v-model="recommendationWornDate" label="착용일" type="date"></sl-input>
             <sl-input v-model="recommendationNote" label="메모" placeholder="선택 입력"></sl-input>
           </div>
@@ -156,14 +170,85 @@
       <sl-button slot="footer" class="mr-2" @click="onRequestCloseRecommendationDialog">닫기</sl-button>
       <sl-button
         slot="footer"
+        class="mr-2"
+        :disabled="!recommendationSessionId || !recommendationItems.length"
+        @click="onClickOpenRecommendationFullBodyDialog"
+      >
+        전신샷
+      </sl-button>
+      <sl-button
+        slot="footer"
         class="ml-2"
         variant="primary"
         :disabled="!recommendationSessionId || !recommendationItems.length"
         :loading="isCreatingRecommendationConfirm"
         @click="onClickConfirmRecommendationButton"
       >
-        오늘 코디 확정
+        확정
       </sl-button>
+    </sl-dialog>
+
+    <sl-dialog label="전신 코디 미리보기" :open="isRecommendationFullBodyDialogOpen" @sl-request-close="onRequestCloseRecommendationFullBodyDialog">
+      <div class="flex flex-col gap-3">
+        <div class="relative rounded-2xl p-3">
+          <div class="mx-auto flex min-h-72 w-40 flex-col items-center justify-between">
+            <div class="flex h-24 w-full items-center justify-center rounded-xl">
+              <img
+                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))"
+                class="h-full w-full rounded-xl object-contain"
+                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))"
+                alt="상의 미리보기"
+              />
+              <span v-else class="text-xs">상의 없음</span>
+            </div>
+
+            <div class="flex h-24 w-full items-center justify-center rounded-xl">
+              <img
+                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom))"
+                class="h-full w-full rounded-xl object-contain"
+                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom))"
+                alt="하의 미리보기"
+              />
+              <span v-else class="text-xs">하의 없음</span>
+            </div>
+
+            <div class="flex h-20 w-full items-center justify-center rounded-xl">
+              <img
+                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes))"
+                class="h-full w-full rounded-xl object-contain"
+                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes))"
+                alt="신발 미리보기"
+              />
+              <span v-else class="text-xs">신발 없음</span>
+            </div>
+          </div>
+
+          <div class="absolute right-3 top-3 h-14 w-14 rounded-xl p-1">
+            <img
+              v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory))"
+              class="h-full w-full rounded-xl object-contain"
+              :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory))"
+              alt="악세사리 미리보기"
+            />
+            <div v-else class="flex h-full w-full items-center justify-center rounded-xl text-[11px]">악세 없음</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <div v-for="category in recommendationCategoryOrder" :key="`preview-${category}`" class="flex flex-col items-center gap-1 rounded-xl p-2">
+            <img
+              v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+              class="h-12 w-12 rounded-lg object-cover"
+              :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+              :alt="`${fetchClothesCategoryLabel(category)} 선택 이미지`"
+            />
+            <div v-else class="flex h-12 w-12 items-center justify-center rounded-lg text-[10px]">없음</div>
+            <div class="text-xs">{{ fetchClothesCategoryLabel(category) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <sl-button slot="footer" @click="onRequestCloseRecommendationFullBodyDialog">닫기</sl-button>
     </sl-dialog>
 
     <sl-dialog label="옷 상세 정보" :open="isDetailDialogOpen" @sl-request-close="onRequestCloseDetailDialog">
@@ -416,7 +501,7 @@ import {
 import { useAuth } from '@/composables/auth';
 import { useAuthGuard } from '@/composables/auth-guard';
 import { useClothes } from '@/composables/clothes';
-import { type RecommendationItem, useRecommendations } from '@/composables/recommendations';
+import { type RecommendationItem, type RecommendationPinnedByCategory, useRecommendations } from '@/composables/recommendations';
 import { type CityWeather, useWeather } from '@/composables/weather';
 import {
   clothesCategoryOptionList,
@@ -464,6 +549,17 @@ type ClothesFilterParams = {
   styles: ClothesStylesOptions[];
 };
 
+type RecommendationSlotCategory = ClothesCategoryOptions.top | ClothesCategoryOptions.bottom | ClothesCategoryOptions.shoes | ClothesCategoryOptions.accessory;
+
+type RecommendationSlotCandidate = {
+  category: RecommendationSlotCategory;
+  clothes: NonNullable<RecommendationItem['clothes']>;
+  clothesId: string;
+  isRecommended: boolean;
+  itemId: string;
+  similarity: number;
+};
+
 const PREFERENCE_SCORE_MIN = 0;
 const PREFERENCE_SCORE_MAX = 100;
 
@@ -497,7 +593,6 @@ const {
   isUpdatingRecommendationReroll,
   isCreatingRecommendationConfirm,
   createRecommendationSession,
-  updateRecommendationItemPinned,
   updateRecommendationReroll,
   createRecommendationConfirm,
   resetRecommendationSession,
@@ -526,9 +621,34 @@ const uploadSourceFile = ref<File | null>(null);
 const uploadSourceFileInputElement = ref<HTMLInputElement | null>(null);
 const isUploadDialogOpen = ref(false);
 const isRecommendationDialogOpen = ref(false);
+const isRecommendationFullBodyDialogOpen = ref(false);
 const recommendationQueryText = ref('');
 const recommendationWornDate = ref('');
 const recommendationNote = ref('');
+const recommendationCategoryOrder: RecommendationSlotCategory[] = [
+  ClothesCategoryOptions.top,
+  ClothesCategoryOptions.bottom,
+  ClothesCategoryOptions.shoes,
+  ClothesCategoryOptions.accessory,
+];
+const recommendationSelectionIndexByCategory = ref<Record<RecommendationSlotCategory, number>>({
+  [ClothesCategoryOptions.top]: 0,
+  [ClothesCategoryOptions.bottom]: 0,
+  [ClothesCategoryOptions.shoes]: 0,
+  [ClothesCategoryOptions.accessory]: 0,
+});
+const recommendationTouchStartXByCategory = ref<Record<RecommendationSlotCategory, number | null>>({
+  [ClothesCategoryOptions.top]: null,
+  [ClothesCategoryOptions.bottom]: null,
+  [ClothesCategoryOptions.shoes]: null,
+  [ClothesCategoryOptions.accessory]: null,
+});
+const recommendationPinnedClothesIdByCategory = ref<Record<RecommendationSlotCategory, string>>({
+  [ClothesCategoryOptions.top]: '',
+  [ClothesCategoryOptions.bottom]: '',
+  [ClothesCategoryOptions.shoes]: '',
+  [ClothesCategoryOptions.accessory]: '',
+});
 const isDetailDialogOpen = ref(false);
 const selectedClothes = ref<ClothesResponse | null>(null);
 const detailForm = ref<ClothesDetailForm>({
@@ -677,6 +797,105 @@ const canPasteClipboardImage = computed(() => {
 
   return typeof navigator.clipboard.read === 'function';
 });
+const recommendationCandidatesByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate[]>>(() => {
+  const groupedCandidates: Record<RecommendationSlotCategory, RecommendationSlotCandidate[]> = {
+    [ClothesCategoryOptions.top]: [],
+    [ClothesCategoryOptions.bottom]: [],
+    [ClothesCategoryOptions.shoes]: [],
+    [ClothesCategoryOptions.accessory]: [],
+  };
+
+  const appendCandidate = (category: RecommendationSlotCategory, candidate: RecommendationSlotCandidate) => {
+    const currentCandidates = groupedCandidates[category];
+    if (currentCandidates.some((item) => item.clothesId === candidate.clothesId)) {
+      return;
+    }
+
+    currentCandidates.push(candidate);
+  };
+
+  recommendationItems.value.forEach((item) => {
+    const category = item.category;
+    if (!recommendationCategoryOrder.includes(category as RecommendationSlotCategory) || !item.clothes) {
+      return;
+    }
+
+    const clothesId = String(item.clothes.id ?? '').trim();
+    if (!clothesId) {
+      return;
+    }
+
+    appendCandidate(category as RecommendationSlotCategory, {
+      category: category as RecommendationSlotCategory,
+      clothes: item.clothes,
+      clothesId,
+      isRecommended: true,
+      itemId: item.itemId,
+      similarity: item.similarity,
+    });
+  });
+
+  clothes.value.forEach((item) => {
+    const category = item.category;
+    if (!recommendationCategoryOrder.includes(category as RecommendationSlotCategory)) {
+      return;
+    }
+
+    if (item.state !== ClothesStateOptions.done) {
+      return;
+    }
+
+    const clothesId = String(item.id ?? '').trim();
+    if (!clothesId) {
+      return;
+    }
+
+    appendCandidate(category as RecommendationSlotCategory, {
+      category: category as RecommendationSlotCategory,
+      clothes: {
+        category: item.category ?? '',
+        colors: Array.isArray(item.colors) ? item.colors : [],
+        contexts: Array.isArray(item.contexts) ? item.contexts : [],
+        fit: item.fit ?? '',
+        id: clothesId,
+        imageHash: String(item.imageHash ?? ''),
+        materials: Array.isArray(item.materials) ? item.materials : [],
+        preferenceScore: Number(item.preferenceScore ?? 0),
+        seasons: Array.isArray(item.seasons) ? item.seasons : [],
+        sourceImage: String(item.sourceImage ?? ''),
+        sourceUrl: String(item.sourceUrl ?? ''),
+        styles: Array.isArray(item.styles) ? item.styles : [],
+      },
+      clothesId,
+      isRecommended: false,
+      itemId: '',
+      similarity: -1,
+    });
+  });
+
+  return groupedCandidates;
+});
+const selectedRecommendationCandidateByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate | null>>(() => {
+  const selectedCandidates: Record<RecommendationSlotCategory, RecommendationSlotCandidate | null> = {
+    [ClothesCategoryOptions.top]: null,
+    [ClothesCategoryOptions.bottom]: null,
+    [ClothesCategoryOptions.shoes]: null,
+    [ClothesCategoryOptions.accessory]: null,
+  };
+
+  recommendationCategoryOrder.forEach((category) => {
+    const candidates = recommendationCandidatesByCategory.value[category];
+    const selectedIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
+    if (!candidates.length) {
+      selectedCandidates[category] = null;
+      return;
+    }
+
+    selectedCandidates[category] = candidates[Math.max(0, Math.min(selectedIndex, candidates.length - 1))] ?? null;
+  });
+
+  return selectedCandidates;
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -698,6 +917,7 @@ const onClickSignoutButton = async () => {
 
 const onClickHomeBrand = async () => {
   isRecommendationDialogOpen.value = false;
+  isRecommendationFullBodyDialogOpen.value = false;
   isDetailDialogOpen.value = false;
   isUploadDialogOpen.value = false;
   isFilterDialogOpen.value = false;
@@ -725,6 +945,7 @@ const onRequestCloseUploadDialog = () => {
 
 const onRequestCloseRecommendationDialog = () => {
   isRecommendationDialogOpen.value = false;
+  isRecommendationFullBodyDialogOpen.value = false;
 };
 
 const onChangeUploadFileInput = (event: Event) => {
@@ -1040,12 +1261,83 @@ const onClickRequestRecommendationButton = async () => {
 
   recommendationNote.value = '';
   recommendationWornDate.value = fetchTodayDateText();
+  recommendationSelectionIndexByCategory.value = {
+    [ClothesCategoryOptions.top]: 0,
+    [ClothesCategoryOptions.bottom]: 0,
+    [ClothesCategoryOptions.shoes]: 0,
+    [ClothesCategoryOptions.accessory]: 0,
+  };
+  recommendationPinnedClothesIdByCategory.value = {
+    [ClothesCategoryOptions.top]: '',
+    [ClothesCategoryOptions.bottom]: '',
+    [ClothesCategoryOptions.shoes]: '',
+    [ClothesCategoryOptions.accessory]: '',
+  };
   isRecommendationDialogOpen.value = true;
 };
 
-const onChangeRecommendationPin = (itemId: string, event: Event) => {
-  const isChecked = readShoelaceChecked(event);
-  updateRecommendationItemPinned(itemId, isChecked);
+const onClickOpenRecommendationFullBodyDialog = () => {
+  const hasAnySelectedCandidate = recommendationCategoryOrder.some((category) => Boolean(fetchSelectedRecommendationCandidate(category)));
+  if (!hasAnySelectedCandidate) {
+    showMessageModal('전신 미리보기할 추천 데이터가 없습니다.');
+    return;
+  }
+
+  isRecommendationFullBodyDialogOpen.value = true;
+};
+
+const onRequestCloseRecommendationFullBodyDialog = () => {
+  isRecommendationFullBodyDialogOpen.value = false;
+};
+
+const fetchSelectedRecommendationCandidate = (category: RecommendationSlotCategory) => {
+  return selectedRecommendationCandidateByCategory.value[category];
+};
+
+const moveRecommendationSelectionIndex = (category: RecommendationSlotCategory, direction: -1 | 1) => {
+  const candidates = recommendationCandidatesByCategory.value[category];
+  if (candidates.length <= 1) {
+    return;
+  }
+
+  const currentIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
+  let nextIndex = currentIndex + direction;
+  if (nextIndex < 0) {
+    nextIndex = candidates.length - 1;
+  }
+  if (nextIndex >= candidates.length) {
+    nextIndex = 0;
+  }
+
+  recommendationSelectionIndexByCategory.value = {
+    ...recommendationSelectionIndexByCategory.value,
+    [category]: nextIndex,
+  };
+};
+
+const fetchRecommendationSelectionPositionLabel = (category: RecommendationSlotCategory) => {
+  const candidates = recommendationCandidatesByCategory.value[category];
+  if (!candidates.length) {
+    return '0/0';
+  }
+
+  const selectedIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
+  const normalizedIndex = Math.max(0, Math.min(selectedIndex, candidates.length - 1));
+  return `${normalizedIndex + 1}/${candidates.length}`;
+};
+
+const fetchPinnedRecommendationByCategory = (): RecommendationPinnedByCategory => {
+  const pinnedByCategory: RecommendationPinnedByCategory = {};
+  recommendationCategoryOrder.forEach((category) => {
+    const clothesId = String(recommendationPinnedClothesIdByCategory.value[category] ?? '').trim();
+    if (!clothesId) {
+      return;
+    }
+
+    pinnedByCategory[category] = clothesId;
+  });
+
+  return pinnedByCategory;
 };
 
 const onClickRerollRecommendationButton = async () => {
@@ -1054,7 +1346,13 @@ const onClickRerollRecommendationButton = async () => {
     return;
   }
 
-  await updateRecommendationReroll();
+  await updateRecommendationReroll(fetchPinnedRecommendationByCategory());
+  recommendationSelectionIndexByCategory.value = {
+    [ClothesCategoryOptions.top]: 0,
+    [ClothesCategoryOptions.bottom]: 0,
+    [ClothesCategoryOptions.shoes]: 0,
+    [ClothesCategoryOptions.accessory]: 0,
+  };
 };
 
 const onClickConfirmRecommendationButton = async () => {
@@ -1068,20 +1366,43 @@ const onClickConfirmRecommendationButton = async () => {
     return;
   }
 
+  const selectedCandidates = recommendationCategoryOrder
+    .map((category) => fetchSelectedRecommendationCandidate(category))
+    .filter((candidate): candidate is RecommendationSlotCandidate => Boolean(candidate));
+  if (!selectedCandidates.length) {
+    showMessageModal('확정할 추천 코디가 없습니다.');
+    return;
+  }
+
+  const selectedItemIds = selectedCandidates.map((candidate) => candidate.itemId).filter(Boolean);
+  const selectedClothesIds = Array.from(new Set(selectedCandidates.map((candidate) => candidate.clothesId).filter(Boolean)));
   const result = await createRecommendationConfirm({
     note: recommendationNote.value.trim(),
+    selectedClothesIds,
+    selectedItemIds,
     wornDate: recommendationWornDate.value.trim(),
   });
 
   resetRecommendationSession();
   isRecommendationDialogOpen.value = false;
+  isRecommendationFullBodyDialogOpen.value = false;
+  recommendationPinnedClothesIdByCategory.value = {
+    [ClothesCategoryOptions.top]: '',
+    [ClothesCategoryOptions.bottom]: '',
+    [ClothesCategoryOptions.shoes]: '',
+    [ClothesCategoryOptions.accessory]: '',
+  };
   recommendationNote.value = '';
   recommendationWornDate.value = result.wornDate;
   showMessageModal(`${result.wornDate} 착용 로그로 ${result.selectedCount}개 아이템을 저장했습니다.`);
 };
 
-const fetchRecommendationItemImageUrl = (item: RecommendationItem) => {
-  const clothesId = String(item.clothes?.id ?? '').trim();
+const fetchRecommendationCandidateImageUrl = (candidate: RecommendationSlotCandidate | null) => {
+  if (!candidate) {
+    return '';
+  }
+
+  const clothesId = String(candidate.clothesId ?? '').trim();
   if (clothesId) {
     const clothesItem = clothes.value.find((data) => data.id === clothesId);
     if (clothesItem) {
@@ -1089,37 +1410,78 @@ const fetchRecommendationItemImageUrl = (item: RecommendationItem) => {
     }
   }
 
-  return String(item.clothes?.sourceUrl ?? '').trim();
+  return String(candidate.clothes.sourceUrl ?? '').trim();
 };
 
-const fetchRecommendationCategoryLabel = (category: ClothesCategoryOptions | '') => {
-  if (!category) {
-    return '-';
+const fetchRecommendationCandidateCanPin = (candidate: RecommendationSlotCandidate | null) => {
+  return Boolean(candidate);
+};
+
+const fetchRecommendationCandidatePinned = (category: RecommendationSlotCategory, candidate: RecommendationSlotCandidate | null) => {
+  if (!candidate) {
+    return false;
   }
 
-  return fetchClothesCategoryLabel(category);
+  const pinnedClothesId = String(recommendationPinnedClothesIdByCategory.value[category] ?? '').trim();
+  return Boolean(pinnedClothesId && pinnedClothesId === candidate.clothesId);
 };
 
-const fetchRecommendationSimilarityLabel = (similarity: number) => {
-  if (!Number.isFinite(similarity) || similarity < 0) {
-    return '-';
+const onChangeRecommendationCandidatePinned = (category: RecommendationSlotCategory, event: Event) => {
+  const candidate = fetchSelectedRecommendationCandidate(category);
+  if (!candidate) {
+    return;
   }
 
-  return `${(similarity * 100).toFixed(1)}%`;
+  const isChecked = readShoelaceChecked(event);
+  recommendationPinnedClothesIdByCategory.value = {
+    ...recommendationPinnedClothesIdByCategory.value,
+    [category]: isChecked ? candidate.clothesId : '',
+  };
 };
 
-const fetchRecommendationSummaryLabel = (item: RecommendationItem) => {
-  if (!item.clothes) {
-    return '추천 옷 정보를 찾지 못했습니다.';
+const onClickPreviousRecommendationCandidateButton = (category: RecommendationSlotCategory) => {
+  moveRecommendationSelectionIndex(category, -1);
+};
+
+const onClickNextRecommendationCandidateButton = (category: RecommendationSlotCategory) => {
+  moveRecommendationSelectionIndex(category, 1);
+};
+
+const onTouchStartRecommendationSlot = (category: RecommendationSlotCategory, event: TouchEvent) => {
+  const startX = Number(event.changedTouches?.[0]?.clientX ?? 0);
+  recommendationTouchStartXByCategory.value = {
+    ...recommendationTouchStartXByCategory.value,
+    [category]: startX,
+  };
+};
+
+const onTouchEndRecommendationSlot = (category: RecommendationSlotCategory, event: TouchEvent) => {
+  const startX = recommendationTouchStartXByCategory.value[category];
+  recommendationTouchStartXByCategory.value = {
+    ...recommendationTouchStartXByCategory.value,
+    [category]: null,
+  };
+  if (startX === null) {
+    return;
   }
 
-  const styleLabel = fetchClothesStylesLabel(item.clothes.styles);
-  const colorLabel = fetchClothesColorsLabel(item.clothes.colors);
-  return `스타일 ${styleLabel} / 색상 ${colorLabel}`;
+  const endX = Number(event.changedTouches?.[0]?.clientX ?? startX);
+  const deltaX = endX - startX;
+  if (Math.abs(deltaX) < 36) {
+    return;
+  }
+
+  if (deltaX < 0) {
+    moveRecommendationSelectionIndex(category, 1);
+    return;
+  }
+
+  moveRecommendationSelectionIndex(category, -1);
 };
 
-const onClickOpenRecommendationDetailButton = async (item: RecommendationItem) => {
-  const clothesId = String(item.clothes?.id ?? '').trim();
+const onClickOpenRecommendationDetailButton = async (category: RecommendationSlotCategory) => {
+  const candidate = fetchSelectedRecommendationCandidate(category);
+  const clothesId = String(candidate?.clothesId ?? '').trim();
   if (!clothesId) {
     showMessageModal('추천 옷 상세 데이터를 찾지 못했습니다.');
     return;

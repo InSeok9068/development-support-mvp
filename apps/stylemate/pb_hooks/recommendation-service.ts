@@ -56,6 +56,16 @@ const normalizeEnumArray = (values, allowed, maxSelect) => {
   return normalized;
 };
 
+const normalizePinnedByCategory = (raw) => {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  return {
+    top: String(source.top ?? '').trim(),
+    bottom: String(source.bottom ?? '').trim(),
+    shoes: String(source.shoes ?? '').trim(),
+    accessory: String(source.accessory ?? '').trim(),
+  };
+};
+
 const toNumberArray = (value) => {
   if (!Array.isArray(value)) {
     return [];
@@ -504,7 +514,7 @@ const requestOutfitRecommendation = (authRecord, queryText, topKInput, seasonsIn
   };
 };
 
-const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds) => {
+const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds, pinnedByCategoryInput) => {
   const userId = readAuthId(authRecord);
   if (!userId) return { ok: false, statusCode: 401, message: '인증 정보가 필요합니다.' };
 
@@ -517,6 +527,7 @@ const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds) => {
   const maxRound = allItems.reduce((acc, item) => Math.max(acc, Number(item.get('round') ?? 1)), 1);
   const currentRoundItems = allItems.filter((item) => Number(item.get('round') ?? 1) === maxRound);
   const pinnedSet = new Set((Array.isArray(pinnedItemIds) ? pinnedItemIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
+  const normalizedPinnedByCategory = normalizePinnedByCategory(pinnedByCategoryInput);
 
   const pinnedByCategory = {};
   const usedByCategory = { accessory: new Set(), bottom: new Set(), shoes: new Set(), top: new Set() };
@@ -528,10 +539,22 @@ const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds) => {
 
   currentRoundItems.forEach((item) => {
     const category = normalizeEnum(item.get('category'), CATEGORY_VALUES, '');
-    const isPinned = pinnedSet.has(item.id);
+    const clothesId = String(item.get('clothes') ?? '').trim();
+    const isPinnedByItem = pinnedSet.has(item.id);
+    const isPinnedByCategory = Boolean(category && clothesId && normalizedPinnedByCategory[category] === clothesId);
+    const isPinned = isPinnedByItem || isPinnedByCategory;
     item.set('isPinned', isPinned);
     $app.save(item);
-    if (isPinned && category) pinnedByCategory[category] = String(item.get('clothes') ?? '').trim();
+    if (isPinned && category && clothesId) pinnedByCategory[category] = clothesId;
+  });
+
+  CATEGORY_VALUES.forEach((category) => {
+    const pinnedClothesId = String(normalizedPinnedByCategory[category] ?? '').trim();
+    if (!pinnedClothesId || pinnedByCategory[category]) {
+      return;
+    }
+
+    pinnedByCategory[category] = pinnedClothesId;
   });
 
   const queryFilter = normalizeQueryFilter(sessionRecord.get('queryFilter'));
@@ -560,7 +583,8 @@ const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds) => {
       selected = pool.find((candidate) => candidate.clothesId === pinnedByCategory[category]) ?? null;
       if (!selected) {
         const clothesRecord = findRecordById(CLOTHES_COLLECTION, pinnedByCategory[category]);
-        if (clothesRecord) {
+        const clothesCategory = normalizeEnum(clothesRecord?.get('category'), CATEGORY_VALUES, '');
+        if (clothesRecord && String(clothesRecord.get('user') ?? '') === userId && clothesCategory === category) {
           selected = { clothesId: clothesRecord.id, record: clothesRecord, similarity: 0 };
         }
       }
@@ -624,16 +648,38 @@ const confirmOutfitRecommendation = (authRecord, args) => {
   const maxRound = allItems.reduce((acc, item) => Math.max(acc, Number(item.get('round') ?? 1)), 1);
   const currentRoundItems = allItems.filter((item) => Number(item.get('round') ?? 1) === maxRound);
   const selectedIdSet = new Set((Array.isArray(args?.selectedItemIds) ? args.selectedItemIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
+  const selectedClothesIdSet = new Set((Array.isArray(args?.selectedClothesIds) ? args.selectedClothesIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
   const selectedItems = selectedIdSet.size ? currentRoundItems.filter((item) => selectedIdSet.has(item.id)) : currentRoundItems;
-  if (!selectedItems.length) return { ok: false, statusCode: 400, message: '선택된 아이템이 없습니다.' };
 
-  const clothesIds = selectedItems
-    .map((item) => String(item.get('clothes') ?? '').trim())
-    .filter(Boolean)
-    .filter((value, index, arr) => arr.indexOf(value) === index);
-  if (!clothesIds.length) return { ok: false, statusCode: 400, message: '선택된 옷이 없습니다.' };
+  if (!selectedClothesIdSet.size) {
+    selectedItems.forEach((item) => {
+      const clothesId = String(item.get('clothes') ?? '').trim();
+      if (clothesId) {
+        selectedClothesIdSet.add(clothesId);
+      }
+    });
+  }
 
-  selectedItems.forEach((item) => {
+  if (!selectedClothesIdSet.size) return { ok: false, statusCode: 400, message: '선택된 옷이 없습니다.' };
+
+  const selectedClothesRecords = [];
+  selectedClothesIdSet.forEach((id) => {
+    const clothesRecord = findRecordById(CLOTHES_COLLECTION, id);
+    if (!clothesRecord) return;
+    if (String(clothesRecord.get('user') ?? '') !== userId) return;
+    selectedClothesRecords.push(clothesRecord);
+  });
+  if (!selectedClothesRecords.length) return { ok: false, statusCode: 400, message: '선택된 옷이 없습니다.' };
+
+  const selectedClothesIds = selectedClothesRecords.map((record) => record.id);
+  const selectedClothesIdLookup = new Set(selectedClothesIds);
+  currentRoundItems.forEach((item) => {
+    const clothesId = String(item.get('clothes') ?? '').trim();
+    const isSelected = selectedIdSet.has(item.id) || selectedClothesIdLookup.has(clothesId);
+    if (!isSelected) {
+      return;
+    }
+
     item.set('isSelected', true);
     $app.save(item);
   });
@@ -644,14 +690,12 @@ const confirmOutfitRecommendation = (authRecord, args) => {
   const wearLogRecord = new Record(wearLogsCollection);
   wearLogRecord.set('user', userId);
   wearLogRecord.set('session', sessionId);
-  wearLogRecord.set('items', clothesIds);
+  wearLogRecord.set('items', selectedClothesIds);
   wearLogRecord.set('wornDate', wornDate);
   wearLogRecord.set('note', note);
   $app.save(wearLogRecord);
 
-  clothesIds.forEach((id) => {
-    const clothesRecord = findRecordById(CLOTHES_COLLECTION, id);
-    if (!clothesRecord) return;
+  selectedClothesRecords.forEach((clothesRecord) => {
     const score = Number(clothesRecord.get('preferenceScore') ?? 0);
     clothesRecord.set('preferenceScore', Number.isFinite(score) ? score + 1 : 1);
     clothesRecord.set('lastWornAt', wornDate);
@@ -661,7 +705,7 @@ const confirmOutfitRecommendation = (authRecord, args) => {
   return {
     ok: true,
     payload: {
-      selectedCount: clothesIds.length,
+      selectedCount: selectedClothesIds.length,
       sessionId,
       wearLogId: wearLogRecord.id,
       wornDate,

@@ -62,8 +62,18 @@ type CreateRecommendationSessionArgs = {
 
 type CreateRecommendationConfirmArgs = {
   note: string;
+  selectedClothesIds?: string[];
+  selectedItemIds?: string[];
   wornDate: string;
 };
+
+type RecommendationCategory =
+  | ClothesCategoryOptions.top
+  | ClothesCategoryOptions.bottom
+  | ClothesCategoryOptions.shoes
+  | ClothesCategoryOptions.accessory;
+
+export type RecommendationPinnedByCategory = Partial<Record<RecommendationCategory, string>>;
 
 export const useRecommendations = () => {
   /* ======================= 변수 ======================= */
@@ -86,10 +96,10 @@ export const useRecommendations = () => {
   });
 
   const updateRecommendationRerollMutation = useMutation({
-    mutationFn: (pinnedItemIds: string[]) =>
+    mutationFn: (pinnedByCategory: RecommendationPinnedByCategory) =>
       pb.send<UpdateRecommendationRerollResponse>('/api/recommendations/reroll', {
         body: {
-          pinnedItemIds,
+          pinnedByCategory,
           sessionId: recommendationSessionId.value,
         },
         method: 'POST',
@@ -101,7 +111,8 @@ export const useRecommendations = () => {
       pb.send<CreateRecommendationConfirmResponse>('/api/recommendations/confirm', {
         body: {
           note: args.note,
-          selectedItemIds: recommendationItems.value.map((item) => item.itemId),
+          selectedClothesIds: Array.isArray(args.selectedClothesIds) ? args.selectedClothesIds : [],
+          selectedItemIds: Array.isArray(args.selectedItemIds) ? args.selectedItemIds : [],
           sessionId: recommendationSessionId.value,
           wornDate: args.wornDate,
         },
@@ -122,22 +133,8 @@ export const useRecommendations = () => {
     return result;
   };
 
-  const updateRecommendationItemPinned = (itemId: string, isPinned: boolean) => {
-    recommendationItems.value = recommendationItems.value.map((item) => {
-      if (item.itemId !== itemId) {
-        return item;
-      }
-
-      return {
-        ...item,
-        isPinned,
-      };
-    });
-  };
-
-  const updateRecommendationReroll = async () => {
-    const pinnedItemIds = recommendationItems.value.filter((item) => item.isPinned).map((item) => item.itemId);
-    const result = await updateRecommendationRerollMutation.mutateAsync(pinnedItemIds);
+  const updateRecommendationReroll = async (pinnedByCategory: RecommendationPinnedByCategory = {}) => {
+    const result = await updateRecommendationRerollMutation.mutateAsync(pinnedByCategory);
     recommendationSessionId.value = result.sessionId;
     recommendationRound.value = result.round;
     recommendationItems.value = result.items;
@@ -172,7 +169,6 @@ export const useRecommendations = () => {
     isRecommendationPending,
 
     createRecommendationSession,
-    updateRecommendationItemPinned,
     updateRecommendationReroll,
     createRecommendationConfirm,
     resetRecommendationSession,

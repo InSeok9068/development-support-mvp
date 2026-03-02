@@ -27,13 +27,14 @@ routerAdd(
   '/api/recommendations/reroll',
   (e) => {
     const payload = new DynamicModel({
+      pinnedByCategory: {},
       pinnedItemIds: [],
       sessionId: '',
     });
     e.bindBody(payload);
 
     const { rerollOutfitRecommendation } = require(`${__hooks}/recommendation-service.ts`);
-    const result = rerollOutfitRecommendation(e.auth, payload.sessionId, payload.pinnedItemIds);
+    const result = rerollOutfitRecommendation(e.auth, payload.sessionId, payload.pinnedItemIds, payload.pinnedByCategory);
     if (!result.ok) {
       return e.error(result.statusCode, result.message, {});
     }
@@ -49,6 +50,7 @@ routerAdd(
   (e) => {
     const payload = new DynamicModel({
       note: '',
+      selectedClothesIds: [],
       selectedItemIds: [],
       sessionId: '',
       wornDate: '',
