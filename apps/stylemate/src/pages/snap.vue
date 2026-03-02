@@ -53,11 +53,14 @@ const isStandaloneDisplayMode = () => {
   return displayModeMatched || iosStandalone;
 };
 
-const buildAndroidIntentUrl = (url: string) => {
+const buildAndroidIntentUrl = (url: string, browserPackageName = '') => {
   try {
     const parsedUrl = new URL(url);
     const pathWithSearch = `${parsedUrl.pathname}${parsedUrl.search}`;
-    return `intent://${parsedUrl.host}${pathWithSearch}#Intent;scheme=${parsedUrl.protocol.replace(':', '')};action=android.intent.action.VIEW;end`;
+    const scheme = parsedUrl.protocol.replace(':', '');
+    const encodedFallbackUrl = encodeURIComponent(url);
+    const packageSegment = browserPackageName ? `package=${browserPackageName};` : '';
+    return `intent://${parsedUrl.host}${pathWithSearch}#Intent;scheme=${scheme};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;${packageSegment}S.browser_fallback_url=${encodedFallbackUrl};end`;
   } catch {
     return url;
   }
@@ -66,7 +69,7 @@ const buildAndroidIntentUrl = (url: string) => {
 const openExternalSnapUrl = (url: string) => {
   const isAndroid = /android/i.test(window.navigator.userAgent);
   if (isAndroid && isStandaloneDisplayMode()) {
-    window.location.href = buildAndroidIntentUrl(url);
+    window.location.href = buildAndroidIntentUrl(url, 'com.android.chrome');
     return;
   }
 

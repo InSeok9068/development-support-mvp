@@ -315,15 +315,16 @@
         <label class="text-sm font-semibold">이미지 파일</label>
         <div class="rounded-xl p-3">
           <input ref="uploadSourceFileInputElement" class="sr-only" type="file" accept="image/*" @change="onChangeUploadFileInput" />
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <sl-button size="small" @click="onClickOpenUploadSourceFileButton">파일 선택</sl-button>
+            <sl-button size="small" :disabled="!canPasteClipboardImage" @click="onClickPasteClipboardImageButton">클립보드 붙여넣기</sl-button>
             <sl-tag size="small" :variant="uploadSourceFile ? 'success' : 'neutral'">
               {{ uploadSourceFile ? '선택됨' : '미선택' }}
             </sl-tag>
           </div>
           <div class="mt-2 text-sm">
             <p class="truncate">{{ uploadSourceFile ? uploadSourceFile.name : '선택된 파일 없음' }}</p>
-            <p class="mt-1 text-xs">지원 형식: 이미지 파일</p>
+            <p class="mt-1 text-xs">지원 형식: 이미지 파일 / 클립보드 이미지 붙여넣기</p>
           </div>
         </div>
       </div>
@@ -665,6 +666,17 @@ const recommendationTemperatureSeasonTagVariant = computed(() => {
       return 'neutral';
   }
 });
+const canPasteClipboardImage = computed(() => {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  if (!('clipboard' in navigator)) {
+    return false;
+  }
+
+  return typeof navigator.clipboard.read === 'function';
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -727,6 +739,59 @@ const onClickOpenUploadSourceFileButton = () => {
 
   uploadSourceFileInputElement.value.value = '';
   uploadSourceFileInputElement.value.click();
+};
+
+const fetchClipboardImageExtension = (mimeType: string) => {
+  switch (mimeType) {
+    case 'image/jpeg':
+      return 'jpg';
+    case 'image/png':
+      return 'png';
+    case 'image/webp':
+      return 'webp';
+    case 'image/gif':
+      return 'gif';
+    case 'image/heic':
+      return 'heic';
+    default:
+      return 'png';
+  }
+};
+
+const onClickPasteClipboardImageButton = async () => {
+  if (!canPasteClipboardImage.value) {
+    showMessageModal('현재 브라우저는 클립보드 이미지 붙여넣기를 지원하지 않습니다.');
+    return;
+  }
+
+  try {
+    const clipboardItems = await navigator.clipboard.read();
+    for (const clipboardItem of clipboardItems) {
+      const imageType = clipboardItem.types.find((type) => String(type ?? '').startsWith('image/'));
+      if (!imageType) {
+        continue;
+      }
+
+      const imageBlob = await clipboardItem.getType(imageType);
+      const extension = fetchClipboardImageExtension(imageType);
+      const fileName = `clipboard-${Date.now()}.${extension}`;
+      uploadSourceFile.value = new File([imageBlob], fileName, {
+        lastModified: Date.now(),
+        type: imageType,
+      });
+      return;
+    }
+
+    showMessageModal('클립보드에 이미지 데이터가 없습니다.');
+  } catch (error) {
+    const errorMessage = String((error as Error)?.message ?? '');
+    if (/denied|notallowed|permission/i.test(errorMessage.toLowerCase())) {
+      showMessageModal('클립보드 접근 권한이 거부되었습니다. 브라우저 권한을 확인해주세요.');
+      return;
+    }
+
+    showMessageModal('클립보드에서 이미지를 가져오지 못했습니다.');
+  }
 };
 
 const findDuplicateClothesBySourceUrl = (sourceUrl: string) => {
