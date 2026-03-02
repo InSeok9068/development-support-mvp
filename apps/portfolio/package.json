@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "vue-tsc --noEmit",
     "typegen": "pocketbase-typegen -j ./pb_schema.json -o ./src/api/pocketbase-types.ts",
-    "lint": "oxlint && eslint --cache",
+    "lint": "oxlint --threads=1 && eslint --cache",
     "lint:fix": "oxlint --fix && eslint --fix",
     "lint:format": "oxfmt",
     "pb:dev": "pnpm run pb:hook && pnpm exec dotenv -e ../../.env -- cmd /d /c \"cd /d %USERPROFILE%\\IdeaProjects\\pocketbase\\portfolio && .\\pbw.exe pocketbase serve --dev\"",

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="stylemate-bg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F59E0B" />
+      <stop offset="1" stop-color="#FB923C" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#stylemate-bg)" />
+  <path d="M23 19L32 24L41 19L48 28L41 34V51H23V34L16 28L23 19Z" fill="white" />
+  <path d="M28 24C28 26.2 29.8 28 32 28C34.2 28 36 26.2 36 24" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />
+  <path d="M48 14L49.3 16.7L52 18L49.3 19.3L48 22L46.7 19.3L44 18L46.7 16.7L48 14Z" fill="white" />
+</svg>
