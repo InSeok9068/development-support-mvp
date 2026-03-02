@@ -6,12 +6,13 @@ import {
   ClothesFitOptions,
   ClothesMaterialsOptions,
   ClothesSeasonsOptions,
+  ClothesStateOptions,
   ClothesStylesOptions,
   Collections,
   type ClothesResponse,
   type Update,
 } from '@/api/pocketbase-types';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 
 type ClothesFilterParams = {
@@ -131,13 +132,26 @@ export const useClothes = () => {
       .then((items) => filterClothesList(items, params));
   };
 
+  const isProcessingState = (state: ClothesStateOptions | null | undefined) => {
+    return (
+      state === ClothesStateOptions.uploaded ||
+      state === ClothesStateOptions.preprocessing ||
+      state === ClothesStateOptions.analyzing ||
+      state === ClothesStateOptions.embedding
+    );
+  };
+
   const fetchClothesDetail = (id: string) => {
     return pb.collection(Collections.Clothes).getOne(id);
   };
 
   const clothesQueryKey = computed(() => buildQueryKey(queryParams.value));
-  const clothesQuery = useQuery({
-    placeholderData: keepPreviousData,
+  const clothesQuery = useQuery<ClothesResponse[]>({
+    placeholderData: (previousData) => previousData,
+    refetchInterval: (query) => {
+      const items = (query.state.data ?? []) as ClothesResponse[];
+      return items.some((item) => isProcessingState(item.state)) ? 2500 : false;
+    },
     queryFn: ({ queryKey }) => {
       const [, , params] = queryKey as ClothesListQueryKey;
       return fetchClothes(params);

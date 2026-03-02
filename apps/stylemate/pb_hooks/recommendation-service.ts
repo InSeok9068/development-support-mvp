@@ -13,6 +13,12 @@ const FIT_VALUES = ['oversized', 'slim', 'wide', 'loose', 'regular'];
 const MATERIAL_VALUES = ['cotton', 'knit', 'leather', 'denim', 'wool', 'linen', 'polyester', 'nylon', 'silk'];
 const CONTEXT_VALUES = ['daily', 'work', 'wedding', 'date', 'travel', 'exercise', 'party', 'formal_event'];
 const DEFAULT_TOP_K = 12;
+const SEASON_LABELS_KO = {
+  fall: '가을',
+  spring: '봄',
+  summer: '여름',
+  winter: '겨울',
+};
 
 const readAuthId = (authRecord) =>
   String(authRecord?.id ?? authRecord?.getString?.('id') ?? authRecord?.get?.('id') ?? '').trim();
@@ -411,17 +417,26 @@ const serializeItem = (itemRecord, clothesRecord) => ({
   similarity: Number(itemRecord.get('similarity') ?? 0),
 });
 
+const buildWeatherBasedDefaultQueryText = (seasonDefaults = []) => {
+  const normalizedSeasons = normalizeEnumArray(seasonDefaults, SEASON_VALUES, 4);
+  if (!normalizedSeasons.length) {
+    return '오늘 날씨에 맞는 데일리 코디 추천';
+  }
+
+  const seasonLabels = normalizedSeasons.map((season) => SEASON_LABELS_KO[season] ?? season).join('/');
+  return `오늘 ${seasonLabels} 날씨에 맞는 데일리 코디 추천`;
+};
+
 const requestOutfitRecommendation = (authRecord, queryText, topKInput, seasonsInput = []) => {
   const userId = readAuthId(authRecord);
   if (!userId) return { ok: false, statusCode: 401, message: '인증 정보가 필요합니다.' };
 
-  const normalizedQueryText = String(queryText ?? '').trim();
-  if (!normalizedQueryText) return { ok: false, statusCode: 400, message: '추천 요청 문장을 입력해주세요.' };
-
   const topK = Math.max(1, Math.min(50, Math.trunc(Number(topKInput) || DEFAULT_TOP_K)));
   const normalizedSeasonDefaults = normalizeEnumArray(Array.isArray(seasonsInput) ? seasonsInput : [], SEASON_VALUES, 4);
-  const filterResult = runQueryFilterStep(normalizedQueryText, normalizedSeasonDefaults);
-  const embeddingResult = runQueryEmbeddingStep(normalizedQueryText);
+  const normalizedQueryText = String(queryText ?? '').trim();
+  const effectiveQueryText = normalizedQueryText || buildWeatherBasedDefaultQueryText(normalizedSeasonDefaults);
+  const filterResult = runQueryFilterStep(effectiveQueryText, normalizedSeasonDefaults);
+  const embeddingResult = runQueryEmbeddingStep(effectiveQueryText);
 
   const doneRecords = $app.findRecordsByFilter(
     CLOTHES_COLLECTION,
@@ -439,7 +454,7 @@ const requestOutfitRecommendation = (authRecord, queryText, topKInput, seasonsIn
   if (!targetCategories.length) {
     createSession({
       userId,
-      queryText: normalizedQueryText,
+      queryText: effectiveQueryText,
       queryFilter: filterResult.filter,
       queryEmbedding: embeddingResult.embedding,
       topK,
@@ -452,7 +467,7 @@ const requestOutfitRecommendation = (authRecord, queryText, topKInput, seasonsIn
 
   const sessionRecord = createSession({
     userId,
-    queryText: normalizedQueryText,
+    queryText: effectiveQueryText,
     queryFilter: filterResult.filter,
     queryEmbedding: embeddingResult.embedding,
     topK,

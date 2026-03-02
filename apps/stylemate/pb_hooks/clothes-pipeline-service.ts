@@ -1,6 +1,19 @@
 // @ts-nocheck
 
 const COLLECTION_NAME = 'clothes';
+const ANALYZE_MODEL = 'gemini-2.5-flash-lite';
+const MAX_ANALYZE_IMAGE_BYTES = 10 * 1024 * 1024;
+
+const IMAGE_MIME_BY_EXTENSION = {
+  '.bmp': 'image/bmp',
+  '.gif': 'image/gif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+};
 
 const readAuthId = (authRecord) =>
   String(authRecord?.id ?? authRecord?.getString?.('id') ?? authRecord?.get?.('id') ?? '').trim();
@@ -44,6 +57,301 @@ const normalizeRetryLimit = (value, fallback) => {
     return fallback;
   }
   return Math.max(0, Math.trunc(parsed));
+};
+
+const readHeaderValue = (headers, targetName) => {
+  const headerMap = headers && typeof headers === 'object' ? headers : {};
+  const normalizedTarget = String(targetName ?? '').toLowerCase();
+  const headerNames = Object.keys(headerMap);
+
+  for (let index = 0; index < headerNames.length; index += 1) {
+    const headerName = headerNames[index];
+    if (String(headerName).toLowerCase() !== normalizedTarget) {
+      continue;
+    }
+
+    const rawValue = headerMap[headerName];
+    if (Array.isArray(rawValue)) {
+      return String(rawValue[0] ?? '').trim();
+    }
+    return String(rawValue ?? '').trim();
+  }
+
+  return '';
+};
+
+const hasBytePrefix = (bytes, prefix, offset = 0) => {
+  if (!Array.isArray(bytes) || bytes.length < offset + prefix.length) {
+    return false;
+  }
+
+  for (let index = 0; index < prefix.length; index += 1) {
+    if (Number(bytes[offset + index]) !== Number(prefix[index])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const normalizeImageMimeType = (value) => {
+  const rawMimeType = String(value ?? '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+
+  if (!rawMimeType) {
+    return '';
+  }
+
+  if ('image/jpg' === rawMimeType || 'image/pjpeg' === rawMimeType) {
+    return 'image/jpeg';
+  }
+
+  if ('image/x-png' === rawMimeType) {
+    return 'image/png';
+  }
+
+  return rawMimeType;
+};
+
+const detectImageMimeTypeByExtension = (sourceName) => {
+  const extension = String($filepath.ext(String(sourceName ?? '')) ?? '')
+    .trim()
+    .toLowerCase();
+
+  return IMAGE_MIME_BY_EXTENSION[extension] ?? '';
+};
+
+const detectImageMimeTypeBySignature = (bytes) => {
+  if (hasBytePrefix(bytes, [0xff, 0xd8, 0xff])) {
+    return 'image/jpeg';
+  }
+
+  if (hasBytePrefix(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
+    return 'image/png';
+  }
+
+  if (hasBytePrefix(bytes, [0x47, 0x49, 0x46, 0x38])) {
+    return 'image/gif';
+  }
+
+  if (hasBytePrefix(bytes, [0x52, 0x49, 0x46, 0x46]) && hasBytePrefix(bytes, [0x57, 0x45, 0x42, 0x50], 8)) {
+    return 'image/webp';
+  }
+
+  if (hasBytePrefix(bytes, [0x42, 0x4d])) {
+    return 'image/bmp';
+  }
+
+  if (hasBytePrefix(bytes, [0x66, 0x74, 0x79, 0x70], 4)) {
+    const majorBrand = String.fromCharCode(
+      Number(bytes[8] ?? 0),
+      Number(bytes[9] ?? 0),
+      Number(bytes[10] ?? 0),
+      Number(bytes[11] ?? 0),
+    ).toLowerCase();
+
+    if (['heic', 'heix', 'hevc', 'hevx'].includes(majorBrand)) {
+      return 'image/heic';
+    }
+
+    if (['heif', 'heim', 'heis', 'mif1', 'msf1'].includes(majorBrand)) {
+      return 'image/heif';
+    }
+  }
+
+  return '';
+};
+
+const resolveImageMimeType = (bytes, headerMimeType, sourceName) => {
+  const signatureMimeType = detectImageMimeTypeBySignature(bytes);
+  if (signatureMimeType) {
+    return signatureMimeType;
+  }
+
+  const normalizedHeaderMimeType = normalizeImageMimeType(headerMimeType);
+  if (normalizedHeaderMimeType && normalizedHeaderMimeType.startsWith('image/')) {
+    return normalizedHeaderMimeType;
+  }
+
+  return detectImageMimeTypeByExtension(sourceName);
+};
+
+const encodeBase64Bytes = (bytes) => {
+  if (!Array.isArray(bytes) || !bytes.length) {
+    return '';
+  }
+
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let encoded = '';
+
+  for (let index = 0; index < bytes.length; index += 3) {
+    const first = Number(bytes[index] ?? 0) & 0xff;
+    const second = Number(bytes[index + 1] ?? 0) & 0xff;
+    const third = Number(bytes[index + 2] ?? 0) & 0xff;
+    const triple = (first << 16) | (second << 8) | third;
+
+    encoded += alphabet[(triple >> 18) & 0x3f];
+    encoded += alphabet[(triple >> 12) & 0x3f];
+    encoded += index + 1 < bytes.length ? alphabet[(triple >> 6) & 0x3f] : '=';
+    encoded += index + 2 < bytes.length ? alphabet[triple & 0x3f] : '=';
+  }
+
+  return encoded;
+};
+
+const readSourceImageFromUpload = (record) => {
+  const sourceImage = String(record.get('sourceImage') ?? '').trim();
+  if (!sourceImage) {
+    return {
+      ok: false,
+      errorMessage: '업로드 이미지 파일명이 비어 있습니다.',
+    };
+  }
+
+  const fsys = $app.newFilesystem();
+  const fileKey = $filepath.join(record.baseFilesPath(), sourceImage);
+  let reader = null;
+
+  try {
+    reader = fsys.getFile(fileKey);
+    const imageBytes = toBytes(reader);
+    if (!Array.isArray(imageBytes) || !imageBytes.length) {
+      return {
+        ok: false,
+        errorMessage: '업로드 이미지 파일을 읽지 못했습니다.',
+      };
+    }
+
+    if (imageBytes.length > MAX_ANALYZE_IMAGE_BYTES) {
+      return {
+        ok: false,
+        errorMessage: `이미지 용량이 너무 큽니다. (최대 ${MAX_ANALYZE_IMAGE_BYTES} bytes)`,
+      };
+    }
+
+    const imageMimeType = resolveImageMimeType(imageBytes, reader?.contentType?.() ?? '', sourceImage);
+    if (!imageMimeType) {
+      return {
+        ok: false,
+        errorMessage: '지원하지 않는 이미지 형식입니다.',
+      };
+    }
+
+    return {
+      ok: true,
+      imageBytes,
+      imageMimeType,
+      sourceText: sourceImage,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      errorMessage: `업로드 이미지 조회 실패: ${toString(error)}`,
+    };
+  } finally {
+    if (reader) {
+      try {
+        reader.close();
+      } catch {}
+    }
+
+    try {
+      fsys.close();
+    } catch {}
+  }
+};
+
+const readSourceImageFromUrl = (sourceUrl) => {
+  const normalizedUrl = String(sourceUrl ?? '').trim();
+  if (!normalizedUrl) {
+    return {
+      ok: false,
+      errorMessage: '이미지 URL이 비어 있습니다.',
+    };
+  }
+
+  let response = null;
+  try {
+    response = $http.send({
+      headers: {
+        accept: 'image/*,*/*;q=0.8',
+      },
+      method: 'GET',
+      timeout: 45,
+      url: normalizedUrl,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      errorMessage: `이미지 URL 요청 실패: ${toString(error)}`,
+    };
+  }
+
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    return {
+      ok: false,
+      errorMessage: `이미지 URL 다운로드 실패 (HTTP ${response.statusCode})`,
+    };
+  }
+
+  const imageBytes = Array.isArray(response.body) ? response.body : toBytes(response.body);
+  if (!Array.isArray(imageBytes) || !imageBytes.length) {
+    return {
+      ok: false,
+      errorMessage: 'URL 이미지 본문이 비어 있습니다.',
+    };
+  }
+
+  if (imageBytes.length > MAX_ANALYZE_IMAGE_BYTES) {
+    return {
+      ok: false,
+      errorMessage: `이미지 용량이 너무 큽니다. (최대 ${MAX_ANALYZE_IMAGE_BYTES} bytes)`,
+    };
+  }
+
+  const imageMimeType = resolveImageMimeType(imageBytes, readHeaderValue(response.headers, 'content-type'), normalizedUrl);
+  if (!imageMimeType) {
+    return {
+      ok: false,
+      errorMessage: 'URL 이미지의 MIME 타입을 확인할 수 없습니다.',
+    };
+  }
+
+  return {
+    ok: true,
+    imageBytes,
+    imageMimeType,
+    sourceText: normalizedUrl,
+  };
+};
+
+const readSourceImageForAnalyze = (record) => {
+  const sourceType = String(record.get('sourceType') ?? '').trim();
+  const sourceUrl = String(record.get('sourceUrl') ?? '').trim();
+  const sourceImage = String(record.get('sourceImage') ?? '').trim();
+
+  if ('url' === sourceType) {
+    return readSourceImageFromUrl(sourceUrl);
+  }
+
+  if ('upload' === sourceType) {
+    return readSourceImageFromUpload(record);
+  }
+
+  if (sourceImage) {
+    return readSourceImageFromUpload(record);
+  }
+
+  if (sourceUrl) {
+    return readSourceImageFromUrl(sourceUrl);
+  }
+
+  return {
+    ok: false,
+    errorMessage: '분석할 원본 이미지 정보를 찾지 못했습니다.',
+  };
 };
 
 const runPreprocessStep = (record) => {
@@ -97,9 +405,20 @@ const runAnalyzeStep = (record) => {
     };
   }
 
+  const sourceImageResult = readSourceImageForAnalyze(record);
+  if (!sourceImageResult.ok) {
+    logger.error('source image load failed', 'reason', sourceImageResult.errorMessage);
+    return {
+      ok: false,
+      errorCode: 'image_decode_error',
+      errorMessage: sourceImageResult.errorMessage,
+    };
+  }
+
   const prompt =
-    '아래 의류 정보를 바탕으로 카테고리/계절/색상/스타일/핏/소재/상황을 JSON 객체로 반환해.\n' +
+    '첨부된 의류 이미지를 직접 보고 카테고리/계절/색상/스타일/핏/소재/상황을 JSON 객체로 반환해.\n' +
     '코드펜스 없이 JSON만 반환.\n' +
+    '이미지에 보이는 정보 중심으로 답하고, 확실하지 않은 값은 가장 근접한 enum 하나를 선택.\n' +
     'enum 값은 반드시 아래 값만 사용.\n' +
     '\n' +
     'category: top, bottom, shoes, accessory\n' +
@@ -121,29 +440,73 @@ const runAnalyzeStep = (record) => {
     '  "contexts": ["daily"]\n' +
     '}\n' +
     '\n' +
-    `sourceText: ${sourceText}\n`;
+    `sourceText: ${sourceImageResult.sourceText || sourceText}\n`;
 
-  const response = $http.send({
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.1,
+  const imageBase64 = encodeBase64Bytes(sourceImageResult.imageBytes);
+  if (!imageBase64) {
+    return {
+      ok: false,
+      errorCode: 'image_decode_error',
+      errorMessage: '이미지 데이터를 base64로 변환하지 못했습니다.',
+    };
+  }
+
+  const buildAnalyzeRequestBody = (useSnakeCase) => ({
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: prompt },
+          useSnakeCase
+            ? {
+                inline_data: {
+                  data: imageBase64,
+                  mime_type: sourceImageResult.imageMimeType,
+                },
+              }
+            : {
+                inlineData: {
+                  data: imageBase64,
+                  mimeType: sourceImageResult.imageMimeType,
+                },
+              },
+        ],
       },
-    }),
+    ],
+    generationConfig: {
+      temperature: 0.1,
+    },
+  });
+
+  let response = $http.send({
+    body: JSON.stringify(buildAnalyzeRequestBody(true)),
     headers: {
       'content-type': 'application/json',
     },
     method: 'POST',
     timeout: 45,
-    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
+    url: `https://generativelanguage.googleapis.com/v1beta/models/${ANALYZE_MODEL}:generateContent?key=${geminiApiKey}`,
   });
 
-  const responseBody = toString(response.body);
+  let responseBody = toString(response.body);
+  const shouldRetryWithCamelCase =
+    response.statusCode >= 400 &&
+    response.statusCode < 500 &&
+    /inline_data|mime_type|unknown name|invalid json payload/i.test(responseBody);
+
+  if (shouldRetryWithCamelCase) {
+    response = $http.send({
+      body: JSON.stringify(buildAnalyzeRequestBody(false)),
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
+      timeout: 45,
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${ANALYZE_MODEL}:generateContent?key=${geminiApiKey}`,
+    });
+    responseBody = toString(response.body);
+  }
+
   const isSuccess = response.statusCode >= 200 && response.statusCode < 300;
   if (!isSuccess) {
     logger.error('gemini analyze failed', 'statusCode', response.statusCode, 'body', responseBody);

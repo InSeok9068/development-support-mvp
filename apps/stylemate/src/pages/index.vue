@@ -6,8 +6,7 @@
     </header>
 
     <sl-card class="overflow-hidden">
-      <div class="flex items-center justify-between gap-2">
-        <div class="text-base font-semibold">코디 추천</div>
+      <div class="flex items-center justify-end gap-2">
         <div class="flex items-center gap-2">
           <sl-tag size="small" :variant="fetchCityWeatherTagVariant(anyangWeather)">{{ fetchCityWeatherLabel('안양', anyangWeather) }}</sl-tag>
           <sl-tag size="small" :variant="fetchCityWeatherTagVariant(seongnamWeather)">{{ fetchCityWeatherLabel('성남', seongnamWeather) }}</sl-tag>
@@ -22,19 +21,6 @@
       </div>
 
       <div class="mt-3 flex flex-col gap-3">
-        <sl-input
-          v-model="recommendationQueryText"
-          label="원하는 스타일"
-          placeholder="예: 오늘 출근룩, 베이지 톤으로 깔끔하게"
-        ></sl-input>
-
-        <sl-select label="후보 개수(topK)" :value="String(recommendationTopKInput)" @sl-change="onChangeRecommendationTopK">
-          <sl-option value="6">6개</sl-option>
-          <sl-option value="8">8개</sl-option>
-          <sl-option value="12">12개</sl-option>
-          <sl-option value="16">16개</sl-option>
-        </sl-select>
-
         <div class="grid grid-cols-2 gap-2">
           <sl-button class="w-full" variant="primary" :loading="isCreatingRecommendationSession" @click="onClickRequestRecommendationButton">
             추천받기
@@ -92,7 +78,7 @@
       </div>
 
       <div v-else class="mt-3 text-sm">
-        원하는 코디를 입력하고 추천받기를 눌러주세요.
+        입력 없이도 현재 날씨 기준으로 추천받을 수 있습니다.
       </div>
     </sl-card>
 
@@ -109,6 +95,16 @@
       </div>
     </div>
 
+    <sl-card v-if="processingClothesCount" class="overflow-hidden">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-sm font-semibold">AI 처리 중 {{ processingClothesCount }}건</div>
+          <sl-tag size="small" variant="primary">{{ processingSummaryLabel }}</sl-tag>
+        </div>
+        <sl-progress-bar :value="processingProgressValue"></sl-progress-bar>
+      </div>
+    </sl-card>
+
     <div class="flex flex-col gap-3">
       <sl-card v-if="isClothesLoading">
         <div class="text-sm">옷장 데이터를 불러오는 중입니다.</div>
@@ -120,49 +116,38 @@
 
       <sl-card v-for="item in clothes" :key="item.id" class="list-item-enter overflow-hidden">
         <div class="flex cursor-pointer gap-3" @click="onClickOpenDetailDialog(item)">
-          <img v-if="fetchClothesImageUrl(item)" class="h-20 w-20 rounded-xl object-cover" :src="fetchClothesImageUrl(item)" alt="옷 이미지" />
-          <div v-else class="flex h-20 w-20 items-center justify-center rounded-xl">
+          <img v-if="fetchClothesImageUrl(item)" class="h-16 w-16 rounded-xl object-cover" :src="fetchClothesImageUrl(item)" alt="옷 이미지" />
+          <div v-else class="flex h-16 w-16 items-center justify-center rounded-xl">
             <span class="text-xs">이미지 없음</span>
           </div>
 
-          <div class="flex min-w-0 flex-1 flex-col gap-2">
-            <div class="flex items-center justify-between gap-2">
+          <div class="flex min-w-0 flex-1 flex-col gap-1">
+            <div class="flex items-start justify-between gap-2">
               <sl-tag size="small" :variant="fetchClothesStateTagVariant(item.state)">
                 {{ fetchClothesStateLabel(item.state) }}
               </sl-tag>
-              <span class="text-xs">{{ item.created.slice(0, 10) }}</span>
+              <div class="flex items-center gap-1">
+                <span class="text-xs">{{ item.created.slice(0, 10) }}</span>
+                <sl-icon-button
+                  label="삭제"
+                  name="trash3"
+                  :disabled="isDeletingClothes"
+                  @click.stop="onClickDeleteButton(item)"
+                ></sl-icon-button>
+              </div>
             </div>
 
-            <div class="space-y-1 text-sm">
-              <div class="truncate">카테고리: {{ fetchClothesCategoryLabel(item.category) }}</div>
-              <div class="truncate">해시: {{ item.imageHash ?? '-' }}</div>
-            </div>
+            <div class="truncate text-sm">카테고리: {{ fetchClothesCategoryLabel(item.category) }}</div>
 
             <div v-if="item.state === ClothesStateOptions.failed" class="text-xs font-semibold text-red-600">
               실패사유: {{ fetchClothesErrorCodeLabel(item.errorCode) }}
             </div>
             <div class="text-xs">탭해서 상세 보기</div>
+            <sl-progress-bar
+              v-if="isClothesProcessingState(item.state)"
+              :value="fetchClothesProcessingProgressValue(item.state)"
+            ></sl-progress-bar>
           </div>
-        </div>
-
-        <sl-divider class="my-3"></sl-divider>
-
-        <div class="grid grid-cols-2 gap-2">
-          <sl-button class="w-full" size="small" :loading="isUpdatingClothes" @click.stop="onClickResetPreferenceButton(item.id)">
-            선호도 초기화
-          </sl-button>
-          <sl-button class="w-full" size="small" variant="danger" :loading="isDeletingClothes" @click.stop="onClickDeleteButton(item)">
-            삭제
-          </sl-button>
-          <sl-button
-            v-if="item.state === ClothesStateOptions.failed"
-            class="col-span-2 w-full"
-            size="small"
-            :loading="isUpdatingClothes"
-            @click.stop="onClickRetryButton(item)"
-          >
-            재시도
-          </sl-button>
         </div>
       </sl-card>
     </div>
@@ -192,51 +177,53 @@
           <div>임베딩 차원: {{ fetchEmbeddingDimension(selectedClothes.embedding) }}</div>
         </div>
 
-        <sl-select label="카테고리" :value="detailForm.category" @sl-change="onChangeDetailCategory">
-          <sl-option value="">선택 안함</sl-option>
-          <sl-option v-for="option in clothesCategoryOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+        <div class="grid grid-cols-2 gap-2">
+          <sl-select label="카테고리" :value="detailForm.category" @sl-change="onChangeDetailCategory">
+            <sl-option value="">선택 안함</sl-option>
+            <sl-option v-for="option in clothesCategoryOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="계절" multiple clearable :value="detailForm.seasons" @sl-change="onChangeDetailSeasons">
-          <sl-option v-for="option in clothesSeasonsOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="핏" :value="detailForm.fit" @sl-change="onChangeDetailFit">
+            <sl-option value="">선택 안함</sl-option>
+            <sl-option v-for="option in clothesFitOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="색상" multiple clearable :value="detailForm.colors" @sl-change="onChangeDetailColors">
-          <sl-option v-for="option in clothesColorsOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="계절" multiple clearable :value="detailForm.seasons" @sl-change="onChangeDetailSeasons">
+            <sl-option v-for="option in clothesSeasonsOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="스타일" multiple clearable :value="detailForm.styles" @sl-change="onChangeDetailStyles">
-          <sl-option v-for="option in clothesStylesOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="색상" multiple clearable :value="detailForm.colors" @sl-change="onChangeDetailColors">
+            <sl-option v-for="option in clothesColorsOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="핏" :value="detailForm.fit" @sl-change="onChangeDetailFit">
-          <sl-option value="">선택 안함</sl-option>
-          <sl-option v-for="option in clothesFitOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="스타일" multiple clearable :value="detailForm.styles" @sl-change="onChangeDetailStyles">
+            <sl-option v-for="option in clothesStylesOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="소재" multiple clearable :value="detailForm.materials" @sl-change="onChangeDetailMaterials">
-          <sl-option v-for="option in clothesMaterialsOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="소재" multiple clearable :value="detailForm.materials" @sl-change="onChangeDetailMaterials">
+            <sl-option v-for="option in clothesMaterialsOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-select label="상황" multiple clearable :value="detailForm.contexts" @sl-change="onChangeDetailContexts">
-          <sl-option v-for="option in clothesContextsOptionList" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </sl-option>
-        </sl-select>
+          <sl-select label="상황" multiple clearable :value="detailForm.contexts" @sl-change="onChangeDetailContexts">
+            <sl-option v-for="option in clothesContextsOptionList" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </sl-option>
+          </sl-select>
 
-        <sl-input v-model="detailForm.preferenceScore" label="선호도 점수" type="number"></sl-input>
+          <sl-input v-model="detailForm.preferenceScore" label="선호도 점수" type="number"></sl-input>
+        </div>
 
         <sl-input
           v-model="detailForm.sourceUrl"
@@ -246,14 +233,39 @@
           :disabled="selectedClothes.sourceType !== 'url'"
         ></sl-input>
 
-        <div class="space-y-1 rounded-xl p-3 text-sm">
-          <div>카테고리: {{ fetchClothesCategoryLabel(detailForm.category || null) }}</div>
-          <div>계절: {{ fetchClothesSeasonsLabel(detailForm.seasons) }}</div>
-          <div>색상: {{ fetchClothesColorsLabel(detailForm.colors) }}</div>
-          <div>스타일: {{ fetchClothesStylesLabel(detailForm.styles) }}</div>
-          <div>핏: {{ fetchClothesFitLabel(detailForm.fit || null) }}</div>
-          <div>소재: {{ fetchClothesMaterialsLabel(detailForm.materials) }}</div>
-          <div>상황: {{ fetchClothesContextsLabel(detailForm.contexts) }}</div>
+        <div class="rounded-xl p-3">
+          <table class="w-full text-sm">
+            <tbody>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">카테고리</th>
+                <td class="py-0.5 text-left">{{ fetchClothesCategoryLabel(detailForm.category || null) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">계절</th>
+                <td class="py-0.5 text-left">{{ fetchClothesSeasonsLabel(detailForm.seasons) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">색상</th>
+                <td class="py-0.5 text-left">{{ fetchClothesColorsLabel(detailForm.colors) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">스타일</th>
+                <td class="py-0.5 text-left">{{ fetchClothesStylesLabel(detailForm.styles) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">핏</th>
+                <td class="py-0.5 text-left">{{ fetchClothesFitLabel(detailForm.fit || null) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">소재</th>
+                <td class="py-0.5 text-left">{{ fetchClothesMaterialsLabel(detailForm.materials) }}</td>
+              </tr>
+              <tr>
+                <th class="w-20 py-0.5 text-left font-semibold">상황</th>
+                <td class="py-0.5 text-left">{{ fetchClothesContextsLabel(detailForm.contexts) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="rounded-xl p-3 text-sm">
@@ -275,11 +287,11 @@
 
     <sl-dialog label="옷 데이터 입력" :open="isUploadDialogOpen" @sl-request-close="onRequestCloseUploadDialog">
       <div class="grid grid-cols-2 gap-2">
-        <sl-button class="w-full" size="small" :variant="uploadType === 'file' ? 'primary' : 'default'" @click="onClickSelectUploadType('file')">
-          파일
-        </sl-button>
         <sl-button class="w-full" size="small" :variant="uploadType === 'url' ? 'primary' : 'default'" @click="onClickSelectUploadType('url')">
           URL
+        </sl-button>
+        <sl-button class="w-full" size="small" :variant="uploadType === 'file' ? 'primary' : 'default'" @click="onClickSelectUploadType('file')">
+          파일
         </sl-button>
       </div>
 
@@ -305,6 +317,7 @@
       </div>
 
       <sl-button class="mt-3 w-full" variant="primary" :loading="isCreatingClothes" @click="onClickUploadButton">업로드</sl-button>
+      <div v-if="isCreatingClothes" class="mt-2 px-1 text-xs">이미지를 분석 중입니다. 목록에서 상태가 자동으로 업데이트됩니다.</div>
       <sl-button slot="footer" @click="onRequestCloseUploadDialog">닫기</sl-button>
     </sl-dialog>
 
@@ -448,7 +461,6 @@ const {
   createClothesByUrl,
   updateClothes,
   deleteClothes,
-  updateClothesRetry,
   updateClothesReembed,
   fetchClothesImageUrl,
 } =
@@ -484,13 +496,12 @@ const filterDialogStyles = ref<ClothesStylesOptions[]>([]);
 const filterDialogMaterials = ref<ClothesMaterialsOptions[]>([]);
 const filterDialogContexts = ref<ClothesContextsOptions[]>([]);
 const filterDialogFit = ref<ClothesFitOptions | 'ALL'>('ALL');
-const uploadType = ref<'file' | 'url'>('file');
+const uploadType = ref<'file' | 'url'>('url');
 const uploadSourceUrl = ref('');
 const uploadSourceFile = ref<File | null>(null);
 const uploadSourceFileInputElement = ref<HTMLInputElement | null>(null);
 const isUploadDialogOpen = ref(false);
-const recommendationQueryText = ref('');
-const recommendationTopKInput = ref(12);
+const DEFAULT_RECOMMENDATION_TOP_K = 12;
 const recommendationWornDate = ref('');
 const recommendationNote = ref('');
 const isDetailDialogOpen = ref(false);
@@ -529,6 +540,65 @@ const filterAppliedCount = computed(() => {
   if (filterContexts.value.length) count += 1;
   if (filterFit.value !== 'ALL') count += 1;
   return count;
+});
+const isClothesProcessingState = (state: ClothesStateOptions | null | undefined) => {
+  return (
+    state === ClothesStateOptions.uploaded ||
+    state === ClothesStateOptions.preprocessing ||
+    state === ClothesStateOptions.analyzing ||
+    state === ClothesStateOptions.embedding
+  );
+};
+const fetchClothesProcessingProgressValue = (state: ClothesStateOptions | null | undefined) => {
+  switch (state) {
+    case ClothesStateOptions.uploaded:
+      return 10;
+    case ClothesStateOptions.preprocessing:
+      return 35;
+    case ClothesStateOptions.analyzing:
+      return 65;
+    case ClothesStateOptions.embedding:
+      return 85;
+    default:
+      return 100;
+  }
+};
+const processingClothes = computed(() => {
+  return clothes.value.filter((item) => isClothesProcessingState(item.state));
+});
+const processingClothesCount = computed(() => processingClothes.value.length);
+const processingProgressValue = computed(() => {
+  if (!processingClothes.value.length) {
+    return 0;
+  }
+
+  const totalProgress = processingClothes.value.reduce((total, item) => {
+    return total + fetchClothesProcessingProgressValue(item.state);
+  }, 0);
+
+  return Math.min(99, Math.round(totalProgress / processingClothes.value.length));
+});
+const processingSummaryLabel = computed(() => {
+  const uploadedCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.uploaded).length;
+  const preprocessingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.preprocessing).length;
+  const analyzingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.analyzing).length;
+  const embeddingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.embedding).length;
+  const labels = [];
+
+  if (uploadedCount) {
+    labels.push(`업로드 ${uploadedCount}`);
+  }
+  if (preprocessingCount) {
+    labels.push(`전처리 ${preprocessingCount}`);
+  }
+  if (analyzingCount) {
+    labels.push(`분석 ${analyzingCount}`);
+  }
+  if (embeddingCount) {
+    labels.push(`임베딩 ${embeddingCount}`);
+  }
+
+  return labels.join(' · ') || '처리 대기';
 });
 const recommendationTemperatureSeasons = computed(() => {
   return fetchDefaultRecommendationSeasonsByAnyangWeather(anyangWeather.value);
@@ -596,6 +666,7 @@ const onClickSelectUploadType = (type: 'file' | 'url') => {
 };
 
 const onClickOpenUploadDialog = () => {
+  uploadType.value = 'url';
   isUploadDialogOpen.value = true;
 };
 
@@ -785,29 +856,13 @@ const onClickApplyFilterDialogButton = async () => {
   isFilterDialogOpen.value = false;
 };
 
-const onChangeRecommendationTopK = (event: Event) => {
-  const parsed = Number(readShoelaceSingleValue(event));
-  if (!Number.isFinite(parsed)) {
-    return;
-  }
-
-  recommendationTopKInput.value = Math.min(50, Math.max(1, Math.trunc(parsed)));
-};
-
 const onClickRequestRecommendationButton = async () => {
-  const normalizedQuery = recommendationQueryText.value.trim();
-  if (!normalizedQuery) {
-    showMessageModal('원하는 코디 문장을 입력해주세요.');
-    return;
-  }
-
-  const result = await createRecommendationSession({
-    queryText: normalizedQuery,
+  await createRecommendationSession({
+    queryText: '',
     seasons: recommendationTemperatureSeasons.value,
-    topK: recommendationTopKInput.value,
+    topK: DEFAULT_RECOMMENDATION_TOP_K,
   });
 
-  recommendationTopKInput.value = result.topK;
   recommendationNote.value = '';
   recommendationWornDate.value = fetchTodayDateText();
 };
@@ -901,16 +956,6 @@ const onClickOpenRecommendationDetailButton = async (item: RecommendationItem) =
 
 const onClickRefreshButton = async () => {
   await fetchClothesList(fetchCurrentFilterParams());
-};
-
-const onClickRetryButton = async (item: ClothesResponse) => {
-  await updateClothesRetry(item);
-};
-
-const onClickResetPreferenceButton = async (id: string) => {
-  await updateClothes(id, {
-    preferenceScore: 0,
-  });
 };
 
 const onClickDeleteButton = (item: ClothesResponse) => {
