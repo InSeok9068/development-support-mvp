@@ -31,6 +31,11 @@ type UpdateClothesArgs = {
   id: string;
 };
 
+type FetchClothesUrlImageCandidatesResponse = {
+  candidates: string[];
+  sourceUrl: string;
+};
+
 export const useClothes = () => {
   /* ======================= 변수 ======================= */
   const queryClient = useQueryClient();
@@ -200,6 +205,17 @@ export const useClothes = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clothes'] }),
   });
 
+  const fetchClothesUrlImageCandidatesMutation = useMutation({
+    mutationFn: (sourceUrl: string) =>
+      pb.send<FetchClothesUrlImageCandidatesResponse>('/api/clothes/url-image-candidates', {
+        body: {
+          maxCount: 3,
+          sourceUrl,
+        },
+        method: 'POST',
+      }),
+  });
+
   const retryClothesMutation = useMutation({
     mutationFn: (id: string) =>
       pb.send(`/api/clothes/retry/${id}`, {
@@ -251,6 +267,18 @@ export const useClothes = () => {
 
   const createClothesByUrl = (sourceUrl: string) => createClothesByUrlMutation.mutateAsync(sourceUrl);
 
+  const fetchClothesUrlImageCandidates = async (sourceUrl: string) => {
+    const result = await fetchClothesUrlImageCandidatesMutation.mutateAsync(sourceUrl);
+    const candidates = (Array.isArray(result?.candidates) ? result.candidates : [])
+      .map((item) => String(item ?? '').trim())
+      .filter((item) => /^https?:\/\//i.test(item));
+
+    return {
+      candidates,
+      sourceUrl: String(result?.sourceUrl ?? sourceUrl).trim(),
+    };
+  };
+
   const updateClothes = (id: string, data: Update<Collections.Clothes>) => updateClothesMutation.mutateAsync({ data, id });
 
   const deleteClothes = (id: string) => deleteClothesMutation.mutateAsync(id);
@@ -273,6 +301,7 @@ export const useClothes = () => {
   };
 
   const isCreatingClothes = computed(() => createClothesByFileMutation.isPending.value || createClothesByUrlMutation.isPending.value);
+  const isFetchingClothesUrlImageCandidates = computed(() => fetchClothesUrlImageCandidatesMutation.isPending.value);
   const isUpdatingClothes = computed(
     () => updateClothesMutation.isPending.value || retryClothesMutation.isPending.value || reembedClothesMutation.isPending.value,
   );
@@ -284,6 +313,7 @@ export const useClothes = () => {
     clothes,
     isClothesLoading,
     isCreatingClothes,
+    isFetchingClothesUrlImageCandidates,
     isUpdatingClothes,
     isDeletingClothes,
     isReembeddingClothes,
@@ -292,6 +322,7 @@ export const useClothes = () => {
     fetchClothesDetail,
     createClothesByFile,
     createClothesByUrl,
+    fetchClothesUrlImageCandidates,
     updateClothes,
     deleteClothes,
     updateClothesRetry,

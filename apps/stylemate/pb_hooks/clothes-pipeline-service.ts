@@ -5,6 +5,8 @@ const RECOMMENDATION_ITEMS_COLLECTION = 'recommendation_items';
 const WEAR_LOGS_COLLECTION = 'wear_logs';
 const ANALYZE_MODEL = 'gemini-2.5-flash-lite';
 const MAX_ANALYZE_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_URL_HTML_TEXT_LENGTH = 1024 * 1024;
+const MAX_URL_IMAGE_CANDIDATES = 3;
 
 const IMAGE_MIME_BY_EXTENSION = {
   '.bmp': 'image/bmp',
@@ -80,6 +82,105 @@ const readHeaderValue = (headers, targetName) => {
   }
 
   return '';
+};
+
+const isHttpUrl = (value) => {
+  return /^https?:\/\//i.test(String(value ?? '').trim());
+};
+
+const decodeHtmlEntities = (value) => {
+  return String(value ?? '')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x2f;/gi, '/')
+    .replace(/&#47;/gi, '/');
+};
+
+const readHtmlAttribute = (tagText, attributeName) => {
+  const normalizedTagText = String(tagText ?? '');
+  const normalizedAttributeName = String(attributeName ?? '').trim();
+  if (!normalizedTagText || !normalizedAttributeName) {
+    return '';
+  }
+
+  const pattern = new RegExp(`${normalizedAttributeName}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i');
+  const matched = normalizedTagText.match(pattern);
+  if (!matched) {
+    return '';
+  }
+
+  return decodeHtmlEntities(String(matched[1] ?? matched[2] ?? matched[3] ?? '')).trim();
+};
+
+const resolveMetaImageUrl = (pageUrl, rawUrl) => {
+  const normalizedRawUrl = decodeHtmlEntities(String(rawUrl ?? ''))
+    .replace(/^["']+|["']+$/g, '')
+    .trim();
+  if (!normalizedRawUrl) {
+    return '';
+  }
+
+  if (isHttpUrl(normalizedRawUrl)) {
+    return normalizedRawUrl;
+  }
+
+  const normalizedPageUrl = String(pageUrl ?? '').trim();
+  const pageMatched = normalizedPageUrl.match(/^(https?):\/\/([^/?#]+)/i);
+  if (!pageMatched) {
+    return '';
+  }
+
+  const protocol = String(pageMatched[1] ?? 'https').toLowerCase();
+  const hostWithPort = String(pageMatched[2] ?? '').trim();
+  if (!hostWithPort) {
+    return '';
+  }
+  const origin = `${protocol}://${hostWithPort}`;
+
+  if (normalizedRawUrl.startsWith('//')) {
+    return `${protocol}:${normalizedRawUrl}`;
+  }
+
+  if (normalizedRawUrl.startsWith('/')) {
+    return `${origin}${normalizedRawUrl}`;
+  }
+
+  return '';
+};
+
+const extractImageCandidatesFromHtml = (pageUrl, htmlText, maxCount = MAX_URL_IMAGE_CANDIDATES) => {
+  const normalizedHtmlText = String(htmlText ?? '').slice(0, MAX_URL_HTML_TEXT_LENGTH);
+  if (!normalizedHtmlText) {
+    return [];
+  }
+  const candidates = [];
+  const seenCandidates = new Set();
+  const safeMaxCount = Math.max(1, Math.min(10, Math.trunc(Number(maxCount) || MAX_URL_IMAGE_CANDIDATES)));
+  const metaTags = normalizedHtmlText.match(/<meta\b[^>]*>/gi) ?? [];
+  for (let index = 0; index < metaTags.length; index += 1) {
+    const metaTag = metaTags[index];
+    const property = String(readHtmlAttribute(metaTag, 'property') || readHtmlAttribute(metaTag, 'name'))
+      .trim()
+      .toLowerCase();
+    if (property !== 'og:image' && property !== 'og:image:url') {
+      continue;
+    }
+
+    const content = readHtmlAttribute(metaTag, 'content');
+    const candidateUrl = resolveMetaImageUrl(pageUrl, content);
+    if (!isHttpUrl(candidateUrl) || seenCandidates.has(candidateUrl)) {
+      continue;
+    }
+
+    seenCandidates.add(candidateUrl);
+    candidates.push(candidateUrl);
+    if (candidates.length >= safeMaxCount) {
+      break;
+    }
+  }
+
+  return candidates.slice(0, safeMaxCount);
 };
 
 const hasBytePrefix = (bytes, prefix, offset = 0) => {
@@ -855,6 +956,74 @@ const processClothesPipeline = (clothesId) => {
   }
 };
 
+const fetchClothesUrlImageCandidates = (authRecord, sourceUrl, maxCount = MAX_URL_IMAGE_CANDIDATES) => {
+  const authId = readAuthId(authRecord);
+  if (!authId) {
+    return {
+      ok: false,
+      statusCode: 401,
+      message: '인증 정보가 필요합니다.',
+    };
+  }
+
+  const normalizedUrl = String(sourceUrl ?? '').trim();
+  if (!isHttpUrl(normalizedUrl)) {
+    return {
+      ok: false,
+      statusCode: 400,
+      message: '유효한 URL을 입력해주세요.',
+    };
+  }
+
+  let response = null;
+  try {
+    response = $http.send({
+      headers: {
+        accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+      },
+      method: 'GET',
+      timeout: 20,
+      url: normalizedUrl,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      statusCode: 502,
+      message: `URL 페이지를 불러오지 못했습니다. ${toString(error)}`,
+    };
+  }
+
+  if (!response || response.statusCode < 200 || response.statusCode >= 300) {
+    return {
+      ok: false,
+      statusCode: 502,
+      message: `URL 페이지 요청이 실패했습니다. (status=${Number(response?.statusCode ?? 0)})`,
+    };
+  }
+
+  const contentType = readHeaderValue(response.headers, 'content-type').toLowerCase();
+  if (contentType.startsWith('image/')) {
+    return {
+      ok: true,
+      payload: {
+        candidates: [normalizedUrl],
+        sourceUrl: normalizedUrl,
+      },
+    };
+  }
+
+  const htmlText = String(toString(response.body) ?? '').slice(0, MAX_URL_HTML_TEXT_LENGTH);
+  const extractedCandidates = extractImageCandidatesFromHtml(normalizedUrl, htmlText, maxCount);
+
+  return {
+    ok: true,
+    payload: {
+      candidates: extractedCandidates.slice(0, MAX_URL_IMAGE_CANDIDATES),
+      sourceUrl: normalizedUrl,
+    },
+  };
+};
+
 const createClothesByUrl = (authRecord, sourceUrl) => {
   const authId = readAuthId(authRecord);
   if (!authId) {
@@ -1137,6 +1306,7 @@ const reembedClothesById = (authRecord, clothesId) => {
 module.exports = {
   createClothesByUrl,
   deleteClothesById,
+  fetchClothesUrlImageCandidates,
   processClothesPipeline,
   reembedClothesById,
   retryClothesById,

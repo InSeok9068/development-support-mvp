@@ -22,6 +22,27 @@ onRecordAfterUpdateSuccess(
 
 routerAdd(
   'POST',
+  '/api/clothes/url-image-candidates',
+  (e) => {
+    const payload = new DynamicModel({
+      maxCount: 3,
+      sourceUrl: '',
+    });
+    e.bindBody(payload);
+
+    const { fetchClothesUrlImageCandidates } = require(`${__hooks}/clothes-pipeline-service.ts`);
+    const result = fetchClothesUrlImageCandidates(e.auth, payload.sourceUrl, payload.maxCount);
+    if (!result.ok) {
+      return e.error(result.statusCode, result.message, {});
+    }
+
+    return e.json(200, result.payload);
+  },
+  $apis.requireAuth(),
+);
+
+routerAdd(
+  'POST',
   '/api/clothes/upload-url',
   (e) => {
     const payload = new DynamicModel({

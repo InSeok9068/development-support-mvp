@@ -416,9 +416,46 @@
 
       <div v-else class="mt-3 flex flex-col gap-3 p-1">
         <sl-input v-model="uploadSourceUrl" type="url" label="이미지 URL" placeholder="https://example.com/item.jpg"></sl-input>
+
+        <div class="px-1 text-xs">공유 링크를 붙여넣고 이미지 후보를 고른 뒤 바로 저장할 수 있습니다.</div>
+
+        <div class="grid grid-cols-1 gap-2">
+          <sl-button
+            v-if="isDirectImageUploadUrl"
+            variant="primary"
+            :disabled="!uploadSourceUrl.trim()"
+            :loading="isCreatingClothes"
+            @click="onClickUploadUrlDirectButton"
+          >
+            <sl-icon slot="prefix" name="upload"></sl-icon>
+            업로드
+          </sl-button>
+          <sl-button
+            v-else
+            variant="primary"
+            :disabled="!uploadSourceUrl.trim()"
+            :loading="isFetchingClothesUrlImageCandidates"
+            @click="onClickFetchUploadUrlImageCandidatesButton"
+          >
+            <sl-icon slot="prefix" name="images"></sl-icon>
+            이미지 후보 추출하기
+          </sl-button>
+        </div>
+
+        <div v-if="uploadUrlImageCandidates.length" class="grid grid-cols-2 gap-2">
+          <sl-card v-for="(candidateUrl, candidateIndex) in uploadUrlImageCandidates" :key="candidateUrl" class="overflow-hidden">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between gap-1">
+                <sl-tag size="small" variant="neutral">후보 {{ candidateIndex + 1 }}</sl-tag>
+              </div>
+              <img class="h-24 w-full rounded-lg object-cover" :src="candidateUrl" alt="후보 이미지" />
+              <sl-button size="small" variant="primary" @click="onClickUploadUrlCandidateButton(candidateUrl)">이 이미지로 저장</sl-button>
+            </div>
+          </sl-card>
+        </div>
       </div>
 
-      <sl-button class="mt-3 w-full" variant="primary" :loading="isCreatingClothes" @click="onClickUploadButton">업로드</sl-button>
+      <sl-button v-if="uploadType === 'file'" class="mt-3 w-full" variant="primary" :loading="isCreatingClothes" @click="onClickUploadButton">업로드</sl-button>
       <div v-if="isCreatingClothes" class="mt-2 px-1 text-xs">이미지를 분석 중입니다. 목록에서 상태가 자동으로 업데이트됩니다.</div>
       <sl-button slot="footer" @click="onRequestCloseUploadDialog">닫기</sl-button>
     </sl-dialog>
@@ -523,7 +560,7 @@ import {
   fetchClothesStylesLabel,
 } from '@/ui/clothes.ui';
 import { readShoelaceChecked, readShoelaceMultiValue, readShoelaceSingleValue, useModal } from '@packages/ui';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 type ClothesDetailForm = {
@@ -572,6 +609,7 @@ const {
   clothes,
   isClothesLoading,
   isCreatingClothes,
+  isFetchingClothesUrlImageCandidates,
   isUpdatingClothes,
   isDeletingClothes,
   isReembeddingClothes,
@@ -579,6 +617,7 @@ const {
   fetchClothesDetail,
   createClothesByFile,
   createClothesByUrl,
+  fetchClothesUrlImageCandidates,
   updateClothes,
   deleteClothes,
   updateClothesReembed,
@@ -617,6 +656,7 @@ const filterDialogContexts = ref<ClothesContextsOptions[]>([]);
 const filterDialogFit = ref<ClothesFitOptions | 'ALL'>('ALL');
 const uploadType = ref<'file' | 'url'>('url');
 const uploadSourceUrl = ref('');
+const uploadUrlImageCandidates = ref<string[]>([]);
 const uploadSourceFile = ref<File | null>(null);
 const uploadSourceFileInputElement = ref<HTMLInputElement | null>(null);
 const isUploadDialogOpen = ref(false);
@@ -797,6 +837,9 @@ const canPasteClipboardImage = computed(() => {
 
   return typeof navigator.clipboard.read === 'function';
 });
+const isDirectImageUploadUrl = computed(() => {
+  return isDirectImageSourceUrl(uploadSourceUrl.value);
+});
 const recommendationCandidatesByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate[]>>(() => {
   const groupedCandidates: Record<RecommendationSlotCategory, RecommendationSlotCandidate[]> = {
     [ClothesCategoryOptions.top]: [],
@@ -896,6 +939,9 @@ const selectedRecommendationCandidateByCategory = computed<Record<Recommendation
 
   return selectedCandidates;
 });
+watch(uploadSourceUrl, () => {
+  uploadUrlImageCandidates.value = [];
+});
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
@@ -932,14 +978,23 @@ const onClickHomeBrand = async () => {
 
 const onClickSelectUploadType = (type: 'file' | 'url') => {
   uploadType.value = type;
+  if ('url' === type) {
+    uploadSourceFile.value = null;
+    return;
+  }
+
+  uploadSourceUrl.value = '';
+  uploadUrlImageCandidates.value = [];
 };
 
 const onClickOpenUploadDialog = () => {
   uploadType.value = 'url';
+  uploadUrlImageCandidates.value = [];
   isUploadDialogOpen.value = true;
 };
 
 const onRequestCloseUploadDialog = () => {
+  uploadUrlImageCandidates.value = [];
   isUploadDialogOpen.value = false;
 };
 
@@ -1015,6 +1070,22 @@ const onClickPasteClipboardImageButton = async () => {
   }
 };
 
+const isDirectImageSourceUrl = (value: string) => {
+  const normalizedValue = String(value ?? '').trim();
+  if (!/^https?:\/\//i.test(normalizedValue)) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedValue);
+    return /\.(?:jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(String(parsedUrl.pathname ?? ''));
+  } catch {
+    const withoutHash = normalizedValue.split('#')[0] ?? '';
+    const withoutQuery = withoutHash.split('?')[0] ?? '';
+    return /\.(?:jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(withoutQuery);
+  }
+};
+
 const findDuplicateClothesBySourceUrl = (sourceUrl: string) => {
   return clothes.value.find((item) => {
     if (item.state === ClothesStateOptions.failed) {
@@ -1066,38 +1137,84 @@ const fetchUploadFileImageHash = async (file: File) => {
   return fetchSha256HashText(fileBytes);
 };
 
-const onClickUploadButton = async () => {
-  if (uploadType.value === 'file') {
-    if (!uploadSourceFile.value) {
-      showMessageModal('업로드할 이미지 파일을 선택해주세요.');
-      return;
-    }
-
-    const imageHash = await fetchUploadFileImageHash(uploadSourceFile.value);
-    const duplicateClothes = findDuplicateClothesByImageHash(imageHash);
-    if (duplicateClothes) {
-      showMessageModal('이미 해당 옷 이미지가 등록되어 있습니다.');
-      return;
-    }
-
-    await createClothesByFile(uploadSourceFile.value);
-    uploadSourceFile.value = null;
-  } else {
-    if (!uploadSourceUrl.value.trim()) {
-      showMessageModal('업로드할 이미지 URL을 입력해주세요.');
-      return;
-    }
-
-    const normalizedSourceUrl = uploadSourceUrl.value.trim();
-    const duplicateClothes = findDuplicateClothesBySourceUrl(normalizedSourceUrl);
-    if (duplicateClothes) {
-      showMessageModal('이미 동일한 URL 옷 데이터가 등록되어 있습니다.');
-      return;
-    }
-
-    await createClothesByUrl(normalizedSourceUrl);
-    uploadSourceUrl.value = '';
+const createClothesBySourceUrl = async (sourceUrl: string) => {
+  const normalizedSourceUrl = String(sourceUrl ?? '').trim();
+  if (!normalizedSourceUrl) {
+    showMessageModal('업로드할 이미지 URL을 입력해주세요.');
+    return false;
   }
+
+  const duplicateClothes = findDuplicateClothesBySourceUrl(normalizedSourceUrl);
+  if (duplicateClothes) {
+    showMessageModal('이미 동일한 URL 옷 데이터가 등록되어 있습니다.');
+    return false;
+  }
+
+  await createClothesByUrl(normalizedSourceUrl);
+  uploadSourceUrl.value = '';
+  uploadUrlImageCandidates.value = [];
+  return true;
+};
+
+const onClickFetchUploadUrlImageCandidatesButton = async () => {
+  const normalizedSourceUrl = String(uploadSourceUrl.value ?? '').trim();
+  if (!/^https?:\/\//i.test(normalizedSourceUrl)) {
+    showMessageModal('유효한 URL을 입력해주세요.');
+    return;
+  }
+
+  const result = await fetchClothesUrlImageCandidates(normalizedSourceUrl);
+  uploadSourceUrl.value = result.sourceUrl;
+  uploadUrlImageCandidates.value = result.candidates;
+
+  if (!result.candidates.length) {
+    showMessageModal('이미지 후보를 찾지 못했습니다. 다른 링크를 시도해주세요.');
+  }
+};
+
+const onClickUploadUrlDirectButton = async () => {
+  const normalizedSourceUrl = String(uploadSourceUrl.value ?? '').trim();
+  if (!/^https?:\/\//i.test(normalizedSourceUrl)) {
+    showMessageModal('유효한 URL을 입력해주세요.');
+    return;
+  }
+  if (!isDirectImageSourceUrl(normalizedSourceUrl)) {
+    showMessageModal('이미지 확장자 URL에서만 바로 업로드할 수 있습니다.');
+    return;
+  }
+
+  const isCreated = await createClothesBySourceUrl(normalizedSourceUrl);
+  if (!isCreated) {
+    return;
+  }
+
+  isUploadDialogOpen.value = false;
+};
+
+const onClickUploadUrlCandidateButton = async (candidateUrl: string) => {
+  const isCreated = await createClothesBySourceUrl(candidateUrl);
+  if (!isCreated) {
+    return;
+  }
+
+  isUploadDialogOpen.value = false;
+};
+
+const onClickUploadButton = async () => {
+  if (!uploadSourceFile.value) {
+    showMessageModal('업로드할 이미지 파일을 선택해주세요.');
+    return;
+  }
+
+  const imageHash = await fetchUploadFileImageHash(uploadSourceFile.value);
+  const duplicateClothes = findDuplicateClothesByImageHash(imageHash);
+  if (duplicateClothes) {
+    showMessageModal('이미 해당 옷 이미지가 등록되어 있습니다.');
+    return;
+  }
+
+  await createClothesByFile(uploadSourceFile.value);
+  uploadSourceFile.value = null;
 
   isUploadDialogOpen.value = false;
 };
