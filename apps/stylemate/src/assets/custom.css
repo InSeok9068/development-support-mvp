@@ -50,15 +50,20 @@ body {
 
 sl-card::part(base) {
   border-radius: 20px;
-  border: none;
+  border: 1px solid #e7ecf4;
   background: #ffffff;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
 }
 
 sl-input::part(base),
 sl-select::part(combobox),
 sl-textarea::part(base) {
   border-radius: 14px;
+}
+
+sl-select::part(tag),
+sl-select::part(tag__base) {
+  border-radius: 10px;
 }
 
 sl-button::part(base) {

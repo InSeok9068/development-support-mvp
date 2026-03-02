@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@packages/ui": ["../../packages/src/ui/index.ts"],
-      "@packages/auth": ["../../packages/src/auth/index.ts"]
+      "@packages/auth": ["../../packages/src/auth/index.ts"],
+      "@packages/date": ["../../packages/src/date/index.ts"]
     }
   }
 }

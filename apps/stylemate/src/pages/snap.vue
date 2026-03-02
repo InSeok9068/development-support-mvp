@@ -9,15 +9,7 @@
       <div class="flex flex-col gap-3">
         <div class="text-sm font-semibold">무신사 스냅</div>
         <div class="text-sm">트렌드 코디를 참고할 수 있는 외부 스냅 페이지입니다.</div>
-        <sl-button
-          class="w-full"
-          variant="primary"
-          href="https://www.musinsa.com/snap/main/recommend?gf=M"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          무신사 스냅 열기
-        </sl-button>
+        <sl-button class="w-full" variant="primary" @click="onClickOpenMusinsaSnapButton">무신사 스냅 열기</sl-button>
       </div>
     </sl-card>
 
@@ -33,6 +25,8 @@
 import { useAuthGuard } from '@/composables/auth-guard';
 import { onMounted } from 'vue';
 
+const MUSINSA_SNAP_URL = 'https://www.musinsa.com/snap/main/recommend?gf=M';
+
 /* ======================= 변수 ======================= */
 const { fetchAuthStateOrRedirect } = useAuthGuard();
 /* ======================= 변수 ======================= */
@@ -42,4 +36,20 @@ onMounted(async () => {
   await fetchAuthStateOrRedirect();
 });
 /* ======================= 생명주기 훅 ======================= */
+
+/* ======================= 메서드 ======================= */
+const onClickOpenMusinsaSnapButton = () => {
+  const openedWindow = window.open(MUSINSA_SNAP_URL, '_blank', 'noopener,noreferrer');
+  if (openedWindow) {
+    openedWindow.opener = null;
+    return;
+  }
+
+  const externalLinkElement = document.createElement('a');
+  externalLinkElement.href = MUSINSA_SNAP_URL;
+  externalLinkElement.target = '_blank';
+  externalLinkElement.rel = 'noopener noreferrer external';
+  externalLinkElement.click();
+};
+/* ======================= 메서드 ======================= */
 </script>

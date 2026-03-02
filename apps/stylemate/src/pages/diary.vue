@@ -22,13 +22,13 @@
 
     <div v-else class="flex flex-col gap-3">
       <div v-for="group in wearLogDateGroups" :key="group.wornDate" class="flex flex-col gap-2">
-        <div class="px-1 text-sm font-semibold">{{ group.wornDate }}</div>
+        <div class="px-1 text-sm font-semibold">{{ fetchWearLogDateLabel(group.wornDate) }}</div>
 
         <sl-card v-for="wearLog in group.logs" :key="wearLog.id">
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between gap-2">
               <sl-tag size="small" variant="success">총 {{ wearLog.itemCount }}개</sl-tag>
-              <span class="text-xs">{{ wearLog.created.slice(11, 16) }}</span>
+              <span class="text-xs">{{ fetchWearLogCreatedTimeLabel(wearLog.created) }}</span>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -56,6 +56,7 @@ import { type ClothesCategoryOptions } from '@/api/pocketbase-types';
 import { useAuthGuard } from '@/composables/auth-guard';
 import { type WearLogItem, useWearLogs } from '@/composables/wear-logs';
 import { fetchClothesCategoryLabel } from '@/ui/clothes.ui';
+import { formatKoreanDateFromInput, formatKoreanDateKeyFromInput } from '@packages/date';
 import { computed, onMounted } from 'vue';
 
 type WearLogDateGroup = {
@@ -70,7 +71,7 @@ const wearLogDateGroups = computed<WearLogDateGroup[]>(() => {
   const groupedMap = new Map<string, typeof wearLogList.value>();
 
   wearLogList.value.forEach((wearLog) => {
-    const wornDate = wearLog.wornDate || '날짜 없음';
+    const wornDate = fetchWearLogDateGroupKey(wearLog.wornDate);
     const logs = groupedMap.get(wornDate) ?? [];
     logs.push(wearLog);
     groupedMap.set(wornDate, logs);
@@ -96,6 +97,25 @@ onMounted(async () => {
 /* ======================= 메서드 ======================= */
 const fetchCategoryLabel = (category: ClothesCategoryOptions | null) => {
   return fetchClothesCategoryLabel(category);
+};
+
+const fetchWearLogFallbackText = (value: string, defaultText = '날짜 없음') => {
+  const normalized = String(value ?? '').trim();
+  return normalized || defaultText;
+};
+
+const fetchWearLogDateGroupKey = (value: string) => {
+  return formatKoreanDateKeyFromInput(value, fetchWearLogFallbackText(value));
+};
+
+const fetchWearLogDateLabel = (value: string) => {
+  return formatKoreanDateFromInput(value, 'date-weekday', fetchWearLogFallbackText(value));
+};
+
+const fetchWearLogCreatedTimeLabel = (value: string) => {
+  const fallback = fetchWearLogFallbackText(value, '');
+  const fallbackTimeText = fallback.length >= 16 ? fallback.slice(11, 16) : fallback;
+  return formatKoreanDateFromInput(value, 'time', fallbackTimeText);
 };
 
 const onClickRefreshWearLogButton = async () => {

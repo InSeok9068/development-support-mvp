@@ -5,6 +5,7 @@
   "version": "0.0.0",
   "exports": {
     "./ui": "./src/ui/index.ts",
-    "./auth": "./src/auth/index.ts"
+    "./auth": "./src/auth/index.ts",
+    "./date": "./src/date/index.ts"
   }
 }

@@ -28,6 +28,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@packages/ui': fileURLToPath(new URL('../../packages/src/ui', import.meta.url)),
       '@packages/auth': fileURLToPath(new URL('../../packages/src/auth', import.meta.url)),
+      '@packages/date': fileURLToPath(new URL('../../packages/src/date', import.meta.url)),
     },
   },
   server: {
