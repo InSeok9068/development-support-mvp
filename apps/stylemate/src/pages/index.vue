@@ -526,7 +526,6 @@ const uploadSourceFileInputElement = ref<HTMLInputElement | null>(null);
 const isUploadDialogOpen = ref(false);
 const isRecommendationDialogOpen = ref(false);
 const recommendationQueryText = ref('');
-const DEFAULT_RECOMMENDATION_TOP_K = 12;
 const recommendationWornDate = ref('');
 const recommendationNote = ref('');
 const isDetailDialogOpen = ref(false);
@@ -814,7 +813,6 @@ const onClickUploadButton = async () => {
     uploadSourceUrl.value = '';
   }
 
-  await fetchClothesList(fetchCurrentFilterParams());
   isUploadDialogOpen.value = false;
 };
 
@@ -973,7 +971,6 @@ const onClickRequestRecommendationButton = async () => {
   await createRecommendationSession({
     queryText: normalizedQueryText,
     seasons: recommendationTemperatureSeasons.value,
-    topK: DEFAULT_RECOMMENDATION_TOP_K,
   });
 
   recommendationNote.value = '';
@@ -1010,8 +1007,6 @@ const onClickConfirmRecommendationButton = async () => {
     note: recommendationNote.value.trim(),
     wornDate: recommendationWornDate.value.trim(),
   });
-
-  await fetchClothesList(fetchCurrentFilterParams());
 
   resetRecommendationSession();
   isRecommendationDialogOpen.value = false;
@@ -1080,7 +1075,6 @@ const onClickDeleteButton = (item: ClothesResponse) => {
     message: '선택한 옷 데이터를 삭제할까요?',
     onConfirm: async () => {
       await deleteClothes(item.id);
-      await fetchClothesList(fetchCurrentFilterParams());
     },
     title: '옷 삭제',
   });
@@ -1145,6 +1139,7 @@ const onClickSaveDetailButton = async () => {
   if (!selectedClothes.value) {
     return;
   }
+  const selectedClothesId = selectedClothes.value.id;
 
   const parsedPreferenceScore = Number(detailForm.value.preferenceScore);
   if (!Number.isFinite(parsedPreferenceScore)) {
@@ -1157,7 +1152,7 @@ const onClickSaveDetailButton = async () => {
     return;
   }
 
-  await updateClothes(selectedClothes.value.id, {
+  await updateClothes(selectedClothesId, {
     category: detailForm.value.category || undefined,
     colors: detailForm.value.colors,
     contexts: detailForm.value.contexts,
@@ -1169,14 +1164,10 @@ const onClickSaveDetailButton = async () => {
     styles: detailForm.value.styles,
   });
 
-  await updateClothesReembed(selectedClothes.value.id);
-  await fetchClothesList(fetchCurrentFilterParams());
-
-  const refreshedClothes = clothes.value.find((item) => item.id === selectedClothes.value?.id);
-  if (refreshedClothes) {
-    selectedClothes.value = refreshedClothes;
-    detailForm.value = createDetailFormByItem(refreshedClothes);
-  }
+  await updateClothesReembed(selectedClothesId);
+  const refreshedClothes = await fetchClothesDetail(selectedClothesId);
+  selectedClothes.value = refreshedClothes;
+  detailForm.value = createDetailFormByItem(refreshedClothes);
 
   showMessageModal('수정된 메타데이터 기준으로 임베딩을 다시 생성했습니다.');
 };

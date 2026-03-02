@@ -11,16 +11,6 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 
-type RecommendationFilter = {
-  categories: ClothesCategoryOptions[];
-  colors: ClothesColorsOptions[];
-  contexts: ClothesContextsOptions[];
-  fit: ClothesFitOptions | '';
-  materials: ClothesMaterialsOptions[];
-  seasons: ClothesSeasonsOptions[];
-  styles: ClothesStylesOptions[];
-};
-
 type RecommendationClothes = {
   category: ClothesCategoryOptions | '';
   colors: ClothesColorsOptions[];
@@ -47,13 +37,9 @@ export type RecommendationItem = {
 };
 
 type CreateRecommendationSessionResponse = {
-  embeddingModel: string;
-  filterModel: string;
   items: RecommendationItem[];
-  queryFilter: RecommendationFilter;
   round: number;
   sessionId: string;
-  topK: number;
 };
 
 type UpdateRecommendationRerollResponse = {
@@ -72,7 +58,6 @@ type CreateRecommendationConfirmResponse = {
 type CreateRecommendationSessionArgs = {
   queryText: string;
   seasons: ClothesSeasonsOptions[];
-  topK: number;
 };
 
 type CreateRecommendationConfirmArgs = {
@@ -86,10 +71,6 @@ export const useRecommendations = () => {
   const recommendationItems = ref<RecommendationItem[]>([]);
   const recommendationSessionId = ref('');
   const recommendationRound = ref(0);
-  const recommendationTopK = ref(12);
-  const recommendationQueryFilter = ref<RecommendationFilter | null>(null);
-  const recommendationEmbeddingModel = ref('');
-  const recommendationFilterModel = ref('');
   /* ======================= 변수 ======================= */
 
   /* ======================= 메서드 ======================= */
@@ -99,7 +80,6 @@ export const useRecommendations = () => {
         body: {
           queryText: args.queryText,
           seasons: args.seasons,
-          topK: args.topK,
         },
         method: 'POST',
       }),
@@ -127,21 +107,18 @@ export const useRecommendations = () => {
         },
         method: 'POST',
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clothes'] });
-      queryClient.invalidateQueries({ queryKey: ['wear-logs'] });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+        queryClient.invalidateQueries({ queryKey: ['wear-logs'] }),
+      ]),
   });
 
   const createRecommendationSession = async (args: CreateRecommendationSessionArgs) => {
     const result = await createRecommendationSessionMutation.mutateAsync(args);
     recommendationSessionId.value = result.sessionId;
     recommendationRound.value = result.round;
-    recommendationTopK.value = result.topK;
     recommendationItems.value = result.items;
-    recommendationQueryFilter.value = result.queryFilter;
-    recommendationEmbeddingModel.value = result.embeddingModel;
-    recommendationFilterModel.value = result.filterModel;
     return result;
   };
 
@@ -175,10 +152,6 @@ export const useRecommendations = () => {
     recommendationItems.value = [];
     recommendationSessionId.value = '';
     recommendationRound.value = 0;
-    recommendationTopK.value = 12;
-    recommendationQueryFilter.value = null;
-    recommendationEmbeddingModel.value = '';
-    recommendationFilterModel.value = '';
   };
 
   const isCreatingRecommendationSession = computed(() => createRecommendationSessionMutation.isPending.value);
@@ -193,10 +166,6 @@ export const useRecommendations = () => {
     recommendationItems,
     recommendationSessionId,
     recommendationRound,
-    recommendationTopK,
-    recommendationQueryFilter,
-    recommendationEmbeddingModel,
-    recommendationFilterModel,
     isCreatingRecommendationSession,
     isUpdatingRecommendationReroll,
     isCreatingRecommendationConfirm,

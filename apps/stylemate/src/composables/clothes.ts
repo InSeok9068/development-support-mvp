@@ -205,10 +205,11 @@ export const useClothes = () => {
       pb.send(`/api/clothes/retry/${id}`, {
         method: 'POST',
       }),
-    onSuccess: (_result, id) => {
-      queryClient.invalidateQueries({ queryKey: ['clothes'] });
-      queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', id] });
-    },
+    onSuccess: (_result, id) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+        queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', id] }),
+      ]),
   });
 
   const reembedClothesMutation = useMutation({
@@ -216,18 +217,20 @@ export const useClothes = () => {
       pb.send(`/api/clothes/reembed/${id}`, {
         method: 'POST',
       }),
-    onSuccess: (_result, id) => {
-      queryClient.invalidateQueries({ queryKey: ['clothes'] });
-      queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', id] });
-    },
+    onSuccess: (_result, id) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+        queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', id] }),
+      ]),
   });
 
   const updateClothesMutation = useMutation({
     mutationFn: (args: UpdateClothesArgs) => pb.collection(Collections.Clothes).update(args.id, args.data),
-    onSuccess: (_result, args) => {
-      queryClient.invalidateQueries({ queryKey: ['clothes'] });
-      queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', args.id] });
-    },
+    onSuccess: (_result, args) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+        queryClient.invalidateQueries({ queryKey: ['clothes', 'detail', args.id] }),
+      ]),
   });
 
   const deleteClothesMutation = useMutation({
@@ -235,9 +238,11 @@ export const useClothes = () => {
       pb.send(`/api/clothes/delete/${id}`, {
         method: 'DELETE',
       }),
-    onSuccess: (_result, id) => {
-      queryClient.invalidateQueries({ queryKey: ['clothes'] });
-      queryClient.invalidateQueries({ queryKey: ['wear-logs'] });
+    onSuccess: async (_result, id) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+        queryClient.invalidateQueries({ queryKey: ['wear-logs'] }),
+      ]);
       queryClient.removeQueries({ queryKey: ['clothes', 'detail', id] });
     },
   });
