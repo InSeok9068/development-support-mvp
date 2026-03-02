@@ -1,7 +1,10 @@
 <template>
-  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-10 pt-4">
+  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-24 pt-4">
     <header class="flex items-center justify-between">
-      <h1 class="text-lg font-semibold">내 옷장</h1>
+      <div class="flex cursor-pointer items-center gap-2" @click="onClickHomeBrand">
+        <sl-icon src="/favicon.svg" class="text-2xl"></sl-icon>
+        <h1 class="text-lg font-semibold">StyleMate</h1>
+      </div>
       <sl-button size="small" @click="onClickSignoutButton">로그아웃</sl-button>
     </header>
 
@@ -16,69 +19,15 @@
               <span>{{ recommendationTemperatureSeasonLabel }}</span>
             </span>
           </sl-tag>
-          <sl-tag v-if="recommendationSessionId" size="small" variant="primary">라운드 {{ recommendationRound }}</sl-tag>
         </div>
       </div>
 
-      <div class="mt-3 flex flex-col gap-3">
-        <div class="grid grid-cols-2 gap-2">
-          <sl-button class="w-full" variant="primary" :loading="isCreatingRecommendationSession" @click="onClickRequestRecommendationButton">
-            추천받기
-          </sl-button>
-          <sl-button
-            class="w-full"
-            :disabled="!recommendationSessionId || !recommendationItems.length"
-            :loading="isUpdatingRecommendationReroll"
-            @click="onClickRerollRecommendationButton"
-          >
-            고정 제외 재추천
-          </sl-button>
-        </div>
-      </div>
+      <div class="mt-3 flex flex-col gap-2">
+        <sl-input v-model="recommendationQueryText" placeholder="예: 오늘 출근룩, 베이지 톤으로 깔끔하게"></sl-input>
 
-      <div v-if="recommendationItems.length" class="mt-3 flex flex-col gap-2">
-        <div v-for="item in recommendationItems" :key="item.itemId" class="rounded-xl p-3">
-          <div class="flex gap-3">
-            <img
-              v-if="fetchRecommendationItemImageUrl(item)"
-              class="h-20 w-20 rounded-xl object-contain"
-              :src="fetchRecommendationItemImageUrl(item)"
-              alt="추천 옷 이미지"
-            />
-            <div v-else class="flex h-20 w-20 items-center justify-center rounded-xl">
-              <span class="text-xs">이미지 없음</span>
-            </div>
-
-            <div class="flex min-w-0 flex-1 flex-col gap-2">
-              <div class="flex items-center justify-between gap-2">
-                <div class="text-sm font-semibold">{{ fetchRecommendationCategoryLabel(item.category) }}</div>
-                <span class="text-xs">유사도 {{ fetchRecommendationSimilarityLabel(item.similarity) }}</span>
-              </div>
-
-              <div class="text-sm">
-                {{ fetchRecommendationSummaryLabel(item) }}
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <sl-switch size="small" :checked="item.isPinned" @sl-change="onChangeRecommendationPin(item.itemId, $event)">고정</sl-switch>
-                <sl-button class="w-full" size="small" @click="onClickOpenRecommendationDetailButton(item)">상세 보기</sl-button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <sl-input v-model="recommendationWornDate" label="착용일" type="date"></sl-input>
-          <sl-input v-model="recommendationNote" label="메모" placeholder="선택 입력"></sl-input>
-        </div>
-
-        <sl-button class="w-full" variant="primary" :loading="isCreatingRecommendationConfirm" @click="onClickConfirmRecommendationButton">
-          오늘 코디 확정
+        <sl-button class="w-full" variant="primary" :loading="isCreatingRecommendationSession" @click="onClickRequestRecommendationButton">
+          {{ recommendationItems.length ? '추천 결과 보기' : '추천받기' }}
         </sl-button>
-      </div>
-
-      <div v-else class="mt-3 text-sm">
-        입력 없이도 현재 날씨 기준으로 추천받을 수 있습니다.
       </div>
     </sl-card>
 
@@ -126,15 +75,12 @@
               <sl-tag size="small" :variant="fetchClothesStateTagVariant(item.state)">
                 {{ fetchClothesStateLabel(item.state) }}
               </sl-tag>
-              <div class="flex items-center gap-1">
-                <span class="text-xs">{{ item.created.slice(0, 10) }}</span>
-                <sl-icon-button
-                  label="삭제"
-                  name="trash3"
-                  :disabled="isDeletingClothes"
-                  @click.stop="onClickDeleteButton(item)"
-                ></sl-icon-button>
-              </div>
+              <sl-icon-button
+                label="삭제"
+                name="trash3"
+                :disabled="isDeletingClothes"
+                @click.stop="onClickDeleteButton(item)"
+              ></sl-icon-button>
             </div>
 
             <div class="truncate text-sm">카테고리: {{ fetchClothesCategoryLabel(item.category) }}</div>
@@ -151,6 +97,74 @@
         </div>
       </sl-card>
     </div>
+
+    <sl-dialog label="추천 결과" :open="isRecommendationDialogOpen" @sl-request-close="onRequestCloseRecommendationDialog">
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-2">
+          <sl-tag v-if="recommendationSessionId" size="small" variant="primary">라운드 {{ recommendationRound }}</sl-tag>
+          <div v-else class="text-sm">추천 결과</div>
+          <sl-button
+            size="small"
+            :disabled="!recommendationSessionId || !recommendationItems.length"
+            :loading="isUpdatingRecommendationReroll"
+            @click="onClickRerollRecommendationButton"
+          >
+            고정 제외 재추천
+          </sl-button>
+        </div>
+
+        <div v-if="recommendationItems.length" class="flex flex-col gap-2">
+          <div v-for="item in recommendationItems" :key="item.itemId" class="rounded-xl p-3">
+            <div class="flex gap-3">
+              <img
+                v-if="fetchRecommendationItemImageUrl(item)"
+                class="h-20 w-20 rounded-xl object-contain"
+                :src="fetchRecommendationItemImageUrl(item)"
+                alt="추천 옷 이미지"
+              />
+              <div v-else class="flex h-20 w-20 items-center justify-center rounded-xl">
+                <span class="text-xs">이미지 없음</span>
+              </div>
+
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-sm font-semibold">{{ fetchRecommendationCategoryLabel(item.category) }}</div>
+                  <span class="text-xs">유사도 {{ fetchRecommendationSimilarityLabel(item.similarity) }}</span>
+                </div>
+
+                <div class="text-sm">
+                  {{ fetchRecommendationSummaryLabel(item) }}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <sl-switch size="small" :checked="item.isPinned" @sl-change="onChangeRecommendationPin(item.itemId, $event)">고정</sl-switch>
+                  <sl-button class="w-full" size="small" @click="onClickOpenRecommendationDetailButton(item)">상세 보기</sl-button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <sl-input v-model="recommendationWornDate" label="착용일" type="date"></sl-input>
+            <sl-input v-model="recommendationNote" label="메모" placeholder="선택 입력"></sl-input>
+          </div>
+        </div>
+
+        <div v-else class="text-sm">추천 결과가 없습니다.</div>
+      </div>
+
+      <sl-button slot="footer" class="mr-2" @click="onRequestCloseRecommendationDialog">닫기</sl-button>
+      <sl-button
+        slot="footer"
+        class="ml-2"
+        variant="primary"
+        :disabled="!recommendationSessionId || !recommendationItems.length"
+        :loading="isCreatingRecommendationConfirm"
+        @click="onClickConfirmRecommendationButton"
+      >
+        오늘 코디 확정
+      </sl-button>
+    </sl-dialog>
 
     <sl-dialog label="옷 상세 정보" :open="isDetailDialogOpen" @sl-request-close="onRequestCloseDetailDialog">
       <div v-if="selectedClothes" class="flex flex-col gap-3">
@@ -169,12 +183,6 @@
             {{ fetchClothesStateLabel(selectedClothes.state) }}
           </sl-tag>
           <span class="text-xs">{{ selectedClothes.updated.slice(0, 10) }}</span>
-        </div>
-
-        <div class="space-y-1 rounded-xl p-3 text-sm">
-          <div class="truncate">이미지 해시: {{ selectedClothes.imageHash ?? '-' }}</div>
-          <div>임베딩 모델: {{ selectedClothes.embeddingModel ?? '-' }}</div>
-          <div>임베딩 차원: {{ fetchEmbeddingDimension(selectedClothes.embedding) }}</div>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -222,7 +230,15 @@
             </sl-option>
           </sl-select>
 
-          <sl-input v-model="detailForm.preferenceScore" label="선호도 점수" type="number"></sl-input>
+          <sl-input
+            v-model="detailForm.preferenceScore"
+            label="선호도 점수"
+            type="number"
+            :min="0"
+            :max="100"
+            :step="1"
+            help-text="0~100 권장 (0: 중립, 100: 매우 선호)"
+          ></sl-input>
         </div>
 
         <sl-input
@@ -379,6 +395,8 @@
       <sl-button slot="footer" class="mr-2" @click="onRequestCloseFilterDialog">닫기</sl-button>
       <sl-button slot="footer" class="ml-2" variant="primary" @click="onClickApplyFilterDialogButton">적용</sl-button>
     </sl-dialog>
+
+    <AppBottomNav />
   </main>
 </template>
 
@@ -444,6 +462,9 @@ type ClothesFilterParams = {
   styles: ClothesStylesOptions[];
 };
 
+const PREFERENCE_SCORE_MIN = 0;
+const PREFERENCE_SCORE_MAX = 100;
+
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { showMessageModal, showConfirmModal } = useModal();
@@ -501,6 +522,8 @@ const uploadSourceUrl = ref('');
 const uploadSourceFile = ref<File | null>(null);
 const uploadSourceFileInputElement = ref<HTMLInputElement | null>(null);
 const isUploadDialogOpen = ref(false);
+const isRecommendationDialogOpen = ref(false);
+const recommendationQueryText = ref('');
 const DEFAULT_RECOMMENDATION_TOP_K = 12;
 const recommendationWornDate = ref('');
 const recommendationNote = ref('');
@@ -661,6 +684,20 @@ const onClickSignoutButton = async () => {
   await deleteAuthSession();
 };
 
+const onClickHomeBrand = async () => {
+  isRecommendationDialogOpen.value = false;
+  isDetailDialogOpen.value = false;
+  isUploadDialogOpen.value = false;
+  isFilterDialogOpen.value = false;
+
+  if (router.currentRoute.value.path !== '/') {
+    await router.push('/');
+    return;
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 const onClickSelectUploadType = (type: 'file' | 'url') => {
   uploadType.value = type;
 };
@@ -672,6 +709,10 @@ const onClickOpenUploadDialog = () => {
 
 const onRequestCloseUploadDialog = () => {
   isUploadDialogOpen.value = false;
+};
+
+const onRequestCloseRecommendationDialog = () => {
+  isRecommendationDialogOpen.value = false;
 };
 
 const onChangeUploadFileInput = (event: Event) => {
@@ -688,10 +729,68 @@ const onClickOpenUploadSourceFileButton = () => {
   uploadSourceFileInputElement.value.click();
 };
 
+const findDuplicateClothesBySourceUrl = (sourceUrl: string) => {
+  return clothes.value.find((item) => {
+    if (item.state === ClothesStateOptions.failed) {
+      return false;
+    }
+
+    return String(item.sourceUrl ?? '').trim() === sourceUrl;
+  });
+};
+
+const findDuplicateClothesByImageHash = (imageHash: string) => {
+  const normalizedHash = String(imageHash ?? '').trim();
+  if (!normalizedHash) {
+    return null;
+  }
+
+  return clothes.value.find((item) => {
+    if (item.state === ClothesStateOptions.failed) {
+      return false;
+    }
+
+    return String(item.imageHash ?? '').trim() === normalizedHash;
+  });
+};
+
+const fetchSha256HashText = async (rawBytes: Uint8Array) => {
+  if (!rawBytes.length) {
+    return '';
+  }
+
+  let hexText = '';
+  rawBytes.forEach((byte) => {
+    hexText += byte.toString(16).padStart(2, '0');
+  });
+
+  const hashSeedBytes = new TextEncoder().encode(hexText);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', hashSeedBytes);
+  const hashBytes = new Uint8Array(hashBuffer);
+  let hashText = '';
+  hashBytes.forEach((byte) => {
+    hashText += byte.toString(16).padStart(2, '0');
+  });
+  return hashText;
+};
+
+const fetchUploadFileImageHash = async (file: File) => {
+  const fileBuffer = await file.arrayBuffer();
+  const fileBytes = new Uint8Array(fileBuffer);
+  return fetchSha256HashText(fileBytes);
+};
+
 const onClickUploadButton = async () => {
   if (uploadType.value === 'file') {
     if (!uploadSourceFile.value) {
       showMessageModal('업로드할 이미지 파일을 선택해주세요.');
+      return;
+    }
+
+    const imageHash = await fetchUploadFileImageHash(uploadSourceFile.value);
+    const duplicateClothes = findDuplicateClothesByImageHash(imageHash);
+    if (duplicateClothes) {
+      showMessageModal('이미 해당 옷 이미지가 등록되어 있습니다.');
       return;
     }
 
@@ -703,7 +802,14 @@ const onClickUploadButton = async () => {
       return;
     }
 
-    await createClothesByUrl(uploadSourceUrl.value.trim());
+    const normalizedSourceUrl = uploadSourceUrl.value.trim();
+    const duplicateClothes = findDuplicateClothesBySourceUrl(normalizedSourceUrl);
+    if (duplicateClothes) {
+      showMessageModal('이미 동일한 URL 옷 데이터가 등록되어 있습니다.');
+      return;
+    }
+
+    await createClothesByUrl(normalizedSourceUrl);
     uploadSourceUrl.value = '';
   }
 
@@ -857,14 +963,21 @@ const onClickApplyFilterDialogButton = async () => {
 };
 
 const onClickRequestRecommendationButton = async () => {
+  const normalizedQueryText = recommendationQueryText.value.trim();
+  if (!normalizedQueryText && recommendationSessionId.value && recommendationItems.value.length) {
+    isRecommendationDialogOpen.value = true;
+    return;
+  }
+
   await createRecommendationSession({
-    queryText: '',
+    queryText: normalizedQueryText,
     seasons: recommendationTemperatureSeasons.value,
     topK: DEFAULT_RECOMMENDATION_TOP_K,
   });
 
   recommendationNote.value = '';
   recommendationWornDate.value = fetchTodayDateText();
+  isRecommendationDialogOpen.value = true;
 };
 
 const onChangeRecommendationPin = (itemId: string, event: Event) => {
@@ -900,6 +1013,7 @@ const onClickConfirmRecommendationButton = async () => {
   await fetchClothesList(fetchCurrentFilterParams());
 
   resetRecommendationSession();
+  isRecommendationDialogOpen.value = false;
   recommendationNote.value = '';
   recommendationWornDate.value = result.wornDate;
   showMessageModal(`${result.wornDate} 착용 로그로 ${result.selectedCount}개 아이템을 저장했습니다.`);
@@ -1037,6 +1151,11 @@ const onClickSaveDetailButton = async () => {
     return;
   }
 
+  if (parsedPreferenceScore < PREFERENCE_SCORE_MIN || parsedPreferenceScore > PREFERENCE_SCORE_MAX) {
+    showMessageModal(`선호도 점수는 ${PREFERENCE_SCORE_MIN}~${PREFERENCE_SCORE_MAX} 범위로 입력해주세요.`);
+    return;
+  }
+
   await updateClothes(selectedClothes.value.id, {
     category: detailForm.value.category || undefined,
     colors: detailForm.value.colors,
@@ -1059,14 +1178,6 @@ const onClickSaveDetailButton = async () => {
   }
 
   showMessageModal('수정된 메타데이터 기준으로 임베딩을 다시 생성했습니다.');
-};
-
-const fetchEmbeddingDimension = (embedding: unknown) => {
-  if (!Array.isArray(embedding)) {
-    return 0;
-  }
-
-  return embedding.length;
 };
 
 /* ======================= 메서드 ======================= */

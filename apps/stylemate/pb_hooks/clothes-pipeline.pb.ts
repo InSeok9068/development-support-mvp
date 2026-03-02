@@ -93,3 +93,23 @@ routerAdd(
   },
   $apis.requireAuth(),
 );
+
+routerAdd(
+  'DELETE',
+  '/api/clothes/delete/{id}',
+  (e) => {
+    const clothesId = String(e.request.pathValue('id') ?? '').trim();
+    if (!clothesId) {
+      return e.error(400, 'clothes id가 필요합니다.', {});
+    }
+
+    const { deleteClothesById } = require(`${__hooks}/clothes-pipeline-service.ts`);
+    const result = deleteClothesById(e.auth, clothesId);
+    if (!result.ok) {
+      return e.error(result.statusCode, result.message, {});
+    }
+
+    return e.json(200, result.payload);
+  },
+  $apis.requireAuth(),
+);

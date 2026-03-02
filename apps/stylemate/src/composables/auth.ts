@@ -47,6 +47,7 @@ export const useAuth = () => {
   };
 
   const fetchAuthUserId = () => pb.authStore.record?.id ?? '';
+  const fetchAuthUserName = () => String(pb.authStore.record?.name ?? '').trim();
   /* ======================= 메서드 ======================= */
 
   return {
@@ -58,5 +59,6 @@ export const useAuth = () => {
     deleteAuthSession,
     fetchAuthState,
     fetchAuthUserId,
+    fetchAuthUserName,
   };
 };

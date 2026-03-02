@@ -231,7 +231,10 @@ export const useClothes = () => {
   });
 
   const deleteClothesMutation = useMutation({
-    mutationFn: (id: string) => pb.collection(Collections.Clothes).delete(id),
+    mutationFn: (id: string) =>
+      pb.send(`/api/clothes/delete/${id}`, {
+        method: 'DELETE',
+      }),
     onSuccess: (_result, id) => {
       queryClient.invalidateQueries({ queryKey: ['clothes'] });
       queryClient.removeQueries({ queryKey: ['clothes', 'detail', id] });

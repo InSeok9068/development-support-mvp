@@ -106,3 +106,25 @@ sl-details::part(base) {
     transform: translateY(0);
   }
 }
+
+sl-button.bottom-nav-item::part(base) {
+  min-height: 56px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #98a2b3;
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+sl-button.bottom-nav-item.is-inactive::part(base):hover {
+  background: transparent;
+  color: #667085;
+}
+
+sl-button.bottom-nav-item.is-active::part(base) {
+  background: transparent;
+  color: #111827;
+  transform: translateY(-1px);
+}

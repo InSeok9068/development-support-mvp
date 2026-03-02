@@ -1,6 +1,8 @@
 // @ts-nocheck
 
 const COLLECTION_NAME = 'clothes';
+const RECOMMENDATION_ITEMS_COLLECTION = 'recommendation_items';
+const WEAR_LOGS_COLLECTION = 'wear_logs';
 const ANALYZE_MODEL = 'gemini-2.5-flash-lite';
 const MAX_ANALYZE_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -201,6 +203,19 @@ const encodeBase64Bytes = (bytes) => {
   return encoded;
 };
 
+const convertBytesToHexText = (bytes) => {
+  if (!Array.isArray(bytes) || !bytes.length) {
+    return '';
+  }
+
+  let hexText = '';
+  for (let index = 0; index < bytes.length; index += 1) {
+    hexText += Number(bytes[index] ?? 0).toString(16).padStart(2, '0');
+  }
+
+  return hexText;
+};
+
 const readSourceImageFromUpload = (record) => {
   const sourceImage = String(record.get('sourceImage') ?? '').trim();
   if (!sourceImage) {
@@ -375,8 +390,24 @@ const runPreprocessStep = (record) => {
     };
   }
 
-  const imageHashBase = sourceUrl || sourceImage || `${record.id}:${record.get('created')}`;
-  const imageHash = $security.md5(imageHashBase);
+  let imageHash = '';
+  if ('upload' === sourceType) {
+    const sourceImageResult = readSourceImageFromUpload(record);
+    if (!sourceImageResult.ok) {
+      return {
+        ok: false,
+        errorCode: 'image_decode_error',
+        errorMessage: sourceImageResult.errorMessage,
+      };
+    }
+
+    const imageHexText = convertBytesToHexText(sourceImageResult.imageBytes);
+    imageHash = $security.sha256(imageHexText);
+  } else {
+    const imageHashBase = sourceUrl || sourceImage || `${record.id}:${record.get('created')}`;
+    imageHash = $security.md5(imageHashBase);
+  }
+
   const fields = {
     imageHash,
   };
@@ -722,6 +753,116 @@ const createClothesByUrl = (authRecord, sourceUrl) => {
   };
 };
 
+const readRelationIds = (value) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map((item) => String(item ?? '').trim()).filter(Boolean);
+};
+
+const deleteClothesById = (authRecord, clothesId) => {
+  const authId = readAuthId(authRecord);
+  if (!authId) {
+    return {
+      ok: false,
+      statusCode: 401,
+      message: '인증 정보가 필요합니다.',
+    };
+  }
+
+  const normalizedClothesId = String(clothesId ?? '').trim();
+  if (!normalizedClothesId) {
+    return {
+      ok: false,
+      statusCode: 400,
+      message: 'clothes id가 필요합니다.',
+    };
+  }
+
+  const record = findClothesRecordById(normalizedClothesId);
+  if (!record) {
+    return {
+      ok: false,
+      statusCode: 404,
+      message: '옷 아이템을 찾지 못했습니다.',
+    };
+  }
+
+  if (String(record.get('user') ?? '') !== authId) {
+    return {
+      ok: false,
+      statusCode: 403,
+      message: '본인 데이터만 삭제할 수 있습니다.',
+    };
+  }
+
+  try {
+    const recommendationItems = $app.findRecordsByFilter(
+      RECOMMENDATION_ITEMS_COLLECTION,
+      'user = {:userId} && clothes = {:clothesId}',
+      '',
+      0,
+      0,
+      { clothesId: normalizedClothesId, userId: authId },
+    );
+
+    let deletedRecommendationItemCount = 0;
+    recommendationItems.forEach((item) => {
+      if (!item) {
+        return;
+      }
+
+      $app.delete(item);
+      deletedRecommendationItemCount += 1;
+    });
+
+    const wearLogs = $app.findRecordsByFilter(WEAR_LOGS_COLLECTION, 'user = {:userId}', '', 0, 0, { userId: authId });
+    let updatedWearLogCount = 0;
+    let deletedWearLogCount = 0;
+
+    wearLogs.forEach((wearLog) => {
+      if (!wearLog) {
+        return;
+      }
+
+      const itemIds = readRelationIds(wearLog.get('items'));
+      if (!itemIds.includes(normalizedClothesId)) {
+        return;
+      }
+
+      const nextItemIds = itemIds.filter((itemId) => itemId !== normalizedClothesId);
+      if (!nextItemIds.length) {
+        $app.delete(wearLog);
+        deletedWearLogCount += 1;
+        return;
+      }
+
+      wearLog.set('items', nextItemIds);
+      $app.save(wearLog);
+      updatedWearLogCount += 1;
+    });
+
+    $app.delete(record);
+
+    return {
+      ok: true,
+      payload: {
+        deletedRecommendationItemCount,
+        deletedWearLogCount,
+        id: normalizedClothesId,
+        updatedWearLogCount,
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      statusCode: 500,
+      message: `옷 삭제 처리 중 오류가 발생했습니다. ${toString(error)}`,
+    };
+  }
+};
+
 const retryClothesById = (authRecord, clothesId) => {
   const authId = readAuthId(authRecord);
   if (!authId) {
@@ -858,6 +999,7 @@ const reembedClothesById = (authRecord, clothesId) => {
 
 module.exports = {
   createClothesByUrl,
+  deleteClothesById,
   processClothesPipeline,
   reembedClothesById,
   retryClothesById,
