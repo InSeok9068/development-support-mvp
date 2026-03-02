@@ -186,7 +186,7 @@ const encodeBase64Bytes = (bytes) => {
   }
 
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let encoded = '';
+  const encodedParts = [];
 
   for (let index = 0; index < bytes.length; index += 3) {
     const first = Number(bytes[index] ?? 0) & 0xff;
@@ -194,13 +194,53 @@ const encodeBase64Bytes = (bytes) => {
     const third = Number(bytes[index + 2] ?? 0) & 0xff;
     const triple = (first << 16) | (second << 8) | third;
 
-    encoded += alphabet[(triple >> 18) & 0x3f];
-    encoded += alphabet[(triple >> 12) & 0x3f];
-    encoded += index + 1 < bytes.length ? alphabet[(triple >> 6) & 0x3f] : '=';
-    encoded += index + 2 < bytes.length ? alphabet[triple & 0x3f] : '=';
+    encodedParts.push(alphabet[(triple >> 18) & 0x3f]);
+    encodedParts.push(alphabet[(triple >> 12) & 0x3f]);
+    encodedParts.push(index + 1 < bytes.length ? alphabet[(triple >> 6) & 0x3f] : '=');
+    encodedParts.push(index + 2 < bytes.length ? alphabet[triple & 0x3f] : '=');
   }
 
-  return encoded;
+  return encodedParts.join('');
+};
+
+const readBytesFromBlobReader = (reader, maxBytes = 0) => {
+  const chunkSize = 64 * 1024;
+  const normalizedMaxBytes = Number(maxBytes);
+  const bytes = [];
+
+  while (true) {
+    const chunk = new Array(chunkSize).fill(0);
+    let readCount = 0;
+    try {
+      readCount = Number(reader.read(chunk));
+    } catch (error) {
+      const errorText = String(error?.message ?? error ?? '').trim();
+      if (/eof/i.test(errorText)) {
+        break;
+      }
+
+      throw error;
+    }
+
+    if (!Number.isFinite(readCount)) {
+      throw new Error('blob reader read 결과가 유효하지 않습니다.');
+    }
+
+    if (readCount <= 0) {
+      break;
+    }
+
+    const copySize = Math.min(readCount, chunk.length);
+    for (let index = 0; index < copySize; index += 1) {
+      bytes.push(Number(chunk[index] ?? 0) & 0xff);
+    }
+
+    if (normalizedMaxBytes > 0 && bytes.length > normalizedMaxBytes) {
+      break;
+    }
+  }
+
+  return bytes;
 };
 
 const convertBytesToHexText = (bytes) => {
@@ -208,12 +248,50 @@ const convertBytesToHexText = (bytes) => {
     return '';
   }
 
-  let hexText = '';
+  const hexParts = new Array(bytes.length);
   for (let index = 0; index < bytes.length; index += 1) {
-    hexText += Number(bytes[index] ?? 0).toString(16).padStart(2, '0');
+    hexParts[index] = Number(bytes[index] ?? 0).toString(16).padStart(2, '0');
   }
 
-  return hexText;
+  return hexParts.join('');
+};
+
+const buildUploadSourceCandidateUrls = (record, sourceImage) => {
+  const collectionId = String(record?.collection?.()?.id ?? '').trim();
+  const recordId = String(record?.id ?? '').trim();
+  const fileName = String(sourceImage ?? '').trim();
+  if (!collectionId || !recordId || !fileName) {
+    return [];
+  }
+
+  const encodedFileName = encodeURIComponent(fileName);
+  const filePath = `/api/files/${collectionId}/${recordId}/${encodedFileName}`;
+  const appUrl = String($app.settings()?.meta?.appURL ?? '')
+    .trim()
+    .replace(/\/+$/g, '');
+  const envUrl = String(process.env.POCKETBASE_URL ?? process.env.PB_URL ?? '')
+    .trim()
+    .replace(/\/+$/g, '');
+  const vitePocketbaseUrl = String(process.env.VITE_POCKETBASE_URL ?? process.env.PB_PUBLIC_URL ?? '')
+    .trim()
+    .replace(/\/+$/g, '');
+
+  const candidates = [appUrl, envUrl, vitePocketbaseUrl, 'http://127.0.0.1:8090', 'http://localhost:8090']
+    .map((baseUrl) => String(baseUrl ?? '').trim())
+    .filter(Boolean)
+    .map((baseUrl) => `${baseUrl}${filePath}`);
+
+  const seen = new Set();
+  const uniqueCandidates = [];
+  candidates.forEach((url) => {
+    if (seen.has(url)) {
+      return;
+    }
+    seen.add(url);
+    uniqueCandidates.push(url);
+  });
+
+  return uniqueCandidates;
 };
 
 const readSourceImageFromUpload = (record) => {
@@ -225,53 +303,106 @@ const readSourceImageFromUpload = (record) => {
     };
   }
 
+  const uploadSourceCandidateUrls = buildUploadSourceCandidateUrls(record, sourceImage);
+  for (let index = 0; index < uploadSourceCandidateUrls.length; index += 1) {
+    const candidateUrl = uploadSourceCandidateUrls[index];
+    const byUrlResult = readSourceImageFromUrl(candidateUrl);
+    if (byUrlResult.ok) {
+      return {
+        ...byUrlResult,
+        sourceText: sourceImage,
+      };
+    }
+  }
+
   const fsys = $app.newFilesystem();
-  const fileKey = $filepath.join(record.baseFilesPath(), sourceImage);
+  const baseFilesPath = String(record.baseFilesPath() ?? '').replace(/\\/g, '/').replace(/\/+$/g, '');
+  const normalizedFileName = sourceImage.replace(/^\/+/g, '');
+  const fileKey = `${baseFilesPath}/${normalizedFileName}`;
   let reader = null;
+  const maxAttempts = 10;
+  const retryDelayMs = 150;
+  let lastErrorText = '';
 
   try {
-    reader = fsys.getFile(fileKey);
-    const imageBytes = toBytes(reader);
-    if (!Array.isArray(imageBytes) || !imageBytes.length) {
-      return {
-        ok: false,
-        errorMessage: '업로드 이미지 파일을 읽지 못했습니다.',
-      };
-    }
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const exists = Boolean(fsys.exists(fileKey));
+        if (!exists) {
+          lastErrorText = `파일이 아직 저장소에 반영되지 않았습니다. (attempt=${attempt})`;
+          if (attempt < maxAttempts) {
+            sleep(retryDelayMs);
+            continue;
+          }
+          break;
+        }
 
-    if (imageBytes.length > MAX_ANALYZE_IMAGE_BYTES) {
-      return {
-        ok: false,
-        errorMessage: `이미지 용량이 너무 큽니다. (최대 ${MAX_ANALYZE_IMAGE_BYTES} bytes)`,
-      };
-    }
+        reader = fsys.getReader(fileKey);
+        const readerSize = Number(reader?.size?.() ?? 0);
+        if (Number.isFinite(readerSize) && readerSize > MAX_ANALYZE_IMAGE_BYTES) {
+          return {
+            ok: false,
+            errorMessage: `이미지 용량이 너무 큽니다. (최대 ${MAX_ANALYZE_IMAGE_BYTES} bytes)`,
+          };
+        }
 
-    const imageMimeType = resolveImageMimeType(imageBytes, reader?.contentType?.() ?? '', sourceImage);
-    if (!imageMimeType) {
-      return {
-        ok: false,
-        errorMessage: '지원하지 않는 이미지 형식입니다.',
-      };
+        const imageBytes = readBytesFromBlobReader(reader, MAX_ANALYZE_IMAGE_BYTES + 1);
+        if (!Array.isArray(imageBytes) || !imageBytes.length) {
+          lastErrorText = `업로드 이미지 파일을 읽지 못했습니다. (attempt=${attempt})`;
+          if (attempt < maxAttempts) {
+            sleep(retryDelayMs);
+            continue;
+          }
+          break;
+        }
+
+        if (imageBytes.length > MAX_ANALYZE_IMAGE_BYTES) {
+          return {
+            ok: false,
+            errorMessage: `이미지 용량이 너무 큽니다. (최대 ${MAX_ANALYZE_IMAGE_BYTES} bytes)`,
+          };
+        }
+
+        const imageMimeType = resolveImageMimeType(imageBytes, reader?.contentType?.() ?? '', sourceImage);
+        if (!imageMimeType) {
+          return {
+            ok: false,
+            errorMessage: '지원하지 않는 이미지 형식입니다.',
+          };
+        }
+
+        return {
+          ok: true,
+          imageBytes,
+          imageMimeType,
+          sourceText: sourceImage,
+        };
+      } catch (error) {
+        lastErrorText = String(error?.message ?? '').trim() || toString(error);
+        if (attempt < maxAttempts) {
+          sleep(retryDelayMs);
+          continue;
+        }
+      } finally {
+        if (reader) {
+          try {
+            reader.close();
+          } catch {}
+          reader = null;
+        }
+      }
     }
 
     return {
-      ok: true,
-      imageBytes,
-      imageMimeType,
-      sourceText: sourceImage,
+      ok: false,
+      errorMessage: `업로드 이미지 조회 실패 (fileKey=${fileKey}): ${lastErrorText || '알 수 없는 오류'}`,
     };
   } catch (error) {
     return {
       ok: false,
-      errorMessage: `업로드 이미지 조회 실패: ${toString(error)}`,
+      errorMessage: `업로드 이미지 조회 실패 (fileKey=${fileKey}): ${toString(error)}`,
     };
   } finally {
-    if (reader) {
-      try {
-        reader.close();
-      } catch {}
-    }
-
     try {
       fsys.close();
     } catch {}
@@ -636,86 +767,92 @@ const runEmbeddingStep = (record) => {
 
 const processClothesPipeline = (clothesId) => {
   const logger = $app.logger().with('hook', 'stylemate-clothes-pipeline', 'clothesId', clothesId);
-  const currentRecord = findClothesRecordById(clothesId);
+  try {
+    const currentRecord = findClothesRecordById(clothesId);
 
-  if (!currentRecord) {
-    return;
+    if (!currentRecord) {
+      return;
+    }
+
+    if ('uploaded' !== String(currentRecord.get('state') ?? '')) {
+      return;
+    }
+
+    const retryCount = normalizeRetryLimit(currentRecord.get('retryCount'), 0);
+    const maxRetry = normalizeRetryLimit(currentRecord.get('maxRetry'), 3);
+    if (maxRetry > 0 && retryCount > maxRetry) {
+      failClothesById(clothesId, 'embedding_error', '최대 재시도 횟수를 초과했습니다.');
+      return;
+    }
+
+    updateClothesById(clothesId, {
+      errorCode: null,
+      errorMessage: '',
+      state: 'preprocessing',
+    });
+
+    let stepRecord = findClothesRecordById(clothesId);
+    if (!stepRecord) {
+      return;
+    }
+
+    const preprocessResult = runPreprocessStep(stepRecord);
+    if (!preprocessResult.ok) {
+      logger.error('pipeline preprocess failed', 'errorCode', preprocessResult.errorCode, 'errorMessage', preprocessResult.errorMessage);
+      failClothesById(clothesId, preprocessResult.errorCode, preprocessResult.errorMessage);
+      return;
+    }
+
+    updateClothesById(clothesId, preprocessResult.fields);
+    updateClothesById(clothesId, { state: 'analyzing' });
+
+    stepRecord = findClothesRecordById(clothesId);
+    if (!stepRecord) {
+      return;
+    }
+
+    const analyzeResult = runAnalyzeStep(stepRecord);
+    if (!analyzeResult.ok) {
+      logger.error('pipeline analyze failed', 'errorCode', analyzeResult.errorCode, 'errorMessage', analyzeResult.errorMessage);
+      failClothesById(clothesId, analyzeResult.errorCode, analyzeResult.errorMessage);
+      return;
+    }
+
+    updateClothesById(clothesId, {
+      category: analyzeResult.analysis.category,
+      colors: analyzeResult.analysis.colors,
+      contexts: analyzeResult.analysis.contexts,
+      fit: analyzeResult.analysis.fit,
+      materials: analyzeResult.analysis.materials,
+      seasons: analyzeResult.analysis.seasons,
+      styles: analyzeResult.analysis.styles,
+    });
+
+    updateClothesById(clothesId, { state: 'embedding' });
+
+    stepRecord = findClothesRecordById(clothesId);
+    if (!stepRecord) {
+      return;
+    }
+
+    const embeddingResult = runEmbeddingStep(stepRecord);
+    if (!embeddingResult.ok) {
+      logger.error('pipeline embedding failed', 'errorCode', embeddingResult.errorCode, 'errorMessage', embeddingResult.errorMessage);
+      failClothesById(clothesId, embeddingResult.errorCode, embeddingResult.errorMessage);
+      return;
+    }
+
+    updateClothesById(clothesId, {
+      embedding: embeddingResult.embedding,
+      embeddingModel: embeddingResult.embeddingModel,
+      errorCode: null,
+      errorMessage: '',
+      state: 'done',
+    });
+  } catch (error) {
+    logger.error('pipeline unexpected error', 'error', toString(error));
+    failClothesById(clothesId, 'image_decode_error', `파이프라인 예외: ${toString(error)}`);
   }
-
-  if ('uploaded' !== String(currentRecord.get('state') ?? '')) {
-    return;
-  }
-
-  const retryCount = normalizeRetryLimit(currentRecord.get('retryCount'), 0);
-  const maxRetry = normalizeRetryLimit(currentRecord.get('maxRetry'), 3);
-  if (maxRetry > 0 && retryCount > maxRetry) {
-    failClothesById(clothesId, 'embedding_error', '최대 재시도 횟수를 초과했습니다.');
-    return;
-  }
-
-  logger.info('pipeline started');
-  updateClothesById(clothesId, {
-    errorCode: null,
-    errorMessage: '',
-    state: 'preprocessing',
-  });
-
-  let stepRecord = findClothesRecordById(clothesId);
-  if (!stepRecord) {
-    return;
-  }
-
-  const preprocessResult = runPreprocessStep(stepRecord);
-  if (!preprocessResult.ok) {
-    failClothesById(clothesId, preprocessResult.errorCode, preprocessResult.errorMessage);
-    return;
-  }
-
-  updateClothesById(clothesId, preprocessResult.fields);
-  updateClothesById(clothesId, { state: 'analyzing' });
-
-  stepRecord = findClothesRecordById(clothesId);
-  if (!stepRecord) {
-    return;
-  }
-
-  const analyzeResult = runAnalyzeStep(stepRecord);
-  if (!analyzeResult.ok) {
-    failClothesById(clothesId, analyzeResult.errorCode, analyzeResult.errorMessage);
-    return;
-  }
-
-  updateClothesById(clothesId, {
-    category: analyzeResult.analysis.category,
-    colors: analyzeResult.analysis.colors,
-    contexts: analyzeResult.analysis.contexts,
-    fit: analyzeResult.analysis.fit,
-    materials: analyzeResult.analysis.materials,
-    seasons: analyzeResult.analysis.seasons,
-    styles: analyzeResult.analysis.styles,
-  });
-
-  updateClothesById(clothesId, { state: 'embedding' });
-
-  stepRecord = findClothesRecordById(clothesId);
-  if (!stepRecord) {
-    return;
-  }
-
-  const embeddingResult = runEmbeddingStep(stepRecord);
-  if (!embeddingResult.ok) {
-    failClothesById(clothesId, embeddingResult.errorCode, embeddingResult.errorMessage);
-    return;
-  }
-
-  updateClothesById(clothesId, {
-    embedding: embeddingResult.embedding,
-    embeddingModel: embeddingResult.embeddingModel,
-    errorCode: null,
-    errorMessage: '',
-    state: 'done',
-  });
-  logger.info('pipeline completed');
 };
 
 const createClothesByUrl = (authRecord, sourceUrl) => {
