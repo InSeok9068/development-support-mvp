@@ -310,7 +310,7 @@ const readBytesFromBlobReader = (reader, maxBytes = 0) => {
   const bytes = [];
 
   while (true) {
-    const chunk = new Array(chunkSize).fill(0);
+    const chunk = Array.from({ length: chunkSize }, () => 0);
     let readCount = 0;
     try {
       readCount = Number(reader.read(chunk));
@@ -349,7 +349,7 @@ const convertBytesToHexText = (bytes) => {
     return '';
   }
 
-  const hexParts = new Array(bytes.length);
+  const hexParts = Array.from({ length: bytes.length }, () => '');
   for (let index = 0; index < bytes.length; index += 1) {
     hexParts[index] = Number(bytes[index] ?? 0).toString(16).padStart(2, '0');
   }
