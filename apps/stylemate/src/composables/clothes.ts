@@ -237,6 +237,7 @@ export const useClothes = () => {
       }),
     onSuccess: (_result, id) => {
       queryClient.invalidateQueries({ queryKey: ['clothes'] });
+      queryClient.invalidateQueries({ queryKey: ['wear-logs'] });
       queryClient.removeQueries({ queryKey: ['clothes', 'detail', id] });
     },
   });

@@ -27,21 +27,19 @@
 
 <script setup lang="ts">
 import { useAuth } from '@/composables/auth';
+import { useAuthGuard } from '@/composables/auth-guard';
 import { computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const router = useRouter();
-const { fetchAuthState, fetchAuthUserId, fetchAuthUserName, deleteAuthSession } = useAuth();
+const { fetchAuthUserId, fetchAuthUserName, deleteAuthSession } = useAuth();
+const { fetchAuthStateOrRedirect } = useAuthGuard();
 const authUserIdLabel = computed(() => fetchAuthUserId() || '-');
 const authUserNameLabel = computed(() => fetchAuthUserName() || '-');
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  if (!fetchAuthState()) {
-    await router.push('/sign');
-  }
+  await fetchAuthStateOrRedirect();
 });
 /* ======================= 생명주기 훅 ======================= */
 

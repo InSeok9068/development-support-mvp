@@ -30,20 +30,16 @@
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '@/composables/auth';
+import { useAuthGuard } from '@/composables/auth-guard';
 import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 /* ======================= 변수 ======================= */
-const router = useRouter();
-const { fetchAuthState } = useAuth();
+const { fetchAuthStateOrRedirect } = useAuthGuard();
 /* ======================= 변수 ======================= */
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  if (!fetchAuthState()) {
-    await router.push('/sign');
-  }
+  await fetchAuthStateOrRedirect();
 });
 /* ======================= 생명주기 훅 ======================= */
 </script>

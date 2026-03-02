@@ -53,11 +53,10 @@
 
 <script setup lang="ts">
 import { type ClothesCategoryOptions } from '@/api/pocketbase-types';
-import { useAuth } from '@/composables/auth';
+import { useAuthGuard } from '@/composables/auth-guard';
 import { type WearLogItem, useWearLogs } from '@/composables/wear-logs';
 import { fetchClothesCategoryLabel } from '@/ui/clothes.ui';
 import { computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 type WearLogDateGroup = {
   logs: WearLogItem[];
@@ -65,8 +64,7 @@ type WearLogDateGroup = {
 };
 
 /* ======================= 변수 ======================= */
-const router = useRouter();
-const { fetchAuthState } = useAuth();
+const { fetchAuthStateOrRedirect } = useAuthGuard();
 const { wearLogList, isWearLogListLoading, fetchWearLogList } = useWearLogs();
 const wearLogDateGroups = computed<WearLogDateGroup[]>(() => {
   const groupedMap = new Map<string, typeof wearLogList.value>();
@@ -87,8 +85,7 @@ const wearLogDateGroups = computed<WearLogDateGroup[]>(() => {
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  if (!fetchAuthState()) {
-    await router.push('/sign');
+  if (!(await fetchAuthStateOrRedirect())) {
     return;
   }
 

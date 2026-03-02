@@ -127,7 +127,10 @@ export const useRecommendations = () => {
         },
         method: 'POST',
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clothes'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clothes'] });
+      queryClient.invalidateQueries({ queryKey: ['wear-logs'] });
+    },
   });
 
   const createRecommendationSession = async (args: CreateRecommendationSessionArgs) => {

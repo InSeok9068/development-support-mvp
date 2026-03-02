@@ -413,6 +413,7 @@ import {
   type ClothesResponse,
 } from '@/api/pocketbase-types';
 import { useAuth } from '@/composables/auth';
+import { useAuthGuard } from '@/composables/auth-guard';
 import { useClothes } from '@/composables/clothes';
 import { type RecommendationItem, useRecommendations } from '@/composables/recommendations';
 import { type CityWeather, useWeather } from '@/composables/weather';
@@ -468,7 +469,8 @@ const PREFERENCE_SCORE_MAX = 100;
 /* ======================= 변수 ======================= */
 const router = useRouter();
 const { showMessageModal, showConfirmModal } = useModal();
-const { fetchAuthState, deleteAuthSession } = useAuth();
+const { deleteAuthSession } = useAuth();
+const { fetchAuthStateOrRedirect } = useAuthGuard();
 const {
   clothes,
   isClothesLoading,
@@ -668,8 +670,7 @@ const recommendationTemperatureSeasonTagVariant = computed(() => {
 
 /* ======================= 생명주기 훅 ======================= */
 onMounted(async () => {
-  if (!fetchAuthState()) {
-    await router.push('/sign');
+  if (!(await fetchAuthStateOrRedirect())) {
     return;
   }
 
