@@ -113,50 +113,121 @@
           </sl-button>
         </div>
 
-        <div v-if="recommendationItems.length" class="flex flex-col gap-2">
-          <div class="grid grid-cols-2 gap-2">
-            <div
-              v-for="category in recommendationCategoryOrder"
-              :key="category"
-              class="rounded-xl p-3"
-              @touchstart="onTouchStartRecommendationSlot(category, $event)"
-              @touchend="onTouchEndRecommendationSlot(category, $event)"
-            >
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
-                <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
+        <div v-if="recommendationItems.length" class="flex flex-col gap-3">
+          <sl-tab-group>
+            <sl-tab slot="nav" panel="all">전체</sl-tab>
+            <sl-tab v-for="category in recommendationCategoryOrder" :key="`tab-${category}`" slot="nav" :panel="category">
+              {{ fetchClothesCategoryLabel(category) }}
+            </sl-tab>
+
+            <sl-tab-panel name="all">
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <div
+                  v-for="category in recommendationCategoryOrder"
+                  :key="`all-${category}`"
+                  class="rounded-xl p-2"
+                  @touchstart="onTouchStartRecommendationSlot(category, $event)"
+                  @touchend="onTouchEndRecommendationSlot(category, $event)"
+                >
+                  <div class="mb-1 flex items-center justify-between gap-1">
+                    <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
+                    <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
+                  </div>
+
+                  <template v-if="fetchSelectedRecommendationCandidate(category)">
+                    <img
+                      v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                      class="h-24 w-full rounded-xl object-contain"
+                      :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                      alt="추천 옷 이미지"
+                    />
+                    <div v-else class="flex h-24 w-full items-center justify-center rounded-xl">
+                      <span class="text-xs">이미지 없음</span>
+                    </div>
+
+                    <div class="mt-1 flex items-center justify-between gap-1">
+                      <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
+                      <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
+                    </div>
+                    <div class="mt-1">
+                      <sl-switch
+                        size="small"
+                        :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
+                        :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
+                        @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
+                      >
+                        고정
+                      </sl-switch>
+                    </div>
+                  </template>
+                  <div v-else class="text-xs">후보 없음</div>
+                </div>
               </div>
+            </sl-tab-panel>
 
-              <template v-if="fetchSelectedRecommendationCandidate(category)">
-                <img
-                  v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
-                  class="h-20 w-full rounded-xl object-contain"
-                  :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
-                  alt="추천 옷 이미지"
-                />
-                <div v-else class="flex h-20 w-full items-center justify-center rounded-xl">
-                  <span class="text-xs">이미지 없음</span>
+            <sl-tab-panel v-for="category in recommendationCategoryOrder" :key="`panel-${category}`" :name="category">
+              <div class="mt-2 flex flex-col gap-2">
+                <div class="rounded-xl p-3" @touchstart="onTouchStartRecommendationSlot(category, $event)" @touchend="onTouchEndRecommendationSlot(category, $event)">
+                  <div class="mb-2 flex items-center justify-between gap-2">
+                    <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
+                    <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
+                  </div>
+
+                  <template v-if="fetchSelectedRecommendationCandidate(category)">
+                    <img
+                      v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                      class="h-48 w-full rounded-xl object-contain"
+                      :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
+                      alt="추천 옷 이미지"
+                    />
+                    <div v-else class="flex h-48 w-full items-center justify-center rounded-xl">
+                      <span class="text-xs">이미지 없음</span>
+                    </div>
+
+                    <div class="mt-2 flex items-center justify-between gap-1">
+                      <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
+                      <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
+                    </div>
+                    <div class="mt-1">
+                      <sl-switch
+                        size="small"
+                        :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
+                        :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
+                        @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
+                      >
+                        고정
+                      </sl-switch>
+                    </div>
+                  </template>
+                  <div v-else class="text-xs">해당 카테고리 후보가 없습니다.</div>
                 </div>
 
-                <div class="mt-2 flex items-center justify-between gap-1">
-                  <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
-                  <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
-                  <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
-                </div>
-                <div class="mt-1">
-                  <sl-switch
-                    size="small"
-                    :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
-                    :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
-                    @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
+                <div v-if="fetchRecommendationCandidates(category).length" class="flex gap-2 overflow-x-auto pb-1">
+                  <sl-card
+                    v-for="(candidate, candidateIndex) in fetchRecommendationCandidates(category)"
+                    :key="`${category}-${candidate.clothesId}-${candidateIndex}`"
+                    class="min-w-20 cursor-pointer overflow-hidden"
+                    @click="onClickSelectRecommendationCandidateThumbnail(category, candidateIndex)"
                   >
-                    고정
-                  </sl-switch>
+                    <div class="flex flex-col items-center gap-1">
+                      <img
+                        v-if="fetchRecommendationCandidateImageUrl(candidate)"
+                        class="h-16 w-16 rounded-lg object-cover"
+                        :src="fetchRecommendationCandidateImageUrl(candidate)"
+                        alt="추천 후보 썸네일"
+                      />
+                      <div v-else class="flex h-16 w-16 items-center justify-center rounded-lg text-xs">없음</div>
+                      <sl-tag size="small" :variant="fetchRecommendationCandidateThumbnailTagVariant(category, candidateIndex)">
+                        {{ candidateIndex + 1 }}
+                      </sl-tag>
+                    </div>
+                  </sl-card>
                 </div>
-              </template>
-              <div v-else class="text-xs">해당 카테고리 후보가 없습니다.</div>
-            </div>
-          </div>
+              </div>
+            </sl-tab-panel>
+          </sl-tab-group>
 
           <div class="grid grid-cols-1 gap-2">
             <sl-input v-model="recommendationWornDate" label="착용일" type="date"></sl-input>
@@ -1364,6 +1435,10 @@ const onClickApplyFilterDialogButton = async () => {
   isFilterDialogOpen.value = false;
 };
 
+const fetchRecommendationCandidates = (category: RecommendationSlotCategory) => {
+  return recommendationCandidatesByCategory.value[category];
+};
+
 const onClickRequestRecommendationButton = async () => {
   const normalizedQueryText = recommendationQueryText.value.trim();
   if (!normalizedQueryText && recommendationSessionId.value && recommendationItems.value.length) {
@@ -1409,6 +1484,30 @@ const onRequestCloseRecommendationFullBodyDialog = () => {
 
 const fetchSelectedRecommendationCandidate = (category: RecommendationSlotCategory) => {
   return selectedRecommendationCandidateByCategory.value[category];
+};
+
+const onClickSelectRecommendationCandidateThumbnail = (category: RecommendationSlotCategory, candidateIndex: number) => {
+  const candidates = fetchRecommendationCandidates(category);
+  if (!candidates.length) {
+    return;
+  }
+
+  const normalizedIndex = Math.max(0, Math.min(candidateIndex, candidates.length - 1));
+  recommendationSelectionIndexByCategory.value = {
+    ...recommendationSelectionIndexByCategory.value,
+    [category]: normalizedIndex,
+  };
+};
+
+const fetchRecommendationCandidateThumbnailTagVariant = (category: RecommendationSlotCategory, candidateIndex: number) => {
+  const candidates = fetchRecommendationCandidates(category);
+  if (!candidates.length) {
+    return 'neutral';
+  }
+
+  const selectedIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
+  const normalizedSelectedIndex = Math.max(0, Math.min(selectedIndex, candidates.length - 1));
+  return normalizedSelectedIndex === candidateIndex ? 'primary' : 'neutral';
 };
 
 const moveRecommendationSelectionIndex = (category: RecommendationSlotCategory, direction: -1 | 1) => {
