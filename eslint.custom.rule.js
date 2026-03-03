@@ -25,7 +25,7 @@ const AGENTS_REF = {
     'AGENTS.md > PocketBase JS Hook (pb_hooks) 작성 규칙 > 모듈 로딩은 CommonJS(require/module.exports)만 사용한다.',
 };
 
-/* ======================= 공통 유틸 ======================= */
+/* ===== 공통 유틸 ===== */
 const rule = (selector, message) => ({ selector, message });
 const errorRule = (selector, message) => rule(selector, `[ERROR] ${message}`);
 const warnRule = (selector, message) => rule(selector, `[WARN] ${message}`);
@@ -56,15 +56,17 @@ const FILE_GLOB = {
   packageVue: 'packages/src/**/*.vue',
   pbHooksTs: 'apps/*/pb_hooks/**/*.ts',
 };
-/* ======================= 공통 유틸 ======================= */
+/* ===== 공통 유틸 ===== */
 
-/* ======================= Query 규칙 ======================= */
-const pbCollectionLiteralRule = errorRule(
-  "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
-  `${AGENTS_REF.pbCollectionLiteral} pb.collection("...") 대신 Collections Enum을 사용하세요.`,
-);
+/* ===== 쿼리 규칙 ===== */
+const pbCollectionLiteralErrorRules = [
+  errorRule(
+    "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
+    `${AGENTS_REF.pbCollectionLiteral} pb.collection("...") 대신 Collections Enum을 사용하세요.`,
+  ),
+];
 
-const queryKeyRules = [
+const queryKeyErrorRules = [
   errorRule(
     "Property[key.name='queryKey'] MemberExpression[object.name='Collections']",
     `${AGENTS_REF.queryKeyRule} queryKey에는 Collections Enum 대신 도메인 문자열(예: 'works')을 사용하세요.`,
@@ -92,10 +94,10 @@ const invalidationWarnRules = [
     `${AGENTS_REF.queryKeyRule} 상세 무효화라면 ['domain', 'detail', id] 형태를 권장합니다. 도메인 전체 무효화(['domain'])는 허용됩니다.`,
   ),
 ];
-/* ======================= Query 규칙 ======================= */
+/* ===== 쿼리 규칙 ===== */
 
-/* ======================= Realtime 규칙 ======================= */
-const realtimeSubscriptionRules = [
+/* ===== 리얼타임 규칙 ===== */
+const realtimeSubscriptionErrorRules = [
   errorRule(
     "CallExpression[callee.type='Identifier'][callee.name='subscribe']",
     `${AGENTS_REF.realtimePageRule} subscribe* 직접 호출 대신 subscribeXxxRealtime을 사용하세요.`,
@@ -113,10 +115,10 @@ const realtimeSubscriptionRules = [
     `${AGENTS_REF.realtimePageRule} 객체의 unsubscribe() 직접 호출 대신 composable의 unsubscribeXxxRealtime을 사용하세요.`,
   ),
 ];
-/* ======================= Realtime 규칙 ======================= */
+/* ===== 리얼타임 규칙 ===== */
 
-/* ======================= Composable 규칙 ======================= */
-const composableMutationRules = [
+/* ===== 컴포저블 규칙 ===== */
+const composableMutationErrorRules = [
   errorRule(
     'ReturnStatement > Identifier[name=/[Mm]utation/]',
     `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
@@ -138,10 +140,10 @@ const composableMutationRules = [
     `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
   ),
 ];
-/* ======================= Composable 규칙 ======================= */
+/* ===== 컴포저블 규칙 ===== */
 
-/* ======================= Shoelace 규칙 ======================= */
-const shoelaceFormVModelRules = [
+/* ===== Shoelace 규칙 ===== */
+const shoelaceFormVModelErrorRules = [
   errorRule(
     "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
     `${AGENTS_REF.shoelaceFirstPrinciple} sl-select에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
@@ -160,7 +162,7 @@ const shoelaceFormVModelRules = [
   ),
 ];
 
-const nativeFormTagRestrictionRules = [
+const nativeFormTagRestrictionErrorRules = [
   errorRule(
     "VElement[name='button']",
     `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <button> 대신 <sl-button>을 사용하세요.`,
@@ -179,7 +181,7 @@ const nativeFormTagRestrictionRules = [
   ),
 ];
 
-const shoelaceValueParsingRules = [
+const shoelaceValueParsingErrorRules = [
   errorRule(
     "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
     `${AGENTS_REF.shoelaceChangeParsing} event.target.value 직접 접근을 피하세요.`,
@@ -218,10 +220,10 @@ const shoelaceChangeHandlerNamingWarnRules = [
     `${AGENTS_REF.sfcMethodNaming} @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.`,
   ),
 ];
-/* ======================= Shoelace 규칙 ======================= */
+/* ===== Shoelace 규칙 ===== */
 
-/* ======================= PB_HOOKS 전용 규칙 ======================= */
-const pbHooksRuntimeRules = [
+/* ===== PB_HOOKS 전용 규칙 ===== */
+const pbHooksRuntimeErrorRules = [
   pbHooksErrorRule('ImportDeclaration', `${AGENTS_REF.pbHooksCjs} ESM import를 사용하지 마세요.`),
   pbHooksErrorRule('ExportNamedDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export를 사용하지 마세요.`),
   pbHooksErrorRule('ExportDefaultDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export default를 사용하지 마세요.`),
@@ -252,7 +254,7 @@ const pbHooksRuntimeRules = [
   pbHooksErrorRule("Identifier[name='Buffer']", `${AGENTS_REF.pbHooksRuntime} Buffer를 사용하지 마세요.`),
 ];
 
-const pbHooksDataSafetyRules = [
+const pbHooksDataSafetyErrorRules = [
   pbHooksErrorRule(
     "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
     'newQuery SQL 문자열에 템플릿 리터럴 보간을 사용하지 마세요. 바인딩 파라미터를 사용하세요.',
@@ -278,7 +280,7 @@ const pbHooksRoutingWarnRules = [
   ),
 ];
 
-const pbHooksRoutingSafetyRules = [
+const pbHooksRoutingSafetyErrorRules = [
   pbHooksErrorRule(
     "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\//]):not(:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//])):not(:has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/]))",
     '인증/내부 API(/api/*, /api/public/* 제외)는 $apis.requireAuth() 또는 $apis.requireSuperuserAuth()를 사용하세요.',
@@ -296,13 +298,13 @@ const pbHooksHttpWarnRules = [
   ),
 ];
 
-const pbHooksRules = [...pbHooksRuntimeRules, ...pbHooksDataSafetyRules, ...pbHooksRoutingSafetyRules];
+const pbHooksErrorRules = [...pbHooksRuntimeErrorRules, ...pbHooksDataSafetyErrorRules, ...pbHooksRoutingSafetyErrorRules];
 const pbHooksWarnRules = [...pbHooksRoutingWarnRules, ...pbHooksHttpWarnRules];
-/* ======================= PB_HOOKS 전용 규칙 ======================= */
+/* ===== PB_HOOKS 전용 규칙 ===== */
 
-/* ======================= 레이어 경계 규칙 ======================= */
-const boundaryBaseRules = [
-  pbCollectionLiteralRule,
+/* ===== 레이어 경계 규칙 ===== */
+const boundaryBaseErrorRules = [
+  ...pbCollectionLiteralErrorRules,
   errorRule(
     "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
     `${AGENTS_REF.noDirectPbCall} 도메인 composable 액션을 사용하세요.`,
@@ -321,8 +323,8 @@ const boundaryBaseRules = [
   ),
 ];
 
-const pageComponentOnlyBoundaryRules = [
-  ...boundaryBaseRules,
+const pageComponentOnlyBoundaryErrorRules = [
+  ...boundaryBaseErrorRules,
   errorRule(
     "CallExpression[callee.name='useQueryClient']",
     `${AGENTS_REF.queryOnlyInComposable} pages/components에서 useQueryClient()를 직접 사용하지 마세요.`,
@@ -333,16 +335,16 @@ const pageComponentOnlyBoundaryRules = [
   ),
 ];
 
-const pageComponentBoundaryRules = [
-  ...pageComponentOnlyBoundaryRules,
-  ...realtimeSubscriptionRules,
-  ...queryKeyRules,
-  ...shoelaceFormVModelRules,
-  ...shoelaceValueParsingRules,
+const pageComponentBoundaryErrorRules = [
+  ...pageComponentOnlyBoundaryErrorRules,
+  ...realtimeSubscriptionErrorRules,
+  ...queryKeyErrorRules,
+  ...shoelaceFormVModelErrorRules,
+  ...shoelaceValueParsingErrorRules,
 ];
 
-const composableRules = [
-  pbCollectionLiteralRule,
+const composableErrorRules = [
+  ...pbCollectionLiteralErrorRules,
   errorRule(
     'VariableDeclarator[id.name=/^on[A-Z].+/]',
     `${AGENTS_REF.composableNaming} composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.`,
@@ -351,25 +353,25 @@ const composableRules = [
     'FunctionDeclaration[id.name=/^on[A-Z].+/]',
     `${AGENTS_REF.composableNaming} composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.`,
   ),
-  ...composableMutationRules,
-  ...queryKeyRules,
+  ...composableMutationErrorRules,
+  ...queryKeyErrorRules,
 ];
 
-const commonRules = [pbCollectionLiteralRule, ...queryKeyRules, ...shoelaceFormVModelRules];
-/* ======================= 레이어 경계 규칙 ======================= */
+const commonErrorRules = [...pbCollectionLiteralErrorRules, ...queryKeyErrorRules, ...shoelaceFormVModelErrorRules];
+/* ===== 레이어 경계 규칙 ===== */
 
-/* ======================= 최종 적용 블록 ======================= */
+/* ===== 최종 적용 블록 ===== */
 const eslintCustomRuleConfig = [
   // pages 적용 규칙
-  restrictedSyntaxErrorBlock([FILE_GLOB.pages], pageComponentBoundaryRules),
+  restrictedSyntaxErrorBlock([FILE_GLOB.pages], pageComponentBoundaryErrorRules),
   // components 적용 규칙
-  restrictedSyntaxErrorBlock([FILE_GLOB.components], pageComponentBoundaryRules),
+  restrictedSyntaxErrorBlock([FILE_GLOB.components], pageComponentBoundaryErrorRules),
   // composables 적용 규칙
-  restrictedSyntaxErrorBlock([FILE_GLOB.composables], composableRules),
+  restrictedSyntaxErrorBlock([FILE_GLOB.composables], composableErrorRules),
   // PB_HOOKS 전용 규칙
-  restrictedSyntaxErrorBlock([FILE_GLOB.pbHooksTs], pbHooksRules),
+  restrictedSyntaxErrorBlock([FILE_GLOB.pbHooksTs], pbHooksErrorRules),
   // 기타 src/packages 적용 규칙
-  restrictedSyntaxErrorBlock([FILE_GLOB.appSrc, FILE_GLOB.packageSrc], commonRules, [
+  restrictedSyntaxErrorBlock([FILE_GLOB.appSrc, FILE_GLOB.packageSrc], commonErrorRules, [
     FILE_GLOB.pages,
     FILE_GLOB.components,
     FILE_GLOB.composables,
@@ -377,7 +379,7 @@ const eslintCustomRuleConfig = [
   // Shoelace form 컴포넌트의 v-model 금지 규칙 (template AST 전용)
   restrictedSyntaxErrorBlock(
     [FILE_GLOB.appVue, FILE_GLOB.packageVue],
-    [...shoelaceFormVModelRules, ...nativeFormTagRestrictionRules],
+    [...shoelaceFormVModelErrorRules, ...nativeFormTagRestrictionErrorRules],
     [],
     'vue/no-restricted-syntax',
   ),
@@ -391,6 +393,6 @@ const eslintCustomRuleConfig = [
   // PB_HOOKS 전용 권장 규칙 (warning)
   restrictedSyntaxWarnBlock([FILE_GLOB.pbHooksTs], pbHooksWarnRules),
 ];
-/* ======================= 최종 적용 블록 ======================= */
+/* ===== 최종 적용 블록 ===== */
 
 export default eslintCustomRuleConfig;
