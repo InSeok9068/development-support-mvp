@@ -15,7 +15,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 
-type ClothesFilterParams = {
+export type ClothesFilterParams = {
   categories: ClothesCategoryOptions[];
   colors: ClothesColorsOptions[];
   contexts: ClothesContextsOptions[];
@@ -34,6 +34,64 @@ type UpdateClothesArgs = {
 type FetchClothesUrlImageCandidatesResponse = {
   candidates: string[];
   sourceUrl: string;
+};
+
+const hasAnyMatchedValue = <T extends string>(source: T[] | null | undefined, target: T[]) => {
+  if (!target.length) {
+    return true;
+  }
+
+  if (!Array.isArray(source) || !source.length) {
+    return false;
+  }
+
+  return source.some((value) => target.includes(value));
+};
+
+export const filterClothesList = (items: ClothesResponse[], params: ClothesFilterParams) => {
+  return items.filter((item) => {
+    if (params.categories.length) {
+      const category = item.category ?? null;
+      if (!category || !params.categories.includes(category)) {
+        return false;
+      }
+    }
+
+    if (params.fit !== 'ALL' && item.fit !== params.fit) {
+      return false;
+    }
+
+    if (!hasAnyMatchedValue(item.seasons, params.seasons)) {
+      return false;
+    }
+
+    if (!hasAnyMatchedValue(item.colors, params.colors)) {
+      return false;
+    }
+
+    if (!hasAnyMatchedValue(item.styles, params.styles)) {
+      return false;
+    }
+
+    if (!hasAnyMatchedValue(item.materials, params.materials)) {
+      return false;
+    }
+
+    if (!hasAnyMatchedValue(item.contexts, params.contexts)) {
+      return false;
+    }
+
+    if (params.searchText.trim()) {
+      const keyword = params.searchText.trim().toLowerCase();
+      const imageHash = String(item.imageHash ?? '').toLowerCase();
+      const sourceUrl = String(item.sourceUrl ?? '').toLowerCase();
+      if (!imageHash.includes(keyword) && !sourceUrl.includes(keyword)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 };
 
 export const useClothes = () => {
@@ -69,64 +127,6 @@ export const useClothes = () => {
       },
     ] as const;
   type ClothesListQueryKey = ReturnType<typeof buildQueryKey>;
-
-  const hasAnyMatchedValue = <T extends string>(source: T[] | null | undefined, target: T[]) => {
-    if (!target.length) {
-      return true;
-    }
-
-    if (!Array.isArray(source) || !source.length) {
-      return false;
-    }
-
-    return source.some((value) => target.includes(value));
-  };
-
-  const filterClothesList = (items: ClothesResponse[], params: ClothesFilterParams) => {
-    return items.filter((item) => {
-      if (params.categories.length) {
-        const category = item.category ?? null;
-        if (!category || !params.categories.includes(category)) {
-          return false;
-        }
-      }
-
-      if (params.fit !== 'ALL' && item.fit !== params.fit) {
-        return false;
-      }
-
-      if (!hasAnyMatchedValue(item.seasons, params.seasons)) {
-        return false;
-      }
-
-      if (!hasAnyMatchedValue(item.colors, params.colors)) {
-        return false;
-      }
-
-      if (!hasAnyMatchedValue(item.styles, params.styles)) {
-        return false;
-      }
-
-      if (!hasAnyMatchedValue(item.materials, params.materials)) {
-        return false;
-      }
-
-      if (!hasAnyMatchedValue(item.contexts, params.contexts)) {
-        return false;
-      }
-
-      if (params.searchText.trim()) {
-        const keyword = params.searchText.trim().toLowerCase();
-        const imageHash = String(item.imageHash ?? '').toLowerCase();
-        const sourceUrl = String(item.sourceUrl ?? '').toLowerCase();
-        if (!imageHash.includes(keyword) && !sourceUrl.includes(keyword)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  };
 
   const fetchClothes = (params: ClothesFilterParams) => {
     return pb

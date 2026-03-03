@@ -609,7 +609,7 @@ import {
 import { useAuth } from '@/composables/auth';
 import { useAuthGuard } from '@/composables/auth-guard';
 import { useClothes } from '@/composables/clothes';
-import { type RecommendationItem, type RecommendationPinnedByCategory, useRecommendations } from '@/composables/recommendations';
+import { type RecommendationPinnedByCategory, useRecommendations } from '@/composables/recommendations';
 import { type CityWeather, useWeather } from '@/composables/weather';
 import {
   clothesCategoryOptionList,
@@ -630,6 +630,19 @@ import {
   fetchClothesStateTagVariant,
   fetchClothesStylesLabel,
 } from '@/ui/clothes.ui';
+import {
+  buildRecommendationCandidatesByCategory,
+  buildSelectedRecommendationCandidatesByCategory,
+  fetchClothesProcessingProgressValue,
+  fetchDefaultRecommendationSeasonsByAnyangWeather,
+  fetchRecommendationSelectionPositionLabel as fetchRecommendationSelectionPositionLabelByIndex,
+  isClothesProcessingState,
+  isDirectImageSourceUrl,
+  recommendationSlotCategoryOrder,
+  type RecommendationSelectionIndexByCategory,
+  type RecommendationSlotCandidate,
+  type RecommendationSlotCategory,
+} from '@/ui/recommendation.ui';
 import { readShoelaceChecked, readShoelaceMultiValue, readShoelaceSingleValue, useModal } from '@packages/ui';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
@@ -655,17 +668,6 @@ type ClothesFilterParams = {
   seasons: ClothesSeasonsOptions[];
   searchText: string;
   styles: ClothesStylesOptions[];
-};
-
-type RecommendationSlotCategory = ClothesCategoryOptions.top | ClothesCategoryOptions.bottom | ClothesCategoryOptions.shoes | ClothesCategoryOptions.accessory;
-
-type RecommendationSlotCandidate = {
-  category: RecommendationSlotCategory;
-  clothes: NonNullable<RecommendationItem['clothes']>;
-  clothesId: string;
-  isRecommended: boolean;
-  itemId: string;
-  similarity: number;
 };
 
 const PREFERENCE_SCORE_MIN = 0;
@@ -736,13 +738,8 @@ const isRecommendationFullBodyDialogOpen = ref(false);
 const recommendationQueryText = ref('');
 const recommendationWornDate = ref('');
 const recommendationNote = ref('');
-const recommendationCategoryOrder: RecommendationSlotCategory[] = [
-  ClothesCategoryOptions.top,
-  ClothesCategoryOptions.bottom,
-  ClothesCategoryOptions.shoes,
-  ClothesCategoryOptions.accessory,
-];
-const recommendationSelectionIndexByCategory = ref<Record<RecommendationSlotCategory, number>>({
+const recommendationCategoryOrder = recommendationSlotCategoryOrder;
+const recommendationSelectionIndexByCategory = ref<RecommendationSelectionIndexByCategory>({
   [ClothesCategoryOptions.top]: 0,
   [ClothesCategoryOptions.bottom]: 0,
   [ClothesCategoryOptions.shoes]: 0,
@@ -797,28 +794,6 @@ const filterAppliedCount = computed(() => {
   if (filterFit.value !== 'ALL') count += 1;
   return count;
 });
-const isClothesProcessingState = (state: ClothesStateOptions | null | undefined) => {
-  return (
-    state === ClothesStateOptions.uploaded ||
-    state === ClothesStateOptions.preprocessing ||
-    state === ClothesStateOptions.analyzing ||
-    state === ClothesStateOptions.embedding
-  );
-};
-const fetchClothesProcessingProgressValue = (state: ClothesStateOptions | null | undefined) => {
-  switch (state) {
-    case ClothesStateOptions.uploaded:
-      return 10;
-    case ClothesStateOptions.preprocessing:
-      return 35;
-    case ClothesStateOptions.analyzing:
-      return 65;
-    case ClothesStateOptions.embedding:
-      return 85;
-    default:
-      return 100;
-  }
-};
 const processingClothes = computed(() => {
   return clothes.value.filter((item) => isClothesProcessingState(item.state));
 });
@@ -912,103 +887,14 @@ const isDirectImageUploadUrl = computed(() => {
   return isDirectImageSourceUrl(uploadSourceUrl.value);
 });
 const recommendationCandidatesByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate[]>>(() => {
-  const groupedCandidates: Record<RecommendationSlotCategory, RecommendationSlotCandidate[]> = {
-    [ClothesCategoryOptions.top]: [],
-    [ClothesCategoryOptions.bottom]: [],
-    [ClothesCategoryOptions.shoes]: [],
-    [ClothesCategoryOptions.accessory]: [],
-  };
-
-  const appendCandidate = (category: RecommendationSlotCategory, candidate: RecommendationSlotCandidate) => {
-    const currentCandidates = groupedCandidates[category];
-    if (currentCandidates.some((item) => item.clothesId === candidate.clothesId)) {
-      return;
-    }
-
-    currentCandidates.push(candidate);
-  };
-
-  recommendationItems.value.forEach((item) => {
-    const category = item.category;
-    if (!recommendationCategoryOrder.includes(category as RecommendationSlotCategory) || !item.clothes) {
-      return;
-    }
-
-    const clothesId = String(item.clothes.id ?? '').trim();
-    if (!clothesId) {
-      return;
-    }
-
-    appendCandidate(category as RecommendationSlotCategory, {
-      category: category as RecommendationSlotCategory,
-      clothes: item.clothes,
-      clothesId,
-      isRecommended: true,
-      itemId: item.itemId,
-      similarity: item.similarity,
-    });
-  });
-
-  clothes.value.forEach((item) => {
-    const category = item.category;
-    if (!recommendationCategoryOrder.includes(category as RecommendationSlotCategory)) {
-      return;
-    }
-
-    if (item.state !== ClothesStateOptions.done) {
-      return;
-    }
-
-    const clothesId = String(item.id ?? '').trim();
-    if (!clothesId) {
-      return;
-    }
-
-    appendCandidate(category as RecommendationSlotCategory, {
-      category: category as RecommendationSlotCategory,
-      clothes: {
-        category: item.category ?? '',
-        colors: Array.isArray(item.colors) ? item.colors : [],
-        contexts: Array.isArray(item.contexts) ? item.contexts : [],
-        fit: item.fit ?? '',
-        id: clothesId,
-        imageHash: String(item.imageHash ?? ''),
-        materials: Array.isArray(item.materials) ? item.materials : [],
-        preferenceScore: Number(item.preferenceScore ?? 0),
-        seasons: Array.isArray(item.seasons) ? item.seasons : [],
-        sourceImage: String(item.sourceImage ?? ''),
-        sourceUrl: String(item.sourceUrl ?? ''),
-        styles: Array.isArray(item.styles) ? item.styles : [],
-      },
-      clothesId,
-      isRecommended: false,
-      itemId: '',
-      similarity: -1,
-    });
-  });
-
-  return groupedCandidates;
+  return buildRecommendationCandidatesByCategory(recommendationItems.value, clothes.value, recommendationCategoryOrder);
 });
 const selectedRecommendationCandidateByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate | null>>(() => {
-  const selectedCandidates: Record<RecommendationSlotCategory, RecommendationSlotCandidate | null> = {
-    [ClothesCategoryOptions.top]: null,
-    [ClothesCategoryOptions.bottom]: null,
-    [ClothesCategoryOptions.shoes]: null,
-    [ClothesCategoryOptions.accessory]: null,
-  };
-
-  recommendationCategoryOrder.forEach((category) => {
-    const candidates = recommendationCandidatesByCategory.value[category];
-    const selectedIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
-    if (!candidates.length) {
-      selectedCandidates[category] = null;
-      return;
-    }
-
-    selectedCandidates[category] = candidates[Math.max(0, Math.min(selectedIndex, candidates.length - 1))] ?? null;
-  });
-
-  return selectedCandidates;
+  return buildSelectedRecommendationCandidatesByCategory(
+    recommendationCandidatesByCategory.value,
+    recommendationSelectionIndexByCategory.value,
+    recommendationCategoryOrder,
+  );
 });
 watch(uploadSourceUrl, () => {
   uploadUrlImageCandidates.value = [];
@@ -1138,22 +1024,6 @@ const onClickPasteClipboardImageButton = async () => {
     }
 
     showMessageModal('클립보드에서 이미지를 가져오지 못했습니다.');
-  }
-};
-
-const isDirectImageSourceUrl = (value: string) => {
-  const normalizedValue = String(value ?? '').trim();
-  if (!/^https?:\/\//i.test(normalizedValue)) {
-    return false;
-  }
-
-  try {
-    const parsedUrl = new URL(normalizedValue);
-    return /\.(?:jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(String(parsedUrl.pathname ?? ''));
-  } catch {
-    const withoutHash = normalizedValue.split('#')[0] ?? '';
-    const withoutQuery = withoutHash.split('?')[0] ?? '';
-    return /\.(?:jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(withoutQuery);
   }
 };
 
@@ -1296,33 +1166,6 @@ const fetchTodayDateText = () => {
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
-};
-
-const fetchDefaultRecommendationSeasonsByAnyangWeather = (weather: CityWeather | null): ClothesSeasonsOptions[] => {
-  if (!weather) {
-    return [];
-  }
-
-  const minTemp = Number(weather.minTemp);
-  const maxTemp = Number(weather.maxTemp);
-  if (!Number.isFinite(minTemp) || !Number.isFinite(maxTemp)) {
-    return [];
-  }
-
-  const averageTemp = (minTemp + maxTemp) / 2;
-  if (averageTemp >= 23) {
-    return [ClothesSeasonsOptions.summer];
-  }
-
-  if (averageTemp >= 17) {
-    return [ClothesSeasonsOptions.fall];
-  }
-
-  if (averageTemp >= 9) {
-    return [ClothesSeasonsOptions.spring];
-  }
-
-  return [ClothesSeasonsOptions.winter];
 };
 
 const fetchCityWeatherLabel = (cityName: string, weather: CityWeather | null) => {
@@ -1532,14 +1375,10 @@ const moveRecommendationSelectionIndex = (category: RecommendationSlotCategory, 
 };
 
 const fetchRecommendationSelectionPositionLabel = (category: RecommendationSlotCategory) => {
-  const candidates = recommendationCandidatesByCategory.value[category];
-  if (!candidates.length) {
-    return '0/0';
-  }
-
-  const selectedIndex = recommendationSelectionIndexByCategory.value[category] ?? 0;
-  const normalizedIndex = Math.max(0, Math.min(selectedIndex, candidates.length - 1));
-  return `${normalizedIndex + 1}/${candidates.length}`;
+  return fetchRecommendationSelectionPositionLabelByIndex(
+    recommendationCandidatesByCategory.value[category],
+    recommendationSelectionIndexByCategory.value[category] ?? 0,
+  );
 };
 
 const fetchPinnedRecommendationByCategory = (): RecommendationPinnedByCategory => {
