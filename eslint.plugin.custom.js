@@ -14,6 +14,29 @@ const createSelectorRule = (checks) => ({
   },
 });
 
+const createVueTemplateSelectorRule = (checks) => ({
+  create(context) {
+    const visitor = Object.fromEntries(
+      checks.map(({ selector, message }) => [
+        selector,
+        (node) => {
+          context.report({
+            message,
+            node,
+          });
+        },
+      ]),
+    );
+
+    const parserServices = context.sourceCode.parserServices;
+    if (parserServices && typeof parserServices.defineTemplateBodyVisitor === 'function') {
+      return parserServices.defineTemplateBodyVisitor(visitor);
+    }
+
+    return {};
+  },
+});
+
 const noPocketbaseCollectionLiteralRule = createSelectorRule([
   {
     selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
@@ -332,7 +355,7 @@ const preferShoelaceReadHelperRule = createSelectorRule([
   },
 ]);
 
-const noShoelaceFormVModelRule = createSelectorRule([
+const noShoelaceFormVModelRule = createVueTemplateSelectorRule([
   {
     selector: "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
     message:
@@ -355,7 +378,7 @@ const noShoelaceFormVModelRule = createSelectorRule([
   },
 ]);
 
-const noNativeFormTagExceptAllowedRule = createSelectorRule([
+const noNativeFormTagExceptAllowedRule = createVueTemplateSelectorRule([
   {
     selector: "VElement[name='button']",
     message:
@@ -379,7 +402,7 @@ const noNativeFormTagExceptAllowedRule = createSelectorRule([
   },
 ]);
 
-const preferShoelaceSlChangeHandlerNamingRule = createSelectorRule([
+const preferShoelaceSlChangeHandlerNamingRule = createVueTemplateSelectorRule([
   {
     selector:
       "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'][value.type='VExpressionContainer'][value.expression.type='Identifier']:not([value.expression.name=/^onChange[A-Z].+/])",
