@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["unicorn"],
-  "jsPlugins": ["./eslint-selector-bridge.js"],
+  "jsPlugins": ["./eslint-selector-bridge.js", "./eslint.plugin.custom.js"],
   "categories": {
     "correctness": "error"
   },
@@ -9,7 +9,10 @@
     "builtin": true
   },
   "ignorePatterns": [".history", "*.d.ts", "apps/*/src/api/pocketbase*", "apps/*/pb_hooks/types.d.ts"],
-  "rules": {},
+  "rules": {
+    "my-custom-rules/no-pocketbase-collection-literal": "error",
+    "my-custom-rules/no-query-key-collections-enum": "error"
+  },
   "overrides": [
     // 1) 기본 앱 코드 규칙
     {
