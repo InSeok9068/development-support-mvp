@@ -783,18 +783,18 @@
         "system": true,
         "type": "text"
       },
-        {
-          "cascadeDelete": false,
-          "collectionId": "_pb_users_auth_",
-          "hidden": false,
-          "id": "clusr001",
-          "maxSelect": 1,
-          "minSelect": 1,
-          "name": "user",
-          "presentable": false,
-          "required": true,
-          "system": false,
-          "type": "relation"
+      {
+        "cascadeDelete": false,
+        "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "clusr001",
+        "maxSelect": 1,
+        "minSelect": 1,
+        "name": "user",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "relation"
       },
       {
         "hidden": false,
@@ -818,25 +818,25 @@
         "system": false,
         "type": "url"
       },
-        {
-          "hidden": false,
-          "id": "climgorg",
-          "maxSelect": 1,
-          "maxSize": 0,
-          "mimeTypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"],
-          "name": "sourceImage",
-          "presentable": false,
-          "protected": false,
-          "required": false,
-          "system": false,
-          "thumbs": null,
-          "type": "file"
-        },
-        {
-          "autogeneratePattern": "",
-          "hidden": false,
-          "id": "climghsh",
-          "max": 0,
+      {
+        "hidden": false,
+        "id": "climgorg",
+        "maxSelect": 1,
+        "maxSize": 0,
+        "mimeTypes": ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"],
+        "name": "sourceImage",
+        "presentable": false,
+        "protected": false,
+        "required": false,
+        "system": false,
+        "thumbs": null,
+        "type": "file"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "climghsh",
+        "max": 0,
         "min": 0,
         "name": "imageHash",
         "pattern": "",
@@ -953,14 +953,14 @@
           "beige"
         ]
       },
-        {
-          "hidden": false,
-          "id": "clstyle1",
-          "maxSelect": 10,
-          "name": "styles",
-          "presentable": false,
-          "required": false,
-          "system": false,
+      {
+        "hidden": false,
+        "id": "clstyle1",
+        "maxSelect": 10,
+        "name": "styles",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "select",
         "values": [
           "street",
@@ -986,14 +986,14 @@
         "type": "select",
         "values": ["oversized", "slim", "wide", "loose", "regular"]
       },
-        {
-          "hidden": false,
-          "id": "clmat001",
-          "maxSelect": 9,
-          "name": "materials",
-          "presentable": false,
-          "required": false,
-          "system": false,
+      {
+        "hidden": false,
+        "id": "clmat001",
+        "maxSelect": 9,
+        "name": "materials",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "select",
         "values": ["cotton", "knit", "leather", "denim", "wool", "linen", "polyester", "nylon", "silk"]
       },
@@ -1008,11 +1008,11 @@
         "type": "select",
         "values": ["daily", "work", "wedding", "date", "travel", "exercise", "party", "formal_event"]
       },
-        {
-          "hidden": true,
-          "id": "cljson02",
-          "maxSize": 0,
-          "name": "embedding",
+      {
+        "hidden": true,
+        "id": "cljson02",
+        "maxSize": 0,
+        "name": "embedding",
         "presentable": false,
         "required": false,
         "system": false,

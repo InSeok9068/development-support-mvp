@@ -1,5 +1,5 @@
 <template>
-  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-24 pt-4">
+  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pt-4 pb-24">
     <header class="flex items-center justify-between">
       <h1 class="text-lg font-semibold">스냅</h1>
       <sl-tag size="small" variant="neutral">외부 링크</sl-tag>
@@ -34,7 +34,8 @@ import { useAuthGuard } from '@/composables/auth-guard';
 import { onMounted } from 'vue';
 
 const MUSINSA_SNAP_URL = 'https://www.musinsa.com/snap/main/recommend?gf=M';
-const ONTHELOOK_SNAP_URL = 'https://onthelook.co.kr/?initFilter={%22styleTagIds%22:[],%22gender%22:[%22MEN%22],%22height%22:[],%22weight%22:[],%22season%22:[]}';
+const ONTHELOOK_SNAP_URL =
+  'https://onthelook.co.kr/?initFilter={%22styleTagIds%22:[],%22gender%22:[%22MEN%22],%22height%22:[],%22weight%22:[],%22season%22:[]}';
 
 /* ======================= 변수 ======================= */
 const { fetchAuthStateOrRedirect } = useAuthGuard();
@@ -48,7 +49,8 @@ onMounted(async () => {
 
 /* ======================= 메서드 ======================= */
 const isStandaloneDisplayMode = () => {
-  const displayModeMatched = typeof window.matchMedia === 'function' ? window.matchMedia('(display-mode: standalone)').matches : false;
+  const displayModeMatched =
+    typeof window.matchMedia === 'function' ? window.matchMedia('(display-mode: standalone)').matches : false;
   const iosStandalone = Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
   return displayModeMatched || iosStandalone;
 };

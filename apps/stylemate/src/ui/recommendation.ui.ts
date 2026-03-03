@@ -62,7 +62,9 @@ export const isDirectImageSourceUrl = (value: string) => {
   }
 };
 
-export const fetchDefaultRecommendationSeasonsByAnyangWeather = (weather: CityWeather | null): ClothesSeasonsOptions[] => {
+export const fetchDefaultRecommendationSeasonsByAnyangWeather = (
+  weather: CityWeather | null,
+): ClothesSeasonsOptions[] => {
   if (!weather) {
     return [];
   }

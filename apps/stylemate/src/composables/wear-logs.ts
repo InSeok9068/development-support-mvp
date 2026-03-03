@@ -39,19 +39,21 @@ export const useWearLogs = () => {
 
     return wearLogRecords.map<WearLogItem>((wearLog) => {
       const items = (Array.isArray(wearLog.items) ? wearLog.items : []).reduce<WearLogClothesItem[]>((acc, itemId) => {
-          const clothes = clothesById.get(itemId);
-          if (!clothes) {
-            return acc;
-          }
-
-          const imageUrl = clothes.sourceImage ? pb.files.getURL(clothes, clothes.sourceImage) : String(clothes.sourceUrl ?? '').trim();
-          acc.push({
-            category: (clothes.category ?? null) as ClothesCategoryOptions | null,
-            id: clothes.id,
-            imageUrl,
-          });
+        const clothes = clothesById.get(itemId);
+        if (!clothes) {
           return acc;
-        }, []);
+        }
+
+        const imageUrl = clothes.sourceImage
+          ? pb.files.getURL(clothes, clothes.sourceImage)
+          : String(clothes.sourceUrl ?? '').trim();
+        acc.push({
+          category: (clothes.category ?? null) as ClothesCategoryOptions | null,
+          id: clothes.id,
+          imageUrl,
+        });
+        return acc;
+      }, []);
 
       return {
         created: wearLog.created,

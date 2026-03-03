@@ -1,5 +1,5 @@
 <template>
-  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-24 pt-4">
+  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pt-4 pb-24">
     <header class="flex items-center justify-between">
       <div class="flex cursor-pointer items-center gap-2" @click="onClickHomeBrand">
         <sl-icon src="/favicon.svg" class="text-2xl"></sl-icon>
@@ -11,9 +11,17 @@
     <sl-card class="overflow-hidden">
       <div class="flex items-center justify-end gap-2">
         <div class="flex items-center gap-2">
-          <sl-tag size="small" :variant="fetchCityWeatherTagVariant(anyangWeather)">{{ fetchCityWeatherLabel('안양', anyangWeather) }}</sl-tag>
-          <sl-tag size="small" :variant="fetchCityWeatherTagVariant(seongnamWeather)">{{ fetchCityWeatherLabel('성남', seongnamWeather) }}</sl-tag>
-          <sl-tag v-if="recommendationTemperatureSeason" size="small" :variant="recommendationTemperatureSeasonTagVariant">
+          <sl-tag size="small" :variant="fetchCityWeatherTagVariant(anyangWeather)">{{
+            fetchCityWeatherLabel('안양', anyangWeather)
+          }}</sl-tag>
+          <sl-tag size="small" :variant="fetchCityWeatherTagVariant(seongnamWeather)">{{
+            fetchCityWeatherLabel('성남', seongnamWeather)
+          }}</sl-tag>
+          <sl-tag
+            v-if="recommendationTemperatureSeason"
+            size="small"
+            :variant="recommendationTemperatureSeasonTagVariant"
+          >
             <span class="flex items-center gap-1">
               <sl-icon :name="recommendationTemperatureSeasonIconName"></sl-icon>
               <span>{{ recommendationTemperatureSeasonLabel }}</span>
@@ -25,7 +33,12 @@
       <div class="mt-3 flex flex-col gap-2">
         <sl-input v-model="recommendationQueryText" placeholder="예: 오늘 출근룩, 베이지 톤으로 깔끔하게"></sl-input>
 
-        <sl-button class="w-full" variant="primary" :loading="isCreatingRecommendationSession" @click="onClickRequestRecommendationButton">
+        <sl-button
+          class="w-full"
+          variant="primary"
+          :loading="isCreatingRecommendationSession"
+          @click="onClickRequestRecommendationButton"
+        >
           {{ recommendationItems.length ? '추천 결과 보기' : '추천받기' }}
         </sl-button>
       </div>
@@ -65,7 +78,12 @@
 
       <sl-card v-for="item in clothes" :key="item.id" class="list-item-enter overflow-hidden">
         <div class="flex cursor-pointer gap-3" @click="onClickOpenDetailDialog(item)">
-          <img v-if="fetchClothesImageUrl(item)" class="h-16 w-16 rounded-xl object-cover" :src="fetchClothesImageUrl(item)" alt="옷 이미지" />
+          <img
+            v-if="fetchClothesImageUrl(item)"
+            class="h-16 w-16 rounded-xl object-cover"
+            :src="fetchClothesImageUrl(item)"
+            alt="옷 이미지"
+          />
           <div v-else class="flex h-16 w-16 items-center justify-center rounded-xl">
             <span class="text-xs">이미지 없음</span>
           </div>
@@ -98,10 +116,16 @@
       </sl-card>
     </div>
 
-    <sl-dialog label="추천 결과" :open="isRecommendationDialogOpen" @sl-request-close="onRequestCloseRecommendationDialog">
+    <sl-dialog
+      label="추천 결과"
+      :open="isRecommendationDialogOpen"
+      @sl-request-close="onRequestCloseRecommendationDialog"
+    >
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between gap-2">
-          <sl-tag v-if="recommendationSessionId" size="small" variant="primary">라운드 {{ recommendationRound }}</sl-tag>
+          <sl-tag v-if="recommendationSessionId" size="small" variant="primary"
+            >라운드 {{ recommendationRound }}</sl-tag
+          >
           <div v-else class="text-sm">추천 결과</div>
           <sl-button
             size="small"
@@ -116,7 +140,12 @@
         <div v-if="recommendationItems.length" class="flex flex-col gap-3">
           <sl-tab-group>
             <sl-tab slot="nav" panel="all">전체</sl-tab>
-            <sl-tab v-for="category in recommendationCategoryOrder" :key="`tab-${category}`" slot="nav" :panel="category">
+            <sl-tab
+              v-for="category in recommendationCategoryOrder"
+              :key="`tab-${category}`"
+              slot="nav"
+              :panel="category"
+            >
               {{ fetchClothesCategoryLabel(category) }}
             </sl-tab>
 
@@ -131,7 +160,9 @@
                 >
                   <div class="mb-1 flex items-center justify-between gap-1">
                     <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
-                    <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
+                    <sl-tag size="small" variant="neutral">{{
+                      fetchRecommendationSelectionPositionLabel(category)
+                    }}</sl-tag>
                   </div>
 
                   <template v-if="fetchSelectedRecommendationCandidate(category)">
@@ -146,14 +177,24 @@
                     </div>
 
                     <div class="mt-1 flex items-center justify-between gap-1">
-                      <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-icon-button
+                        label="이전"
+                        name="chevron-left"
+                        @click="onClickPreviousRecommendationCandidateButton(category)"
+                      ></sl-icon-button>
                       <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
-                      <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-icon-button
+                        label="다음"
+                        name="chevron-right"
+                        @click="onClickNextRecommendationCandidateButton(category)"
+                      ></sl-icon-button>
                     </div>
                     <div class="mt-1">
                       <sl-switch
                         size="small"
-                        :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
+                        :checked="
+                          fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))
+                        "
                         :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
                         @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
                       >
@@ -168,10 +209,16 @@
 
             <sl-tab-panel v-for="category in recommendationCategoryOrder" :key="`panel-${category}`" :name="category">
               <div class="mt-2 flex flex-col gap-2">
-                <div class="rounded-xl p-3" @touchstart="onTouchStartRecommendationSlot(category, $event)" @touchend="onTouchEndRecommendationSlot(category, $event)">
+                <div
+                  class="rounded-xl p-3"
+                  @touchstart="onTouchStartRecommendationSlot(category, $event)"
+                  @touchend="onTouchEndRecommendationSlot(category, $event)"
+                >
                   <div class="mb-2 flex items-center justify-between gap-2">
                     <div class="text-sm font-semibold">{{ fetchClothesCategoryLabel(category) }}</div>
-                    <sl-tag size="small" variant="neutral">{{ fetchRecommendationSelectionPositionLabel(category) }}</sl-tag>
+                    <sl-tag size="small" variant="neutral">{{
+                      fetchRecommendationSelectionPositionLabel(category)
+                    }}</sl-tag>
                   </div>
 
                   <template v-if="fetchSelectedRecommendationCandidate(category)">
@@ -186,14 +233,24 @@
                     </div>
 
                     <div class="mt-2 flex items-center justify-between gap-1">
-                      <sl-icon-button label="이전" name="chevron-left" @click="onClickPreviousRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-icon-button
+                        label="이전"
+                        name="chevron-left"
+                        @click="onClickPreviousRecommendationCandidateButton(category)"
+                      ></sl-icon-button>
                       <sl-button size="small" @click="onClickOpenRecommendationDetailButton(category)">상세</sl-button>
-                      <sl-icon-button label="다음" name="chevron-right" @click="onClickNextRecommendationCandidateButton(category)"></sl-icon-button>
+                      <sl-icon-button
+                        label="다음"
+                        name="chevron-right"
+                        @click="onClickNextRecommendationCandidateButton(category)"
+                      ></sl-icon-button>
                     </div>
                     <div class="mt-1">
                       <sl-switch
                         size="small"
-                        :checked="fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))"
+                        :checked="
+                          fetchRecommendationCandidatePinned(category, fetchSelectedRecommendationCandidate(category))
+                        "
                         :disabled="!fetchRecommendationCandidateCanPin(fetchSelectedRecommendationCandidate(category))"
                         @sl-change="onChangeRecommendationCandidatePinned(category, $event)"
                       >
@@ -219,7 +276,10 @@
                         alt="추천 후보 썸네일"
                       />
                       <div v-else class="flex h-16 w-16 items-center justify-center rounded-lg text-xs">없음</div>
-                      <sl-tag size="small" :variant="fetchRecommendationCandidateThumbnailTagVariant(category, candidateIndex)">
+                      <sl-tag
+                        size="small"
+                        :variant="fetchRecommendationCandidateThumbnailTagVariant(category, candidateIndex)"
+                      >
                         {{ candidateIndex + 1 }}
                       </sl-tag>
                     </div>
@@ -259,15 +319,23 @@
       </sl-button>
     </sl-dialog>
 
-    <sl-dialog label="전신 코디 미리보기" :open="isRecommendationFullBodyDialogOpen" @sl-request-close="onRequestCloseRecommendationFullBodyDialog">
+    <sl-dialog
+      label="전신 코디 미리보기"
+      :open="isRecommendationFullBodyDialogOpen"
+      @sl-request-close="onRequestCloseRecommendationFullBodyDialog"
+    >
       <div class="flex flex-col gap-3">
         <div class="relative rounded-2xl p-3">
           <div class="mx-auto flex min-h-72 w-40 flex-col items-center justify-between">
             <div class="flex h-24 w-full items-center justify-center rounded-xl">
               <img
-                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))"
+                v-if="
+                  fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))
+                "
                 class="h-full w-full rounded-xl object-contain"
-                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))"
+                :src="
+                  fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.top))
+                "
                 alt="상의 미리보기"
               />
               <span v-else class="text-xs">상의 없음</span>
@@ -275,9 +343,17 @@
 
             <div class="flex h-24 w-full items-center justify-center rounded-xl">
               <img
-                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom))"
+                v-if="
+                  fetchRecommendationCandidateImageUrl(
+                    fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom),
+                  )
+                "
                 class="h-full w-full rounded-xl object-contain"
-                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom))"
+                :src="
+                  fetchRecommendationCandidateImageUrl(
+                    fetchSelectedRecommendationCandidate(ClothesCategoryOptions.bottom),
+                  )
+                "
                 alt="하의 미리보기"
               />
               <span v-else class="text-xs">하의 없음</span>
@@ -285,20 +361,36 @@
 
             <div class="flex h-20 w-full items-center justify-center rounded-xl">
               <img
-                v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes))"
+                v-if="
+                  fetchRecommendationCandidateImageUrl(
+                    fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes),
+                  )
+                "
                 class="h-full w-full rounded-xl object-contain"
-                :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes))"
+                :src="
+                  fetchRecommendationCandidateImageUrl(
+                    fetchSelectedRecommendationCandidate(ClothesCategoryOptions.shoes),
+                  )
+                "
                 alt="신발 미리보기"
               />
               <span v-else class="text-xs">신발 없음</span>
             </div>
           </div>
 
-          <div class="absolute right-3 top-3 h-14 w-14 rounded-xl p-1">
+          <div class="absolute top-3 right-3 h-14 w-14 rounded-xl p-1">
             <img
-              v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory))"
+              v-if="
+                fetchRecommendationCandidateImageUrl(
+                  fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory),
+                )
+              "
               class="h-full w-full rounded-xl object-contain"
-              :src="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory))"
+              :src="
+                fetchRecommendationCandidateImageUrl(
+                  fetchSelectedRecommendationCandidate(ClothesCategoryOptions.accessory),
+                )
+              "
               alt="악세사리 미리보기"
             />
             <div v-else class="flex h-full w-full items-center justify-center rounded-xl text-[11px]">악세 없음</div>
@@ -306,7 +398,11 @@
         </div>
 
         <div class="grid grid-cols-4 gap-2">
-          <div v-for="category in recommendationCategoryOrder" :key="`preview-${category}`" class="flex flex-col items-center gap-1 rounded-xl p-2">
+          <div
+            v-for="category in recommendationCategoryOrder"
+            :key="`preview-${category}`"
+            class="flex flex-col items-center gap-1 rounded-xl p-2"
+          >
             <img
               v-if="fetchRecommendationCandidateImageUrl(fetchSelectedRecommendationCandidate(category))"
               class="h-12 w-12 rounded-lg object-cover"
@@ -440,9 +536,7 @@
           </table>
         </div>
 
-        <div class="rounded-xl p-3 text-sm">
-          저장하면 수정한 메타데이터를 기준으로 임베딩을 다시 생성합니다.
-        </div>
+        <div class="rounded-xl p-3 text-sm">저장하면 수정한 메타데이터를 기준으로 임베딩을 다시 생성합니다.</div>
       </div>
 
       <sl-button slot="footer" class="mr-2" @click="onRequestCloseDetailDialog">닫기</sl-button>
@@ -459,10 +553,20 @@
 
     <sl-dialog label="옷 데이터 입력" :open="isUploadDialogOpen" @sl-request-close="onRequestCloseUploadDialog">
       <div class="grid grid-cols-2 gap-2">
-        <sl-button class="w-full" size="small" :variant="uploadType === 'url' ? 'primary' : 'default'" @click="onClickSelectUploadType('url')">
+        <sl-button
+          class="w-full"
+          size="small"
+          :variant="uploadType === 'url' ? 'primary' : 'default'"
+          @click="onClickSelectUploadType('url')"
+        >
           URL
         </sl-button>
-        <sl-button class="w-full" size="small" :variant="uploadType === 'file' ? 'primary' : 'default'" @click="onClickSelectUploadType('file')">
+        <sl-button
+          class="w-full"
+          size="small"
+          :variant="uploadType === 'file' ? 'primary' : 'default'"
+          @click="onClickSelectUploadType('file')"
+        >
           파일
         </sl-button>
       </div>
@@ -470,10 +574,18 @@
       <div v-if="uploadType === 'file'" class="mt-3 flex flex-col gap-2 p-1">
         <label class="text-sm font-semibold">이미지 파일</label>
         <div class="rounded-xl p-3">
-          <input ref="uploadSourceFileInputElement" class="sr-only" type="file" accept="image/*" @change="onChangeUploadFileInput" />
+          <input
+            ref="uploadSourceFileInputElement"
+            class="sr-only"
+            type="file"
+            accept="image/*"
+            @change="onChangeUploadFileInput"
+          />
           <div class="flex flex-wrap items-center gap-2">
             <sl-button size="small" @click="onClickOpenUploadSourceFileButton">파일 선택</sl-button>
-            <sl-button size="small" :disabled="!canPasteClipboardImage" @click="onClickPasteClipboardImageButton">클립보드 붙여넣기</sl-button>
+            <sl-button size="small" :disabled="!canPasteClipboardImage" @click="onClickPasteClipboardImageButton"
+              >클립보드 붙여넣기</sl-button
+            >
             <sl-tag size="small" :variant="uploadSourceFile ? 'success' : 'neutral'">
               {{ uploadSourceFile ? '선택됨' : '미선택' }}
             </sl-tag>
@@ -486,7 +598,12 @@
       </div>
 
       <div v-else class="mt-3 flex flex-col gap-3 p-1">
-        <sl-input v-model="uploadSourceUrl" type="url" label="이미지 URL" placeholder="https://example.com/item.jpg"></sl-input>
+        <sl-input
+          v-model="uploadSourceUrl"
+          type="url"
+          label="이미지 URL"
+          placeholder="https://example.com/item.jpg"
+        ></sl-input>
 
         <div class="px-1 text-xs">공유 링크를 붙여넣고 이미지 후보를 고른 뒤 바로 저장할 수 있습니다.</div>
 
@@ -514,20 +631,35 @@
         </div>
 
         <div v-if="uploadUrlImageCandidates.length" class="grid grid-cols-2 gap-2">
-          <sl-card v-for="(candidateUrl, candidateIndex) in uploadUrlImageCandidates" :key="candidateUrl" class="overflow-hidden">
+          <sl-card
+            v-for="(candidateUrl, candidateIndex) in uploadUrlImageCandidates"
+            :key="candidateUrl"
+            class="overflow-hidden"
+          >
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between gap-1">
                 <sl-tag size="small" variant="neutral">후보 {{ candidateIndex + 1 }}</sl-tag>
               </div>
               <img class="h-24 w-full rounded-lg object-cover" :src="candidateUrl" alt="후보 이미지" />
-              <sl-button size="small" variant="primary" @click="onClickUploadUrlCandidateButton(candidateUrl)">이 이미지로 저장</sl-button>
+              <sl-button size="small" variant="primary" @click="onClickUploadUrlCandidateButton(candidateUrl)"
+                >이 이미지로 저장</sl-button
+              >
             </div>
           </sl-card>
         </div>
       </div>
 
-      <sl-button v-if="uploadType === 'file'" class="mt-3 w-full" variant="primary" :loading="isCreatingClothes" @click="onClickUploadButton">업로드</sl-button>
-      <div v-if="isCreatingClothes" class="mt-2 px-1 text-xs">이미지를 분석 중입니다. 목록에서 상태가 자동으로 업데이트됩니다.</div>
+      <sl-button
+        v-if="uploadType === 'file'"
+        class="mt-3 w-full"
+        variant="primary"
+        :loading="isCreatingClothes"
+        @click="onClickUploadButton"
+        >업로드</sl-button
+      >
+      <div v-if="isCreatingClothes" class="mt-2 px-1 text-xs">
+        이미지를 분석 중입니다. 목록에서 상태가 자동으로 업데이트됩니다.
+      </div>
       <sl-button slot="footer" @click="onRequestCloseUploadDialog">닫기</sl-button>
     </sl-dialog>
 
@@ -541,37 +673,73 @@
         <sl-input v-model="filterDialogSearchText" clearable type="search" placeholder="해시 또는 URL 검색"></sl-input>
 
         <div class="grid grid-cols-2 gap-2">
-          <sl-select label="카테고리" multiple clearable :value="filterDialogCategories" @sl-change="onChangeFilterDialogCategories">
+          <sl-select
+            label="카테고리"
+            multiple
+            clearable
+            :value="filterDialogCategories"
+            @sl-change="onChangeFilterDialogCategories"
+          >
             <sl-option v-for="option in clothesCategoryOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
           </sl-select>
 
-          <sl-select label="계절" multiple clearable :value="filterDialogSeasons" @sl-change="onChangeFilterDialogSeasons">
+          <sl-select
+            label="계절"
+            multiple
+            clearable
+            :value="filterDialogSeasons"
+            @sl-change="onChangeFilterDialogSeasons"
+          >
             <sl-option v-for="option in clothesSeasonsOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
           </sl-select>
 
-          <sl-select label="색상" multiple clearable :value="filterDialogColors" @sl-change="onChangeFilterDialogColors">
+          <sl-select
+            label="색상"
+            multiple
+            clearable
+            :value="filterDialogColors"
+            @sl-change="onChangeFilterDialogColors"
+          >
             <sl-option v-for="option in clothesColorsOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
           </sl-select>
 
-          <sl-select label="스타일" multiple clearable :value="filterDialogStyles" @sl-change="onChangeFilterDialogStyles">
+          <sl-select
+            label="스타일"
+            multiple
+            clearable
+            :value="filterDialogStyles"
+            @sl-change="onChangeFilterDialogStyles"
+          >
             <sl-option v-for="option in clothesStylesOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
           </sl-select>
 
-          <sl-select label="소재" multiple clearable :value="filterDialogMaterials" @sl-change="onChangeFilterDialogMaterials">
+          <sl-select
+            label="소재"
+            multiple
+            clearable
+            :value="filterDialogMaterials"
+            @sl-change="onChangeFilterDialogMaterials"
+          >
             <sl-option v-for="option in clothesMaterialsOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
           </sl-select>
 
-          <sl-select label="상황" multiple clearable :value="filterDialogContexts" @sl-change="onChangeFilterDialogContexts">
+          <sl-select
+            label="상황"
+            multiple
+            clearable
+            :value="filterDialogContexts"
+            @sl-change="onChangeFilterDialogContexts"
+          >
             <sl-option v-for="option in clothesContextsOptionList" :key="option.value" :value="option.value">
               {{ option.label }}
             </sl-option>
@@ -684,8 +852,7 @@ const {
   deleteClothes,
   updateClothesReembed,
   fetchClothesImageUrl,
-} =
-  useClothes();
+} = useClothes();
 const {
   recommendationItems,
   recommendationSessionId,
@@ -762,13 +929,13 @@ const detailForm = ref<ClothesDetailForm>({
 const isAnyFilterApplied = computed(() => {
   return Boolean(
     filterSearchText.value.trim() ||
-      filterCategories.value.length ||
-      filterSeasons.value.length ||
-      filterColors.value.length ||
-      filterStyles.value.length ||
-      filterMaterials.value.length ||
-      filterContexts.value.length ||
-      filterFit.value !== 'ALL',
+    filterCategories.value.length ||
+    filterSeasons.value.length ||
+    filterColors.value.length ||
+    filterStyles.value.length ||
+    filterMaterials.value.length ||
+    filterContexts.value.length ||
+    filterFit.value !== 'ALL',
   );
 });
 const filterAppliedCount = computed(() => {
@@ -800,7 +967,9 @@ const processingProgressValue = computed(() => {
 });
 const processingSummaryLabel = computed(() => {
   const uploadedCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.uploaded).length;
-  const preprocessingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.preprocessing).length;
+  const preprocessingCount = processingClothes.value.filter(
+    (item) => item.state === ClothesStateOptions.preprocessing,
+  ).length;
   const analyzingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.analyzing).length;
   const embeddingCount = processingClothes.value.filter((item) => item.state === ClothesStateOptions.embedding).length;
   const labels = [];
@@ -875,10 +1044,18 @@ const canPasteClipboardImage = computed(() => {
 const isDirectImageUploadUrl = computed(() => {
   return isDirectImageSourceUrl(uploadSourceUrl.value);
 });
-const recommendationCandidatesByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate[]>>(() => {
-  return buildRecommendationCandidatesByCategory(recommendationItems.value, clothes.value, recommendationCategoryOrder);
-});
-const selectedRecommendationCandidateByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate | null>>(() => {
+const recommendationCandidatesByCategory = computed<Record<RecommendationSlotCategory, RecommendationSlotCandidate[]>>(
+  () => {
+    return buildRecommendationCandidatesByCategory(
+      recommendationItems.value,
+      clothes.value,
+      recommendationCategoryOrder,
+    );
+  },
+);
+const selectedRecommendationCandidateByCategory = computed<
+  Record<RecommendationSlotCategory, RecommendationSlotCandidate | null>
+>(() => {
   return buildSelectedRecommendationCandidatesByCategory(
     recommendationCandidatesByCategory.value,
     recommendationSelectionIndexByCategory.value,
@@ -1301,7 +1478,9 @@ const onClickRequestRecommendationButton = async () => {
 };
 
 const onClickOpenRecommendationFullBodyDialog = () => {
-  const hasAnySelectedCandidate = recommendationCategoryOrder.some((category) => Boolean(fetchSelectedRecommendationCandidate(category)));
+  const hasAnySelectedCandidate = recommendationCategoryOrder.some((category) =>
+    Boolean(fetchSelectedRecommendationCandidate(category)),
+  );
   if (!hasAnySelectedCandidate) {
     showMessageModal('전신 미리보기할 추천 데이터가 없습니다.');
     return;
@@ -1318,7 +1497,10 @@ const fetchSelectedRecommendationCandidate = (category: RecommendationSlotCatego
   return selectedRecommendationCandidateByCategory.value[category];
 };
 
-const onClickSelectRecommendationCandidateThumbnail = (category: RecommendationSlotCategory, candidateIndex: number) => {
+const onClickSelectRecommendationCandidateThumbnail = (
+  category: RecommendationSlotCategory,
+  candidateIndex: number,
+) => {
   const candidates = fetchRecommendationCandidates(category);
   if (!candidates.length) {
     return;
@@ -1331,7 +1513,10 @@ const onClickSelectRecommendationCandidateThumbnail = (category: RecommendationS
   };
 };
 
-const fetchRecommendationCandidateThumbnailTagVariant = (category: RecommendationSlotCategory, candidateIndex: number) => {
+const fetchRecommendationCandidateThumbnailTagVariant = (
+  category: RecommendationSlotCategory,
+  candidateIndex: number,
+) => {
   const candidates = fetchRecommendationCandidates(category);
   if (!candidates.length) {
     return 'neutral';
@@ -1419,7 +1604,9 @@ const onClickConfirmRecommendationButton = async () => {
   }
 
   const selectedItemIds = selectedCandidates.map((candidate) => candidate.itemId).filter(Boolean);
-  const selectedClothesIds = Array.from(new Set(selectedCandidates.map((candidate) => candidate.clothesId).filter(Boolean)));
+  const selectedClothesIds = Array.from(
+    new Set(selectedCandidates.map((candidate) => candidate.clothesId).filter(Boolean)),
+  );
   const result = await createRecommendationConfirm({
     note: recommendationNote.value.trim(),
     selectedClothesIds,
@@ -1461,7 +1648,10 @@ const fetchRecommendationCandidateCanPin = (candidate: RecommendationSlotCandida
   return Boolean(candidate);
 };
 
-const fetchRecommendationCandidatePinned = (category: RecommendationSlotCategory, candidate: RecommendationSlotCandidate | null) => {
+const fetchRecommendationCandidatePinned = (
+  category: RecommendationSlotCategory,
+  candidate: RecommendationSlotCandidate | null,
+) => {
   if (!candidate) {
     return false;
   }

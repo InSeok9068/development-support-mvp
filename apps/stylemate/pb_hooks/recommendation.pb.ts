@@ -34,7 +34,12 @@ routerAdd(
     e.bindBody(payload);
 
     const { rerollOutfitRecommendation } = require(`${__hooks}/recommendation-service.ts`);
-    const result = rerollOutfitRecommendation(e.auth, payload.sessionId, payload.pinnedItemIds, payload.pinnedByCategory);
+    const result = rerollOutfitRecommendation(
+      e.auth,
+      payload.sessionId,
+      payload.pinnedItemIds,
+      payload.pinnedByCategory,
+    );
     if (!result.ok) {
       return e.error(result.statusCode, result.message, {});
     }

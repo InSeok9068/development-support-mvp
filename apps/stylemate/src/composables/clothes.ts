@@ -279,7 +279,8 @@ export const useClothes = () => {
     };
   };
 
-  const updateClothes = (id: string, data: Update<Collections.Clothes>) => updateClothesMutation.mutateAsync({ data, id });
+  const updateClothes = (id: string, data: Update<Collections.Clothes>) =>
+    updateClothesMutation.mutateAsync({ data, id });
 
   const deleteClothes = (id: string) => deleteClothesMutation.mutateAsync(id);
 
@@ -300,10 +301,15 @@ export const useClothes = () => {
     return String(item.sourceUrl ?? '').trim();
   };
 
-  const isCreatingClothes = computed(() => createClothesByFileMutation.isPending.value || createClothesByUrlMutation.isPending.value);
+  const isCreatingClothes = computed(
+    () => createClothesByFileMutation.isPending.value || createClothesByUrlMutation.isPending.value,
+  );
   const isFetchingClothesUrlImageCandidates = computed(() => fetchClothesUrlImageCandidatesMutation.isPending.value);
   const isUpdatingClothes = computed(
-    () => updateClothesMutation.isPending.value || retryClothesMutation.isPending.value || reembedClothesMutation.isPending.value,
+    () =>
+      updateClothesMutation.isPending.value ||
+      retryClothesMutation.isPending.value ||
+      reembedClothesMutation.isPending.value,
   );
   const isDeletingClothes = computed(() => deleteClothesMutation.isPending.value);
   const isReembeddingClothes = computed(() => reembedClothesMutation.isPending.value);

@@ -1,5 +1,5 @@
 <template>
-  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-24 pt-4">
+  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pt-4 pb-24">
     <header class="flex items-center justify-between">
       <h1 class="text-lg font-semibold">코디일지</h1>
       <sl-button size="small" @click="onClickRefreshWearLogButton">새로고침</sl-button>
@@ -33,7 +33,12 @@
 
             <div class="flex flex-wrap gap-2">
               <div v-for="item in wearLog.items" :key="item.id" class="flex items-center gap-2 rounded-xl p-2">
-                <img v-if="item.imageUrl" class="h-10 w-10 rounded-lg object-cover" :src="item.imageUrl" alt="착용 옷 이미지" />
+                <img
+                  v-if="item.imageUrl"
+                  class="h-10 w-10 rounded-lg object-cover"
+                  :src="item.imageUrl"
+                  alt="착용 옷 이미지"
+                />
                 <div v-else class="flex h-10 w-10 items-center justify-center rounded-lg">
                   <span class="text-xs">없음</span>
                 </div>

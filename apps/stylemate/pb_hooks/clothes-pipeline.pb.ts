@@ -1,24 +1,18 @@
 // @ts-nocheck
 
-onRecordAfterCreateSuccess(
-  (e) => {
-    const { processClothesPipeline } = require(`${__hooks}/clothes-pipeline-service.ts`);
-    processClothesPipeline(e.record.id);
-  },
-  'clothes',
-);
+onRecordAfterCreateSuccess((e) => {
+  const { processClothesPipeline } = require(`${__hooks}/clothes-pipeline-service.ts`);
+  processClothesPipeline(e.record.id);
+}, 'clothes');
 
-onRecordAfterUpdateSuccess(
-  (e) => {
-    if ('uploaded' !== String(e.record.get('state') ?? '')) {
-      return;
-    }
+onRecordAfterUpdateSuccess((e) => {
+  if ('uploaded' !== String(e.record.get('state') ?? '')) {
+    return;
+  }
 
-    const { processClothesPipeline } = require(`${__hooks}/clothes-pipeline-service.ts`);
-    processClothesPipeline(e.record.id);
-  },
-  'clothes',
-);
+  const { processClothesPipeline } = require(`${__hooks}/clothes-pipeline-service.ts`);
+  processClothesPipeline(e.record.id);
+}, 'clothes');
 
 routerAdd(
   'POST',

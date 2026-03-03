@@ -7,8 +7,33 @@ const WEAR_LOGS_COLLECTION = 'wear_logs';
 
 const CATEGORY_VALUES = ['top', 'bottom', 'shoes', 'accessory'];
 const SEASON_VALUES = ['spring', 'summer', 'fall', 'winter'];
-const COLOR_VALUES = ['red', 'orange', 'yellow', 'green', 'blue', 'navy', 'purple', 'pink', 'white', 'gray', 'black', 'brown', 'beige'];
-const STYLE_VALUES = ['street', 'casual', 'classic', 'minimal', 'sporty', 'feminine', 'vintage', 'workwear', 'formal', 'chic'];
+const COLOR_VALUES = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'navy',
+  'purple',
+  'pink',
+  'white',
+  'gray',
+  'black',
+  'brown',
+  'beige',
+];
+const STYLE_VALUES = [
+  'street',
+  'casual',
+  'classic',
+  'minimal',
+  'sporty',
+  'feminine',
+  'vintage',
+  'workwear',
+  'formal',
+  'chic',
+];
 const FIT_VALUES = ['oversized', 'slim', 'wide', 'loose', 'regular'];
 const MATERIAL_VALUES = ['cotton', 'knit', 'leather', 'denim', 'wool', 'linen', 'polyester', 'nylon', 'silk'];
 const CONTEXT_VALUES = ['daily', 'work', 'wedding', 'date', 'travel', 'exercise', 'party', 'formal_event'];
@@ -442,7 +467,11 @@ const requestOutfitRecommendation = (authRecord, queryText, topKInput, seasonsIn
   if (!userId) return { ok: false, statusCode: 401, message: '인증 정보가 필요합니다.' };
 
   const topK = Math.max(1, Math.min(50, Math.trunc(Number(topKInput) || DEFAULT_TOP_K)));
-  const normalizedSeasonDefaults = normalizeEnumArray(Array.isArray(seasonsInput) ? seasonsInput : [], SEASON_VALUES, 4);
+  const normalizedSeasonDefaults = normalizeEnumArray(
+    Array.isArray(seasonsInput) ? seasonsInput : [],
+    SEASON_VALUES,
+    4,
+  );
   const normalizedQueryText = String(queryText ?? '').trim();
   const effectiveQueryText = normalizedQueryText || buildWeatherBasedDefaultQueryText(normalizedSeasonDefaults);
   const filterResult = runQueryFilterStep(effectiveQueryText, normalizedSeasonDefaults);
@@ -521,12 +550,22 @@ const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds, pinned
   const normalizedSessionId = String(sessionId ?? '').trim();
   const sessionRecord = findRecordById(RECOMMENDATION_SESSIONS_COLLECTION, normalizedSessionId);
   if (!sessionRecord) return { ok: false, statusCode: 404, message: '추천 세션을 찾지 못했습니다.' };
-  if (String(sessionRecord.get('user') ?? '') !== userId) return { ok: false, statusCode: 403, message: '권한이 없습니다.' };
+  if (String(sessionRecord.get('user') ?? '') !== userId)
+    return { ok: false, statusCode: 403, message: '권한이 없습니다.' };
 
-  const allItems = $app.findRecordsByFilter(RECOMMENDATION_ITEMS_COLLECTION, 'session = {:sessionId}', 'round,created', 0, 0, { sessionId: normalizedSessionId });
+  const allItems = $app.findRecordsByFilter(
+    RECOMMENDATION_ITEMS_COLLECTION,
+    'session = {:sessionId}',
+    'round,created',
+    0,
+    0,
+    { sessionId: normalizedSessionId },
+  );
   const maxRound = allItems.reduce((acc, item) => Math.max(acc, Number(item.get('round') ?? 1)), 1);
   const currentRoundItems = allItems.filter((item) => Number(item.get('round') ?? 1) === maxRound);
-  const pinnedSet = new Set((Array.isArray(pinnedItemIds) ? pinnedItemIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
+  const pinnedSet = new Set(
+    (Array.isArray(pinnedItemIds) ? pinnedItemIds : []).map((id) => String(id ?? '').trim()).filter(Boolean),
+  );
   const normalizedPinnedByCategory = normalizePinnedByCategory(pinnedByCategoryInput);
 
   const pinnedByCategory = {};
@@ -566,9 +605,18 @@ const rerollOutfitRecommendation = (authRecord, sessionId, pinnedItemIds, pinned
   }
 
   const topK = Math.max(1, Math.min(50, Math.trunc(Number(sessionRecord.get('topK') ?? DEFAULT_TOP_K))));
-  const doneRecords = $app.findRecordsByFilter(CLOTHES_COLLECTION, 'user = {:userId} && state = "done"', '-preferenceScore,-updated', 0, 0, { userId });
+  const doneRecords = $app.findRecordsByFilter(
+    CLOTHES_COLLECTION,
+    'user = {:userId} && state = "done"',
+    '-preferenceScore,-updated',
+    0,
+    0,
+    { userId },
+  );
   const candidates = buildCandidates(doneRecords, queryFilter, queryEmbedding, topK);
-  const categories = currentRoundItems.map((item) => normalizeEnum(item.get('category'), CATEGORY_VALUES, '')).filter(Boolean);
+  const categories = currentRoundItems
+    .map((item) => normalizeEnum(item.get('category'), CATEGORY_VALUES, ''))
+    .filter(Boolean);
   const targetCategories = categories.length ? categories : CATEGORY_VALUES;
 
   const nextRound = maxRound + 1;
@@ -642,14 +690,32 @@ const confirmOutfitRecommendation = (authRecord, args) => {
   const sessionId = String(args?.sessionId ?? '').trim();
   const sessionRecord = findRecordById(RECOMMENDATION_SESSIONS_COLLECTION, sessionId);
   if (!sessionRecord) return { ok: false, statusCode: 404, message: '추천 세션을 찾지 못했습니다.' };
-  if (String(sessionRecord.get('user') ?? '') !== userId) return { ok: false, statusCode: 403, message: '권한이 없습니다.' };
+  if (String(sessionRecord.get('user') ?? '') !== userId)
+    return { ok: false, statusCode: 403, message: '권한이 없습니다.' };
 
-  const allItems = $app.findRecordsByFilter(RECOMMENDATION_ITEMS_COLLECTION, 'session = {:sessionId}', 'round,created', 0, 0, { sessionId });
+  const allItems = $app.findRecordsByFilter(
+    RECOMMENDATION_ITEMS_COLLECTION,
+    'session = {:sessionId}',
+    'round,created',
+    0,
+    0,
+    { sessionId },
+  );
   const maxRound = allItems.reduce((acc, item) => Math.max(acc, Number(item.get('round') ?? 1)), 1);
   const currentRoundItems = allItems.filter((item) => Number(item.get('round') ?? 1) === maxRound);
-  const selectedIdSet = new Set((Array.isArray(args?.selectedItemIds) ? args.selectedItemIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
-  const selectedClothesIdSet = new Set((Array.isArray(args?.selectedClothesIds) ? args.selectedClothesIds : []).map((id) => String(id ?? '').trim()).filter(Boolean));
-  const selectedItems = selectedIdSet.size ? currentRoundItems.filter((item) => selectedIdSet.has(item.id)) : currentRoundItems;
+  const selectedIdSet = new Set(
+    (Array.isArray(args?.selectedItemIds) ? args.selectedItemIds : [])
+      .map((id) => String(id ?? '').trim())
+      .filter(Boolean),
+  );
+  const selectedClothesIdSet = new Set(
+    (Array.isArray(args?.selectedClothesIds) ? args.selectedClothesIds : [])
+      .map((id) => String(id ?? '').trim())
+      .filter(Boolean),
+  );
+  const selectedItems = selectedIdSet.size
+    ? currentRoundItems.filter((item) => selectedIdSet.has(item.id))
+    : currentRoundItems;
 
   if (!selectedClothesIdSet.size) {
     selectedItems.forEach((item) => {

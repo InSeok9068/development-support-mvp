@@ -2,8 +2,33 @@
 
 const CATEGORY_VALUES = ['top', 'bottom', 'shoes', 'accessory'];
 const SEASON_VALUES = ['spring', 'summer', 'fall', 'winter'];
-const COLOR_VALUES = ['red', 'orange', 'yellow', 'green', 'blue', 'navy', 'purple', 'pink', 'white', 'gray', 'black', 'brown', 'beige'];
-const STYLE_VALUES = ['street', 'casual', 'classic', 'minimal', 'sporty', 'feminine', 'vintage', 'workwear', 'formal', 'chic'];
+const COLOR_VALUES = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'navy',
+  'purple',
+  'pink',
+  'white',
+  'gray',
+  'black',
+  'brown',
+  'beige',
+];
+const STYLE_VALUES = [
+  'street',
+  'casual',
+  'classic',
+  'minimal',
+  'sporty',
+  'feminine',
+  'vintage',
+  'workwear',
+  'formal',
+  'chic',
+];
 const FIT_VALUES = ['oversized', 'slim', 'wide', 'loose', 'regular'];
 const MATERIAL_VALUES = ['cotton', 'knit', 'leather', 'denim', 'wool', 'linen', 'polyester', 'nylon', 'silk'];
 const CONTEXT_VALUES = ['daily', 'work', 'wedding', 'date', 'travel', 'exercise', 'party', 'formal_event'];
@@ -81,7 +106,14 @@ const normalizeAnalysis = (raw) => {
 const buildFallbackAnalysis = (sourceText) => {
   const text = String(sourceText ?? '').toLowerCase();
 
-  const category = text.includes('shoe') || text.includes('sneaker') ? 'shoes' : text.includes('pants') || text.includes('skirt') ? 'bottom' : text.includes('shirt') || text.includes('tee') || text.includes('hoodie') ? 'top' : 'accessory';
+  const category =
+    text.includes('shoe') || text.includes('sneaker')
+      ? 'shoes'
+      : text.includes('pants') || text.includes('skirt')
+        ? 'bottom'
+        : text.includes('shirt') || text.includes('tee') || text.includes('hoodie')
+          ? 'top'
+          : 'accessory';
 
   const styles = [];
   if (text.includes('street') || text.includes('hoodie')) {

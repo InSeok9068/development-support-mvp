@@ -155,7 +155,10 @@ export const useRecommendations = () => {
   const isUpdatingRecommendationReroll = computed(() => updateRecommendationRerollMutation.isPending.value);
   const isCreatingRecommendationConfirm = computed(() => createRecommendationConfirmMutation.isPending.value);
   const isRecommendationPending = computed(
-    () => isCreatingRecommendationSession.value || isUpdatingRecommendationReroll.value || isCreatingRecommendationConfirm.value,
+    () =>
+      isCreatingRecommendationSession.value ||
+      isUpdatingRecommendationReroll.value ||
+      isCreatingRecommendationConfirm.value,
   );
   /* ======================= 메서드 ======================= */
 

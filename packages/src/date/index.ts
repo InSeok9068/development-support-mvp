@@ -3,13 +3,7 @@ const SEOUL_TIME_ZONE = 'Asia/Seoul';
 
 export type KoreanDateInput = Date | number | string | null | undefined;
 
-export type KoreanDateFormatPreset =
-  | 'date'
-  | 'date-weekday'
-  | 'dot-date'
-  | 'dot-date-weekday'
-  | 'time'
-  | 'date-time';
+export type KoreanDateFormatPreset = 'date' | 'date-weekday' | 'dot-date' | 'dot-date-weekday' | 'time' | 'date-time';
 
 const DATE_FORMATTER = new Intl.DateTimeFormat(KO_LOCALE, {
   day: 'numeric',
@@ -126,7 +120,11 @@ export const parseKoreanDateInput = (value: KoreanDateInput) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-export const formatKoreanDateFromInput = (value: KoreanDateInput, preset: KoreanDateFormatPreset = 'date-weekday', fallback = '') => {
+export const formatKoreanDateFromInput = (
+  value: KoreanDateInput,
+  preset: KoreanDateFormatPreset = 'date-weekday',
+  fallback = '',
+) => {
   const parsed = parseKoreanDateInput(value);
   if (!parsed) {
     return fallback;

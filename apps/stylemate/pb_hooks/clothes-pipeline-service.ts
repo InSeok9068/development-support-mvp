@@ -351,7 +351,9 @@ const convertBytesToHexText = (bytes) => {
 
   const hexParts = Array.from({ length: bytes.length }, () => '');
   for (let index = 0; index < bytes.length; index += 1) {
-    hexParts[index] = Number(bytes[index] ?? 0).toString(16).padStart(2, '0');
+    hexParts[index] = Number(bytes[index] ?? 0)
+      .toString(16)
+      .padStart(2, '0');
   }
 
   return hexParts.join('');
@@ -417,7 +419,9 @@ const readSourceImageFromUpload = (record) => {
   }
 
   const fsys = $app.newFilesystem();
-  const baseFilesPath = String(record.baseFilesPath() ?? '').replace(/\\/g, '/').replace(/\/+$/g, '');
+  const baseFilesPath = String(record.baseFilesPath() ?? '')
+    .replace(/\\/g, '/')
+    .replace(/\/+$/g, '');
   const normalizedFileName = sourceImage.replace(/^\/+/g, '');
   const fileKey = `${baseFilesPath}/${normalizedFileName}`;
   let reader = null;
@@ -558,7 +562,11 @@ const readSourceImageFromUrl = (sourceUrl) => {
     };
   }
 
-  const imageMimeType = resolveImageMimeType(imageBytes, readHeaderValue(response.headers, 'content-type'), normalizedUrl);
+  const imageMimeType = resolveImageMimeType(
+    imageBytes,
+    readHeaderValue(response.headers, 'content-type'),
+    normalizedUrl,
+  );
   if (!imageMimeType) {
     return {
       ok: false,
@@ -899,7 +907,13 @@ const processClothesPipeline = (clothesId) => {
 
     const preprocessResult = runPreprocessStep(stepRecord);
     if (!preprocessResult.ok) {
-      logger.error('pipeline preprocess failed', 'errorCode', preprocessResult.errorCode, 'errorMessage', preprocessResult.errorMessage);
+      logger.error(
+        'pipeline preprocess failed',
+        'errorCode',
+        preprocessResult.errorCode,
+        'errorMessage',
+        preprocessResult.errorMessage,
+      );
       failClothesById(clothesId, preprocessResult.errorCode, preprocessResult.errorMessage);
       return;
     }
@@ -914,7 +928,13 @@ const processClothesPipeline = (clothesId) => {
 
     const analyzeResult = runAnalyzeStep(stepRecord);
     if (!analyzeResult.ok) {
-      logger.error('pipeline analyze failed', 'errorCode', analyzeResult.errorCode, 'errorMessage', analyzeResult.errorMessage);
+      logger.error(
+        'pipeline analyze failed',
+        'errorCode',
+        analyzeResult.errorCode,
+        'errorMessage',
+        analyzeResult.errorMessage,
+      );
       failClothesById(clothesId, analyzeResult.errorCode, analyzeResult.errorMessage);
       return;
     }
@@ -938,7 +958,13 @@ const processClothesPipeline = (clothesId) => {
 
     const embeddingResult = runEmbeddingStep(stepRecord);
     if (!embeddingResult.ok) {
-      logger.error('pipeline embedding failed', 'errorCode', embeddingResult.errorCode, 'errorMessage', embeddingResult.errorMessage);
+      logger.error(
+        'pipeline embedding failed',
+        'errorCode',
+        embeddingResult.errorCode,
+        'errorMessage',
+        embeddingResult.errorMessage,
+      );
       failClothesById(clothesId, embeddingResult.errorCode, embeddingResult.errorMessage);
       return;
     }

@@ -77,7 +77,9 @@ const createClothes = (args: Partial<ClothesResponse> = {}): ClothesResponse =>
     ...args,
   }) as ClothesResponse;
 
-const createSelectionIndex = (args: Partial<RecommendationSelectionIndexByCategory> = {}): RecommendationSelectionIndexByCategory => ({
+const createSelectionIndex = (
+  args: Partial<RecommendationSelectionIndexByCategory> = {},
+): RecommendationSelectionIndexByCategory => ({
   [ClothesCategoryOptions.top]: 0,
   [ClothesCategoryOptions.bottom]: 0,
   [ClothesCategoryOptions.shoes]: 0,
@@ -104,10 +106,18 @@ describe('recommendation.ui', () => {
 
   test('fetchDefaultRecommendationSeasonsByAnyangWeather는 평균 기온 구간에 맞는 계절을 반환한다', () => {
     expect(fetchDefaultRecommendationSeasonsByAnyangWeather(null)).toEqual([]);
-    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(23, 23))).toEqual([ClothesSeasonsOptions.summer]);
-    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(17, 17))).toEqual([ClothesSeasonsOptions.fall]);
-    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(9, 9))).toEqual([ClothesSeasonsOptions.spring]);
-    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(0, 8))).toEqual([ClothesSeasonsOptions.winter]);
+    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(23, 23))).toEqual([
+      ClothesSeasonsOptions.summer,
+    ]);
+    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(17, 17))).toEqual([
+      ClothesSeasonsOptions.fall,
+    ]);
+    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(9, 9))).toEqual([
+      ClothesSeasonsOptions.spring,
+    ]);
+    expect(fetchDefaultRecommendationSeasonsByAnyangWeather(createWeather(0, 8))).toEqual([
+      ClothesSeasonsOptions.winter,
+    ]);
   });
 
   test('isClothesProcessingState와 fetchClothesProcessingProgressValue는 상태별 진행률을 일관되게 반환한다', () => {
@@ -175,7 +185,11 @@ describe('recommendation.ui', () => {
       }),
     ];
 
-    const candidates = buildRecommendationCandidatesByCategory(recommendationItems, clothesItems, recommendationSlotCategoryOrder);
+    const candidates = buildRecommendationCandidatesByCategory(
+      recommendationItems,
+      clothesItems,
+      recommendationSlotCategoryOrder,
+    );
 
     expect(candidates[ClothesCategoryOptions.top].map((item) => item.clothesId)).toEqual(['top-1', 'top-2']);
     expect(candidates[ClothesCategoryOptions.top][0]?.isRecommended).toBe(true);

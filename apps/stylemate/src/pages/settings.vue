@@ -1,5 +1,5 @@
 <template>
-  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pb-24 pt-4">
+  <main class="page-enter mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 px-4 pt-4 pb-24">
     <header class="flex items-center justify-between">
       <h1 class="text-lg font-semibold">설정</h1>
       <sl-button size="small" @click="onClickSignoutButton">로그아웃</sl-button>
