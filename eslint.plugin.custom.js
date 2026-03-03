@@ -441,6 +441,46 @@ const preferPbHooksHttpTimeoutRule = createSelectorRule([
 
 const pluginName = 'my-custom-rules';
 
+const appCommonRecommendedRules = {
+  [`${pluginName}/no-pocketbase-collection-literal`]: 'error',
+  [`${pluginName}/no-query-key-collections-enum`]: 'error',
+  [`${pluginName}/no-query-key-first-segment-domain`]: 'error',
+  [`${pluginName}/prefer-query-key-second-segment`]: 'warn',
+  [`${pluginName}/prefer-detail-invalidation-query-key`]: 'warn',
+  [`${pluginName}/prefer-shoelace-read-helper`]: 'warn',
+};
+
+const pagesComponentsRecommendedRules = {
+  [`${pluginName}/no-direct-pocketbase-sdk-call-in-page-component`]: 'error',
+  [`${pluginName}/no-direct-tanstack-query-in-page-component`]: 'error',
+  [`${pluginName}/no-direct-realtime-subscribe-in-page-component`]: 'error',
+  [`${pluginName}/no-direct-shoelace-event-target-access`]: 'error',
+};
+
+const composablesRecommendedRules = {
+  [`${pluginName}/no-composable-on-prefix-action-name`]: 'error',
+  [`${pluginName}/no-composable-mutation-exposure`]: 'error',
+  [`${pluginName}/no-composable-mutate-call`]: 'error',
+  [`${pluginName}/no-composable-usemutation-destructure`]: 'error',
+};
+
+const pbHooksRecommendedRules = {
+  [`${pluginName}/no-pb-hooks-esm-module`]: 'error',
+  [`${pluginName}/no-pb-hooks-require-relative-path`]: 'error',
+  [`${pluginName}/no-pb-hooks-runtime-dependency`]: 'error',
+  [`${pluginName}/no-pb-hooks-filter-template-literal`]: 'error',
+  [`${pluginName}/no-pb-hooks-router-auth-middleware`]: 'error',
+  [`${pluginName}/prefer-pb-hooks-router-method-uppercase`]: 'warn',
+  [`${pluginName}/prefer-pb-hooks-router-api-prefix`]: 'warn',
+  [`${pluginName}/prefer-pb-hooks-http-timeout`]: 'warn',
+};
+
+const vueTemplateRecommendedRules = {
+  [`${pluginName}/no-shoelace-form-v-model`]: 'error',
+  [`${pluginName}/no-native-form-tag-except-allowed`]: 'error',
+  [`${pluginName}/prefer-shoelace-sl-change-handler-naming`]: 'warn',
+};
+
 const plugin = {
   meta: {
     name: pluginName,
@@ -475,32 +515,27 @@ const plugin = {
   configs: {
     recommended: {
       rules: {
-        [`${pluginName}/no-pocketbase-collection-literal`]: 'error',
-        [`${pluginName}/no-query-key-collections-enum`]: 'error',
-        [`${pluginName}/no-query-key-first-segment-domain`]: 'error',
-        [`${pluginName}/no-direct-pocketbase-sdk-call-in-page-component`]: 'error',
-        [`${pluginName}/no-direct-tanstack-query-in-page-component`]: 'error',
-        [`${pluginName}/no-direct-realtime-subscribe-in-page-component`]: 'error',
-        [`${pluginName}/no-direct-shoelace-event-target-access`]: 'error',
-        [`${pluginName}/no-composable-on-prefix-action-name`]: 'error',
-        [`${pluginName}/no-composable-mutation-exposure`]: 'error',
-        [`${pluginName}/no-composable-mutate-call`]: 'error',
-        [`${pluginName}/no-composable-usemutation-destructure`]: 'error',
-        [`${pluginName}/no-pb-hooks-esm-module`]: 'error',
-        [`${pluginName}/no-pb-hooks-require-relative-path`]: 'error',
-        [`${pluginName}/no-pb-hooks-runtime-dependency`]: 'error',
-        [`${pluginName}/no-pb-hooks-filter-template-literal`]: 'error',
-        [`${pluginName}/no-pb-hooks-router-auth-middleware`]: 'error',
-        [`${pluginName}/prefer-query-key-second-segment`]: 'warn',
-        [`${pluginName}/prefer-detail-invalidation-query-key`]: 'warn',
-        [`${pluginName}/prefer-shoelace-read-helper`]: 'warn',
-        [`${pluginName}/no-shoelace-form-v-model`]: 'error',
-        [`${pluginName}/no-native-form-tag-except-allowed`]: 'error',
-        [`${pluginName}/prefer-shoelace-sl-change-handler-naming`]: 'warn',
-        [`${pluginName}/prefer-pb-hooks-router-method-uppercase`]: 'warn',
-        [`${pluginName}/prefer-pb-hooks-router-api-prefix`]: 'warn',
-        [`${pluginName}/prefer-pb-hooks-http-timeout`]: 'warn',
+        ...appCommonRecommendedRules,
+        ...pagesComponentsRecommendedRules,
+        ...composablesRecommendedRules,
+        ...pbHooksRecommendedRules,
+        ...vueTemplateRecommendedRules,
       },
+    },
+    recommendedAppCommon: {
+      rules: appCommonRecommendedRules,
+    },
+    recommendedPagesComponents: {
+      rules: pagesComponentsRecommendedRules,
+    },
+    recommendedComposables: {
+      rules: composablesRecommendedRules,
+    },
+    recommendedPbHooks: {
+      rules: pbHooksRecommendedRules,
+    },
+    recommendedVueTemplate: {
+      rules: vueTemplateRecommendedRules,
     },
   },
 };

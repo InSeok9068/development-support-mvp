@@ -70,12 +70,7 @@ export default defineConfig(
   {
     files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     rules: {
-      'my-custom-rules/no-pocketbase-collection-literal': 'error',
-      'my-custom-rules/no-query-key-collections-enum': 'error',
-      'my-custom-rules/no-query-key-first-segment-domain': 'error',
-      'my-custom-rules/prefer-query-key-second-segment': 'warn',
-      'my-custom-rules/prefer-detail-invalidation-query-key': 'warn',
-      'my-custom-rules/prefer-shoelace-read-helper': 'warn',
+      ...eslintPluginCustom.configs.recommendedAppCommon.rules,
     },
   },
 
@@ -83,10 +78,7 @@ export default defineConfig(
   {
     files: ['apps/*/src/pages/**/*.{js,ts,vue}', 'apps/*/src/components/**/*.{js,ts,vue}'],
     rules: {
-      'my-custom-rules/no-direct-pocketbase-sdk-call-in-page-component': 'error',
-      'my-custom-rules/no-direct-tanstack-query-in-page-component': 'error',
-      'my-custom-rules/no-direct-realtime-subscribe-in-page-component': 'error',
-      'my-custom-rules/no-direct-shoelace-event-target-access': 'error',
+      ...eslintPluginCustom.configs.recommendedPagesComponents.rules,
     },
   },
 
@@ -94,10 +86,7 @@ export default defineConfig(
   {
     files: ['apps/*/src/composables/**/*.{js,ts,vue}'],
     rules: {
-      'my-custom-rules/no-composable-on-prefix-action-name': 'error',
-      'my-custom-rules/no-composable-mutation-exposure': 'error',
-      'my-custom-rules/no-composable-mutate-call': 'error',
-      'my-custom-rules/no-composable-usemutation-destructure': 'error',
+      ...eslintPluginCustom.configs.recommendedComposables.rules,
     },
   },
 
@@ -105,14 +94,7 @@ export default defineConfig(
   {
     files: ['apps/*/pb_hooks/**/*.ts'],
     rules: {
-      'my-custom-rules/no-pb-hooks-esm-module': 'error',
-      'my-custom-rules/no-pb-hooks-require-relative-path': 'error',
-      'my-custom-rules/no-pb-hooks-runtime-dependency': 'error',
-      'my-custom-rules/no-pb-hooks-filter-template-literal': 'error',
-      'my-custom-rules/no-pb-hooks-router-auth-middleware': 'error',
-      'my-custom-rules/prefer-pb-hooks-router-method-uppercase': 'warn',
-      'my-custom-rules/prefer-pb-hooks-router-api-prefix': 'warn',
-      'my-custom-rules/prefer-pb-hooks-http-timeout': 'warn',
+      ...eslintPluginCustom.configs.recommendedPbHooks.rules,
     },
   },
 
@@ -120,9 +102,7 @@ export default defineConfig(
   {
     files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
-      'my-custom-rules/no-shoelace-form-v-model': 'error',
-      'my-custom-rules/no-native-form-tag-except-allowed': 'error',
-      'my-custom-rules/prefer-shoelace-sl-change-handler-naming': 'warn',
+      ...eslintPluginCustom.configs.recommendedVueTemplate.rules,
     },
   },
 
