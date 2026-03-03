@@ -304,40 +304,20 @@ const boundaryBaseRules = [
   ),
 ];
 
-const pageOnlyBoundaryRules = [
+const pageComponentOnlyBoundaryRules = [
+  ...boundaryBaseRules,
   forbid(
     "CallExpression[callee.name='useQueryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} pages에서 useQueryClient()를 직접 사용하지 마세요.`,
+    `${AGENTS_REF.queryOnlyInComposable} pages/components에서 useQueryClient()를 직접 사용하지 마세요.`,
   ),
   forbid(
     "Identifier[name='queryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} pages에서 queryClient를 직접 사용하지 마세요.`,
+    `${AGENTS_REF.queryOnlyInComposable} pages/components에서 queryClient를 직접 사용하지 마세요.`,
   ),
 ];
 
-const componentOnlyBoundaryRules = [
-  forbid(
-    "CallExpression[callee.name='useQueryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} components에서 useQueryClient()를 직접 사용하지 마세요.`,
-  ),
-  forbid(
-    "Identifier[name='queryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} components에서 queryClient를 직접 사용하지 마세요.`,
-  ),
-];
-
-const pageBoundaryRules = [
-  ...boundaryBaseRules,
-  ...pageOnlyBoundaryRules,
-  ...realtimeSubscriptionRules,
-  ...queryKeyRules,
-  ...shoelaceFormVModelRules,
-  ...shoelaceValueParsingRules,
-];
-
-const componentBoundaryRules = [
-  ...boundaryBaseRules,
-  ...componentOnlyBoundaryRules,
+const pageComponentBoundaryRules = [
+  ...pageComponentOnlyBoundaryRules,
   ...realtimeSubscriptionRules,
   ...queryKeyRules,
   ...shoelaceFormVModelRules,
@@ -364,9 +344,9 @@ const commonRules = [pbCollectionLiteralRule, ...queryKeyRules, ...shoelaceFormV
 /* ======================= 최종 적용 블록 ======================= */
 const eslintCustomRuleConfig = [
   // pages 적용 규칙
-  syntaxBlock(['apps/*/src/pages/**/*.{js,ts,vue}'], pageBoundaryRules),
+  syntaxBlock(['apps/*/src/pages/**/*.{js,ts,vue}'], pageComponentBoundaryRules),
   // components 적용 규칙
-  syntaxBlock(['apps/*/src/components/**/*.{js,ts,vue}'], componentBoundaryRules),
+  syntaxBlock(['apps/*/src/components/**/*.{js,ts,vue}'], pageComponentBoundaryRules),
   // composables 적용 규칙
   syntaxBlock(['apps/*/src/composables/**/*.{js,ts,vue}'], composableRules),
   // PB_HOOKS 전용 규칙
