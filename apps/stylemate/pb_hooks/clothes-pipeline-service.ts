@@ -492,7 +492,9 @@ const readSourceImageFromUpload = (record) => {
         if (reader) {
           try {
             reader.close();
-          } catch {}
+          } catch {
+            void 0;
+          }
           reader = null;
         }
       }
@@ -510,7 +512,9 @@ const readSourceImageFromUpload = (record) => {
   } finally {
     try {
       fsys.close();
-    } catch {}
+    } catch {
+      void 0;
+    }
   }
 };
 
