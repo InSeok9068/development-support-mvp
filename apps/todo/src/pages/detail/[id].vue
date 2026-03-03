@@ -547,6 +547,7 @@ const selectRedmineData = async () => {
   const re = /\/issues\/(\d+)(?=[/?#]|$)/;
 
   // oxlint-disable-next-line no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const res: any = await requestFetchRedmineData(work.value.redmine.match(re)?.[1] ?? '');
 
   redmineData.value.startDate = res['issue']['start_date'];

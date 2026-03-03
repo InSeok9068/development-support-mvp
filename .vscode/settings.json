@@ -12,7 +12,8 @@
   "explorer.fileNesting.patterns": {
     "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml, pnpm-helper.sh",
     ".prettierrc.cjs": ".prettierignore",
-    ".oxlintrc.json": ".oxfmtrc.json, eslint.config.js, eslint.custom.rule.js, eslint-selector-bridge.js"
+    ".oxlintrc.json": ".oxfmtrc.json, eslint.config.backup.js, eslint-selector-bridge.js",
+    "eslint.config.js": "eslint.custom.rule.js"
   },
   "code-runner.executorMap": {
     "typescript": "tsx"
