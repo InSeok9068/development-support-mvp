@@ -36,43 +36,40 @@ const buildRulePayload = (level, policy, violation, remediation, example = '') =
   example,
   source: 'eslint.custom.rule.js',
 });
-const normalizeRuleArgs = (level, isPbHooks, args) => {
-  if (typeof args[0] === 'object' && args[0] !== null && typeof args[0].selector === 'string') {
-    const { selector, policy, violation, remediation, example = '' } = args[0];
-    return {
-      selector,
-      message: JSON.stringify({
-        ...buildRulePayload(level, policy, violation, remediation, example),
-        ...(isPbHooks ? { scope: 'pb_hooks' } : {}),
-      }),
-    };
+const createRuleBuilder = (level, scope) => (definition) => {
+  if (!definition || typeof definition !== 'object' || Array.isArray(definition)) {
+    throw new Error('eslint.custom.rule: rule definition must be an object');
   }
 
-  const [selector, policy, violation, remediation, example = ''] = args;
-  return {
+  const { selector, policy, violation, remediation, example = '' } = definition;
+  const required = [
+    ['selector', selector],
+    ['policy', policy],
+    ['violation', violation],
+    ['remediation', remediation],
+  ];
+
+  for (const [name, value] of required) {
+    if (typeof value !== 'string' || value.trim() === '') {
+      throw new Error(`eslint.custom.rule: ${name} must be a non-empty string`);
+    }
+  }
+  if (example !== '' && typeof example !== 'string') {
+    throw new Error('eslint.custom.rule: example must be a string when provided');
+  }
+
+  return rule(
     selector,
-    message: JSON.stringify({
+    JSON.stringify({
       ...buildRulePayload(level, policy, violation, remediation, example),
-      ...(isPbHooks ? { scope: 'pb_hooks' } : {}),
+      ...(scope ? { scope } : {}),
     }),
-  };
+  );
 };
-const errorRule = (...args) => {
-  const { selector, message } = normalizeRuleArgs('error', false, args);
-  return rule(selector, message);
-};
-const warnRule = (...args) => {
-  const { selector, message } = normalizeRuleArgs('warn', false, args);
-  return rule(selector, message);
-};
-const pbHooksErrorRule = (...args) => {
-  const { selector, message } = normalizeRuleArgs('error', true, args);
-  return rule(selector, message);
-};
-const pbHooksWarnRule = (...args) => {
-  const { selector, message } = normalizeRuleArgs('warn', true, args);
-  return rule(selector, message);
-};
+const errorRule = createRuleBuilder('error');
+const warnRule = createRuleBuilder('warn');
+const pbHooksErrorRule = createRuleBuilder('error', 'pb_hooks');
+const pbHooksWarnRule = createRuleBuilder('warn', 'pb_hooks');
 
 const restrictedSyntaxBlock = (
   files,
@@ -353,7 +350,7 @@ const shoelaceHelperWarnRules = [
 const shoelaceChangeHandlerNamingWarnRules = [
   warnRule({
     selector:
-      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > Identifier:not([name=/^onChange[A-Z].+/])",
+      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'][value.type='VExpressionContainer'][value.expression.type='Identifier']:not([value.expression.name=/^onChange[A-Z].+/])",
     policy: AGENTS_REF.sfcMethodNaming,
     violation: '@sl-change 핸들러 이름이 onChangeXxx 규약과 다름',
     remediation: 'onChangeXxx 형태로 변경',
@@ -361,7 +358,7 @@ const shoelaceChangeHandlerNamingWarnRules = [
   }),
   warnRule({
     selector:
-      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > MemberExpression[property.name]:not(:has(Identifier[name=/^onChange[A-Z].+/]))",
+      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'][value.type='VExpressionContainer'][value.expression.type='MemberExpression']:not([value.expression.property.name=/^onChange[A-Z].+/])",
     policy: AGENTS_REF.sfcMethodNaming,
     violation: '@sl-change 핸들러 멤버명명이 규약과 다름',
     remediation: 'onChangeXxx 형태로 변경',
@@ -673,8 +670,13 @@ const eslintCustomRuleConfig = [
       ...queryKeyWarnRules,
       ...invalidationWarnRules,
       ...shoelaceHelperWarnRules,
-      ...shoelaceChangeHandlerNamingWarnRules,
     ],
+  ),
+  restrictedSyntaxWarnBlock(
+    [FILE_GLOB.appVue, FILE_GLOB.packageVue],
+    [...shoelaceChangeHandlerNamingWarnRules],
+    [],
+    'vue/no-restricted-syntax',
   ),
   // PB_HOOKS 전용 권장 규칙 (warning)
   restrictedSyntaxWarnBlock([FILE_GLOB.pbHooksTs], pbHooksWarnRules),
