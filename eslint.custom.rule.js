@@ -27,12 +27,60 @@ const AGENTS_REF = {
 
 /* ===== 공통 유틸 ===== */
 const rule = (selector, message) => ({ selector, message });
-const errorRule = (selector, message) => rule(selector, `[ERROR] ${message}`);
-const warnRule = (selector, message) => rule(selector, `[WARN] ${message}`);
-const pbHooksErrorRule = (selector, message) => rule(selector, `[PB_HOOKS 전용][ERROR] ${message}`);
-const pbHooksWarnRule = (selector, message) => rule(selector, `[PB_HOOKS 전용][WARN] ${message}`);
+const buildRulePayload = (level, policy, violation, remediation, example = '') => ({
+  event: 'eslint.custom.rule.violation',
+  level,
+  policy,
+  violation,
+  remediation,
+  example,
+  source: 'eslint.custom.rule.js',
+});
+const normalizeRuleArgs = (level, isPbHooks, args) => {
+  if (typeof args[0] === 'object' && args[0] !== null && typeof args[0].selector === 'string') {
+    const { selector, policy, violation, remediation, example = '' } = args[0];
+    return {
+      selector,
+      message: JSON.stringify({
+        ...buildRulePayload(level, policy, violation, remediation, example),
+        ...(isPbHooks ? { scope: 'pb_hooks' } : {}),
+      }),
+    };
+  }
 
-const restrictedSyntaxBlock = (files, severity, restrictedSyntaxRules, ignores = [], ruleName = 'no-restricted-syntax') => ({
+  const [selector, policy, violation, remediation, example = ''] = args;
+  return {
+    selector,
+    message: JSON.stringify({
+      ...buildRulePayload(level, policy, violation, remediation, example),
+      ...(isPbHooks ? { scope: 'pb_hooks' } : {}),
+    }),
+  };
+};
+const errorRule = (...args) => {
+  const { selector, message } = normalizeRuleArgs('error', false, args);
+  return rule(selector, message);
+};
+const warnRule = (...args) => {
+  const { selector, message } = normalizeRuleArgs('warn', false, args);
+  return rule(selector, message);
+};
+const pbHooksErrorRule = (...args) => {
+  const { selector, message } = normalizeRuleArgs('error', true, args);
+  return rule(selector, message);
+};
+const pbHooksWarnRule = (...args) => {
+  const { selector, message } = normalizeRuleArgs('warn', true, args);
+  return rule(selector, message);
+};
+
+const restrictedSyntaxBlock = (
+  files,
+  severity,
+  restrictedSyntaxRules,
+  ignores = [],
+  ruleName = 'no-restricted-syntax',
+) => ({
   files,
   ...(ignores.length ? { ignores } : {}),
   rules: {
@@ -56,283 +104,514 @@ const FILE_GLOB = {
   packageVue: 'packages/src/**/*.vue',
   pbHooksTs: 'apps/*/pb_hooks/**/*.ts',
 };
-/* ===== 공통 유틸 ===== */
 
 /* ===== 쿼리 규칙 ===== */
 const pbCollectionLiteralErrorRules = [
-  errorRule(
-    "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
-    `${AGENTS_REF.pbCollectionLiteral} pb.collection("...") 대신 Collections Enum을 사용하세요.`,
-  ),
+  errorRule({
+    selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection'][arguments.0.type='Literal']",
+    policy: AGENTS_REF.pbCollectionLiteral,
+    violation: 'pb.collection() 첫 인자로 문자열 리터럴 전달',
+    remediation: 'Collections Enum을 사용하도록 변경',
+    example: `pb.collection("works") → pb.collection(Collections.Works)`,
+  }),
 ];
 
 const queryKeyErrorRules = [
-  errorRule(
-    "Property[key.name='queryKey'] MemberExpression[object.name='Collections']",
-    `${AGENTS_REF.queryKeyRule} queryKey에는 Collections Enum 대신 도메인 문자열(예: 'works')을 사용하세요.`,
-  ),
-  errorRule(
-    "Property[key.name='queryKey'] > ArrayExpression > :first-child:not(Literal[value=/^[a-z0-9-]+$/])",
-    `${AGENTS_REF.queryKeyRule} queryKey 1st segment는 소문자 도메인 문자열이어야 합니다. 예: ['works', 'list', params]`,
-  ),
+  errorRule({
+    selector: "Property[key.name='queryKey'] MemberExpression[object.name='Collections']",
+    policy: AGENTS_REF.queryKeyRule,
+    violation: 'queryKey 1번째 세그먼트에 Collections Enum 사용',
+    remediation: '쿼리 키는 도메인 문자열로 통일',
+    example: "queryKey: [Collections.Works] → queryKey: ['works']",
+  }),
+  errorRule({
+    selector: "Property[key.name='queryKey'] > ArrayExpression > :first-child:not(Literal[value=/^[a-z0-9-]+$/])",
+    policy: AGENTS_REF.queryKeyRule,
+    violation: 'queryKey 1번째 세그먼트가 소문자 도메인 문자열이 아님',
+    remediation: '도메인 문자열(소문자 + 하이픈)로 맞춤',
+    example: "queryKey: ['Works', 'list'] → queryKey: ['works', 'list']",
+  }),
 ];
 
 const queryKeyWarnRules = [
-  warnRule(
-    "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
-    `${AGENTS_REF.queryKeyRule} useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.`,
-  ),
+  warnRule({
+    selector: "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
+    policy: AGENTS_REF.queryKeyRule,
+    violation: 'useQuery 쿼리 키에 2번째 세그먼트 없음',
+    remediation: '목적을 표현하는 2번째 세그먼트 추가',
+    example: "queryKey: ['works'] → queryKey: ['works', 'list', params]",
+  }),
 ];
 
 const invalidationWarnRules = [
-  warnRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)):has(> :nth-child(2)[type='Identifier']):not(:has(> Literal:nth-child(2)[value='detail']))",
-    `${AGENTS_REF.queryKeyRule} 상세 무효화라면 ['domain', 'detail', id] 형태를 권장합니다. 도메인 전체 무효화(['domain'])는 허용됩니다.`,
-  ),
-  warnRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)[type='TemplateLiteral']):not(:has(> Literal:nth-child(2)[value='detail']))",
-    `${AGENTS_REF.queryKeyRule} 상세 무효화라면 ['domain', 'detail', id] 형태를 권장합니다. 도메인 전체 무효화(['domain'])는 허용됩니다.`,
-  ),
+  warnRule({
+    selector:
+      "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)):has(> :nth-child(2)[type='Identifier']):not(:has(> Literal:nth-child(2)[value='detail']))",
+    policy: AGENTS_REF.queryKeyRule,
+    violation: 'invalidate/removeQueries에서 detail 대상 캐시를 detail 세그먼트 없이 사용',
+    remediation: "상세 캐시는 ['domain', 'detail', id] 패턴으로 작성",
+    example: "invalidateQueries({ queryKey: ['works', id] }) → invalidateQueries({ queryKey: ['works', 'detail', id] })",
+  }),
+  warnRule({
+    selector:
+      "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(invalidateQueries|removeQueries)$/] Property[key.name='queryKey'] > ArrayExpression:has(> :nth-child(2)[type='TemplateLiteral']):not(:has(> Literal:nth-child(2)[value='detail']))",
+    policy: AGENTS_REF.queryKeyRule,
+    violation: 'invalidate/removeQueries에서 detail 세그먼트가 템플릿으로 혼재',
+    remediation: '상세 무효화는 detail Literal 문자열로 고정',
+    example: "invalidateQueries({ queryKey: ['works', `${'detail'}Id`] }) → invalidateQueries({ queryKey: ['works', 'detail', id] })",
+  }),
 ];
-/* ===== 쿼리 규칙 ===== */
 
 /* ===== 리얼타임 규칙 ===== */
 const realtimeSubscriptionErrorRules = [
-  errorRule(
-    "CallExpression[callee.type='Identifier'][callee.name='subscribe']",
-    `${AGENTS_REF.realtimePageRule} subscribe* 직접 호출 대신 subscribeXxxRealtime을 사용하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.type='Identifier'][callee.name='unsubscribe']",
-    `${AGENTS_REF.realtimePageRule} unsubscribe* 직접 호출 대신 unsubscribeXxxRealtime을 사용하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='subscribe']",
-    `${AGENTS_REF.realtimePageRule} 객체의 subscribe() 직접 호출 대신 composable의 subscribeXxxRealtime을 사용하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='unsubscribe']",
-    `${AGENTS_REF.realtimePageRule} 객체의 unsubscribe() 직접 호출 대신 composable의 unsubscribeXxxRealtime을 사용하세요.`,
-  ),
+  errorRule({
+    selector: "CallExpression[callee.type='Identifier'][callee.name='subscribe']",
+    policy: AGENTS_REF.realtimePageRule,
+    violation: '페이지/컴포넌트에서 subscribe() 직접 호출',
+    remediation: 'composable의 subscribeXxxRealtime()로 대체',
+    example: 'subscribe(...) → subscribeTodosRealtime(...)',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.type='Identifier'][callee.name='unsubscribe']",
+    policy: AGENTS_REF.realtimePageRule,
+    violation: '페이지/컴포넌트에서 unsubscribe() 직접 호출',
+    remediation: 'composable의 unsubscribeXxxRealtime()로 대체',
+    example: 'unsubscribe(...) → unsubscribeTodosRealtime()',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='subscribe']",
+    policy: AGENTS_REF.realtimePageRule,
+    violation: '객체.subscribe() 호출',
+    remediation: '도메인 composable의 subscribeXxxRealtime() 사용',
+    example: 'someRef.subscribe(...) → subscribeTodosRealtime(...)',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='unsubscribe']",
+    policy: AGENTS_REF.realtimePageRule,
+    violation: '객체.unsubscribe() 호출',
+    remediation: '도메인 composable의 unsubscribeXxxRealtime() 사용',
+    example: 'someRef.unsubscribe() → unsubscribeTodosRealtime()',
+  }),
 ];
-/* ===== 리얼타임 규칙 ===== */
 
 /* ===== 컴포저블 규칙 ===== */
 const composableMutationErrorRules = [
-  errorRule(
-    'ReturnStatement > Identifier[name=/[Mm]utation/]',
-    `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
-  ),
-  errorRule(
-    "ReturnStatement ObjectExpression > Property[value.type='Identifier'][value.name=/[Mm]utation/]",
-    `${AGENTS_REF.noMutationReturn} mutateAsync 기반 도메인 액션 함수로 감싸서 반환하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.object.name=/[Mm]utation/][callee.property.name='mutate']",
-    `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
-  ),
-  errorRule(
-    "VariableDeclarator[id.type='ObjectPattern'][init.type='CallExpression'][init.callee.name='useMutation']",
-    `${AGENTS_REF.noMutationReturn} useMutation 결과 구조분해를 금지합니다. mutation 객체는 내부에서만 사용하고 mutateAsync 기반 도메인 액션으로 노출하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.type='Identifier'][callee.name='mutate']",
-    `${AGENTS_REF.mutateAsyncOnly} mutate() 대신 mutateAsync()를 사용하세요.`,
-  ),
+  errorRule({
+    selector: 'ReturnStatement > Identifier[name=/[Mm]utation/]',
+    policy: AGENTS_REF.noMutationReturn,
+    violation: 'composable 반환값에 mutation 객체가 직접 노출',
+    remediation: '도메인 액션 함수로 감싸 반환',
+    example: 'return { createTodoMutation } → return { createTodo: async (payload) => createTodoMutation.mutateAsync(payload) }',
+  }),
+  errorRule({
+    selector: "ReturnStatement ObjectExpression > Property[value.type='Identifier'][value.name=/[Mm]utation/]",
+    policy: AGENTS_REF.noMutationReturn,
+    violation: 'return 객체에 mutation 식별자 노출',
+    remediation: 'mutation 객체는 내부 처리 후 액션 함수만 노출',
+    example: 'return { updateTodoMutation } → return { updateTodo }',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.object.name=/[Mm]utation/][callee.property.name='mutate']",
+    policy: AGENTS_REF.mutateAsyncOnly,
+    violation: 'mutate() 호출',
+    remediation: 'mutateAsync()로 변경해 Promise 흐름 사용',
+    example: 'mutation.mutate(payload) → mutation.mutateAsync(payload)',
+  }),
+  errorRule({
+    selector: "VariableDeclarator[id.type='ObjectPattern'][init.type='CallExpression'][init.callee.name='useMutation']",
+    policy: AGENTS_REF.noMutationReturn,
+    violation: 'useMutation() 결과를 구조분해해서 노출',
+    remediation: '내부에서만 처리하고 액션 함수를 노출',
+    example: `const { mutate, data } = useMutation(...) → const createTodo = async (payload) => mutation.mutateAsync(payload)`,
+  }),
+  errorRule({
+    selector: "CallExpression[callee.type='Identifier'][callee.name='mutate']",
+    policy: AGENTS_REF.mutateAsyncOnly,
+    violation: 'mutation mutate 호출',
+    remediation: 'mutateAsync()로 변경',
+    example: 'mutate(payload) → mutateAsync(payload)',
+  }),
 ];
-/* ===== 컴포저블 규칙 ===== */
 
 /* ===== Shoelace 규칙 ===== */
 const shoelaceFormVModelErrorRules = [
-  errorRule(
-    "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    `${AGENTS_REF.shoelaceFirstPrinciple} sl-select에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='sl-checkbox'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    `${AGENTS_REF.shoelaceFirstPrinciple} sl-checkbox에서는 v-model 대신 :checked/@sl-change를 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='sl-switch'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    `${AGENTS_REF.shoelaceFirstPrinciple} sl-switch에서는 v-model 대신 :checked/@sl-change를 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
-    `${AGENTS_REF.shoelaceFirstPrinciple} sl-radio-group에서는 v-model 대신 :value + @sl-change를 사용하세요.`,
-  ),
+  errorRule({
+    selector: "VElement[name='sl-select'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    policy: AGENTS_REF.shoelaceFirstPrinciple,
+    violation: 'sl-select에서 v-model 사용',
+    remediation: ':value와 @sl-change 조합으로 변경',
+    example: '<sl-select v-model="value" /> → <sl-select :value="value" @sl-change="onChangeValue" />',
+  }),
+  errorRule({
+    selector: "VElement[name='sl-checkbox'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    policy: AGENTS_REF.shoelaceFirstPrinciple,
+    violation: 'sl-checkbox에서 v-model 사용',
+    remediation: ':checked와 @sl-change 조합으로 변경',
+    example: '<sl-checkbox v-model="checked" /> → <sl-checkbox :checked="checked" @sl-change="onChangeChecked" />',
+  }),
+  errorRule({
+    selector: "VElement[name='sl-switch'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    policy: AGENTS_REF.shoelaceFirstPrinciple,
+    violation: 'sl-switch에서 v-model 사용',
+    remediation: ':checked와 @sl-change 조합으로 변경',
+    example: '<sl-switch v-model="value" /> → <sl-switch :checked="value" @sl-change="onChangeSwitch" />',
+  }),
+  errorRule({
+    selector: "VElement[name='sl-radio-group'] > VStartTag > VAttribute[directive=true][key.name.name='model']",
+    policy: AGENTS_REF.shoelaceFirstPrinciple,
+    violation: 'sl-radio-group에서 v-model 사용',
+    remediation: ':value와 @sl-change 조합으로 변경',
+    example: '<sl-radio-group v-model="value" /> → <sl-radio-group :value="value" @sl-change="onChangeValue" />',
+  }),
 ];
 
 const nativeFormTagRestrictionErrorRules = [
-  errorRule(
-    "VElement[name='button']",
-    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <button> 대신 <sl-button>을 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='select']",
-    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <select> 대신 <sl-select>를 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='textarea']",
-    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <textarea> 대신 <sl-textarea>를 사용하세요.`,
-  ),
-  errorRule(
-    "VElement[name='input']:not(:has(VAttribute[key.name='type'][value.value='file'])):not(:has(VAttribute[key.name='type'][value.value='text']):has(VAttribute[key.name='hidden']))",
-    `${AGENTS_REF.shoelaceNativeFormException} 네이티브 <input>은 type='file' 또는 type='text' hidden 예외 외 사용을 금지합니다.`,
-  ),
+  errorRule({
+    selector: "VElement[name='button']",
+    policy: AGENTS_REF.shoelaceNativeFormException,
+    violation: '네이티브 <button> 직접 사용',
+    remediation: 'Shoelace <sl-button>으로 변경',
+    example: '<button>저장</button> → <sl-button>저장</sl-button>',
+  }),
+  errorRule({
+    selector: "VElement[name='select']",
+    policy: AGENTS_REF.shoelaceNativeFormException,
+    violation: '네이티브 <select> 직접 사용',
+    remediation: 'Shoelace <sl-select>으로 변경',
+    example: '<select>...</select> → <sl-select>...</sl-select>',
+  }),
+  errorRule({
+    selector: "VElement[name='textarea']",
+    policy: AGENTS_REF.shoelaceNativeFormException,
+    violation: '네이티브 <textarea> 직접 사용',
+    remediation: 'Shoelace <sl-textarea>으로 변경',
+    example: '<textarea></textarea> → <sl-textarea></sl-textarea>',
+  }),
+  errorRule({
+    selector:
+      "VElement[name='input']:not(:has(VAttribute[key.name='type'][value.value='file'])):not(:has(VAttribute[key.name='type'][value.value='text']):has(VAttribute[key.name='hidden']))",
+    policy: AGENTS_REF.shoelaceNativeFormException,
+    violation: '허용 예외 외에 네이티브 <input> 사용',
+    remediation: 'Shoelace 컴포넌트 또는 파일/hidden 예외만 사용',
+    example: '<input type="text" /> → <sl-input :value="v" @sl-change="onChangeValue" />',
+  }),
 ];
 
 const shoelaceValueParsingErrorRules = [
-  errorRule(
-    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
-    `${AGENTS_REF.shoelaceChangeParsing} event.target.value 직접 접근을 피하세요.`,
-  ),
-  errorRule(
-    "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
-    `${AGENTS_REF.shoelaceChangeParsing} event.target.checked 직접 접근을 피하세요.`,
-  ),
-  errorRule(
-    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
-    `${AGENTS_REF.shoelaceChangeParsing} event.target.value 직접 접근을 피하세요.`,
-  ),
-  errorRule(
-    "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
-    `${AGENTS_REF.shoelaceChangeParsing} event.target.checked 직접 접근을 피하세요.`,
-  ),
+  errorRule({
+    selector:
+      "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 함수에서 event.target.value 접근',
+    remediation: 'readShoelaceSingleValue / readShoelaceMultiValue 사용',
+    example: 'event.target.value → readShoelaceSingleValue(event)',
+  }),
+  errorRule({
+    selector:
+      "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 함수에서 event.target.checked 접근',
+    remediation: 'readShoelaceChecked 사용',
+    example: 'event.target.checked → readShoelaceChecked(event)',
+  }),
+  errorRule({
+    selector:
+      "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='value']",
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 변수/람다에서 event.target.value 접근',
+    remediation: 'readShoelaceSingleValue / readShoelaceMultiValue 사용',
+    example: 'event.target.value → readShoelaceSingleValue(event)',
+  }),
+  errorRule({
+    selector:
+      "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/] MemberExpression[object.type='MemberExpression'][object.object.name='event'][object.property.name='target'][property.name='checked']",
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 변수/람다에서 event.target.checked 접근',
+    remediation: 'readShoelaceChecked 사용',
+    example: 'event.target.checked → readShoelaceChecked(event)',
+  }),
 ];
 
 const shoelaceHelperWarnRules = [
-  warnRule(
-    'FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
-    `${AGENTS_REF.shoelaceChangeParsing} readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.`,
-  ),
-  warnRule(
-    'VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
-    `${AGENTS_REF.shoelaceChangeParsing} readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.`,
-  ),
+  warnRule({
+    selector:
+      'FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 핸들러에서 readShoelace* 미사용',
+    remediation: '권장 헬퍼 사용으로 파싱 표준화',
+    example: 'const v = event.target.value → const v = readShoelaceSingleValue(event)',
+  }),
+  warnRule({
+    selector:
+      'VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
+    policy: AGENTS_REF.shoelaceChangeParsing,
+    violation: 'onChange 변수형 핸들러에서 readShoelace* 미사용',
+    remediation: '권장 헬퍼 사용으로 파싱 표준화',
+    example: 'const v = event.target.value → const v = readShoelaceSingleValue(event)',
+  }),
 ];
 const shoelaceChangeHandlerNamingWarnRules = [
-  warnRule(
-    "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > Identifier:not([name=/^onChange[A-Z].+/])",
-    `${AGENTS_REF.sfcMethodNaming} @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.`,
-  ),
-  warnRule(
-    "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > MemberExpression[property.name]:not(:has(Identifier[name=/^onChange[A-Z].+/]))",
-    `${AGENTS_REF.sfcMethodNaming} @sl-change 핸들러명은 onChangeXxx 형태를 권장합니다.`,
-  ),
+  warnRule({
+    selector:
+      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > Identifier:not([name=/^onChange[A-Z].+/])",
+    policy: AGENTS_REF.sfcMethodNaming,
+    violation: '@sl-change 핸들러 이름이 onChangeXxx 규약과 다름',
+    remediation: 'onChangeXxx 형태로 변경',
+    example: 'handlerChange → onChangeValue',
+  }),
+  warnRule({
+    selector:
+      "VAttribute[directive=true][key.name.name='on'][key.argument.name='sl-change'] > VExpressionContainer > MemberExpression[property.name]:not(:has(Identifier[name=/^onChange[A-Z].+/]))",
+    policy: AGENTS_REF.sfcMethodNaming,
+    violation: '@sl-change 핸들러 멤버명명이 규약과 다름',
+    remediation: 'onChangeXxx 형태로 변경',
+    example: 'method.handle → onChangeValue',
+  }),
 ];
-/* ===== Shoelace 규칙 ===== */
 
 /* ===== PB_HOOKS 전용 규칙 ===== */
 const pbHooksRuntimeErrorRules = [
-  pbHooksErrorRule('ImportDeclaration', `${AGENTS_REF.pbHooksCjs} ESM import를 사용하지 마세요.`),
-  pbHooksErrorRule('ExportNamedDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export를 사용하지 마세요.`),
-  pbHooksErrorRule('ExportDefaultDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export default를 사용하지 마세요.`),
-  pbHooksErrorRule('ExportAllDeclaration', `${AGENTS_REF.pbHooksCjs} ESM export * 를 사용하지 마세요.`),
-  pbHooksErrorRule('ImportExpression', `${AGENTS_REF.pbHooksCjs} dynamic import()를 사용하지 마세요.`),
-  pbHooksErrorRule(
-    "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(\\.\\.?\\/)/]",
-    `${AGENTS_REF.pbHooksModuleLoad} require('__hooks/...') 절대경로를 사용하세요.`,
-  ),
-  pbHooksErrorRule(
-    "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(fs|path|buffer|crypto|child_process|stream|http|https)$/]",
-    `${AGENTS_REF.pbHooksRuntime} Node 내장 모듈 require를 사용하지 마세요.`,
-  ),
-  pbHooksErrorRule("CallExpression[callee.name='fetch']", `${AGENTS_REF.pbHooksRuntime} fetch를 사용하지 마세요.`),
-  pbHooksErrorRule(
-    "CallExpression[callee.name='setTimeout']",
-    `${AGENTS_REF.pbHooksRuntime} setTimeout 대신 PocketBase hook 흐름으로 제어하세요.`,
-  ),
-  pbHooksErrorRule(
-    "CallExpression[callee.name='setInterval']",
-    `${AGENTS_REF.pbHooksRuntime} setInterval 대신 cronAdd를 사용하세요.`,
-  ),
-  pbHooksErrorRule("Identifier[name='window']", `${AGENTS_REF.pbHooksRuntime} window를 사용하지 마세요.`),
-  pbHooksErrorRule("Identifier[name='document']", `${AGENTS_REF.pbHooksRuntime} document를 사용하지 마세요.`),
-  pbHooksErrorRule("Identifier[name='navigator']", `${AGENTS_REF.pbHooksRuntime} navigator를 사용하지 마세요.`),
-  pbHooksErrorRule("Identifier[name='localStorage']", `${AGENTS_REF.pbHooksRuntime} localStorage를 사용하지 마세요.`),
-  pbHooksErrorRule("Identifier[name='sessionStorage']", `${AGENTS_REF.pbHooksRuntime} sessionStorage를 사용하지 마세요.`),
-  pbHooksErrorRule("Identifier[name='Buffer']", `${AGENTS_REF.pbHooksRuntime} Buffer를 사용하지 마세요.`),
+  pbHooksErrorRule({
+    selector: 'ImportDeclaration',
+    policy: AGENTS_REF.pbHooksCjs,
+    violation: 'ESM import 사용',
+    remediation: 'CJS require로 변경',
+    example: `import dayjs from 'dayjs' → const dayjs = require('dayjs')`,
+  }),
+  pbHooksErrorRule({
+    selector: 'ExportNamedDeclaration',
+    policy: AGENTS_REF.pbHooksCjs,
+    violation: 'ESM named export 사용',
+    remediation: 'module.exports로 export 처리',
+    example: `export const fn = () => {} → module.exports.fn = fn`,
+  }),
+  pbHooksErrorRule({
+    selector: 'ExportDefaultDeclaration',
+    policy: AGENTS_REF.pbHooksCjs,
+    violation: 'ESM export default 사용',
+    remediation: 'module.exports로 대체',
+    example: `export default handler → module.exports = handler`,
+  }),
+  pbHooksErrorRule({
+    selector: 'ExportAllDeclaration',
+    policy: AGENTS_REF.pbHooksCjs,
+    violation: 'ESM export * 사용',
+    remediation: 'CJS 호환 방식으로 변경',
+    example: `export * from './x' → const x = require('./x'); Object.assign(module.exports, x)`,
+  }),
+  pbHooksErrorRule({
+    selector: 'ImportExpression',
+    policy: AGENTS_REF.pbHooksCjs,
+    violation: '동적 import() 사용',
+    remediation: 'require() 사용',
+    example: `import('foo') → require('foo')`,
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(\\.\\.?\\/)/]",
+    policy: AGENTS_REF.pbHooksModuleLoad,
+    violation: 'require 상대 경로 사용',
+    remediation: '__hooks 절대경로로 변경',
+    example: `require('./utils') → require('__hooks/utils')`,
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(fs|path|buffer|crypto|child_process|stream|http|https)$/]",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'Node 내장 모듈 사용',
+    remediation: '호환 가능한 대체 경로로 이동',
+    example: `require('fs') 사용 제거`,
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.name='fetch']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'fetch() 직접 사용',
+    remediation: 'PocketBase 훅 규칙에 맞는 흐름으로 전환',
+    example: 'fetch(url) → 허용 API 기반 처리',
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.name='setTimeout']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'setTimeout 사용',
+    remediation: 'hook 실행 흐름으로 타이밍 제어',
+    example: 'setTimeout(fn, 1000) → 필요 시 다른 훅 처리로 변경',
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.name='setInterval']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'setInterval 사용',
+    remediation: 'cronAdd 등 예약 작업으로 대체',
+    example: 'setInterval(fn, 1000) → cronAdd(fn, 1000)',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='window']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'window 전역 객체 사용',
+    remediation: 'pb_hooks 환경에서 사용 불가 API 제거',
+    example: 'window.location → 제거',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='document']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'document 전역 객체 사용',
+    remediation: 'pb_hooks 환경에서 사용 불가 API 제거',
+    example: 'document.querySelector → 제거',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='navigator']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'navigator 전역 객체 사용',
+    remediation: 'pb_hooks 환경에서 사용 불가 API 제거',
+    example: 'navigator.userAgent → 제거',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='localStorage']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'localStorage 사용',
+    remediation: '영구 저장 정책을 PB Hooks 용도에 맞게 대체',
+    example: 'localStorage.setItem → 제거',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='sessionStorage']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'sessionStorage 사용',
+    remediation: '영구 저장 정책을 PB Hooks 용도에 맞게 대체',
+    example: 'sessionStorage.getItem → 제거',
+  }),
+  pbHooksErrorRule({
+    selector: "Identifier[name='Buffer']",
+    policy: AGENTS_REF.pbHooksRuntime,
+    violation: 'Buffer 사용',
+    remediation: '런타임 제약에 맞는 대체 구현 사용',
+    example: 'Buffer.from(...) → 대체 로직 적용',
+  }),
 ];
 
 const pbHooksDataSafetyErrorRules = [
-  pbHooksErrorRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
-    'newQuery SQL 문자열에 템플릿 리터럴 보간을 사용하지 마세요. 바인딩 파라미터를 사용하세요.',
-  ),
-  pbHooksErrorRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='findRecordsByFilter'][arguments.1.type='TemplateLiteral']",
-    'findRecordsByFilter filter 문자열에 템플릿 리터럴 보간을 사용하지 마세요. {:param} + params를 사용하세요.',
-  ),
-  pbHooksErrorRule(
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='findFirstRecordByFilter'][arguments.1.type='TemplateLiteral']",
-    'findFirstRecordByFilter filter 문자열에 템플릿 리터럴 보간을 사용하지 마세요. {:param} + params를 사용하세요.',
-  ),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
+    policy: 'PocketBase Hook 데이터 안전성 규칙',
+    violation: 'newQuery SQL에 템플릿 보간 사용',
+    remediation: '바인딩 파라미터 사용',
+    example: "newQuery(`SELECT * FROM a WHERE id=${id}`) → newQuery('SELECT * FROM a WHERE id = {:id}', { id })",
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='findRecordsByFilter'][arguments.1.type='TemplateLiteral']",
+    policy: 'PocketBase Hook 데이터 안전성 규칙',
+    violation: 'findRecordsByFilter에서 템플릿 보간 사용',
+    remediation: '필터 파라미터 바인딩 사용',
+    example: "findRecordsByFilter('users', `${'name'} = '${'name'}'`) → findRecordsByFilter('users', '{name} = :name', { name })",
+  }),
+  pbHooksErrorRule({
+    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='findFirstRecordByFilter'][arguments.1.type='TemplateLiteral']",
+    policy: 'PocketBase Hook 데이터 안전성 규칙',
+    violation: 'findFirstRecordByFilter에서 템플릿 보간 사용',
+    remediation: '필터 파라미터 바인딩 사용',
+    example: "findFirstRecordByFilter('users', `${'name'} = '${'name'}'`) → findFirstRecordByFilter('users', '{name} = :name', { name })",
+  }),
 ];
 
 const pbHooksRoutingWarnRules = [
-  pbHooksWarnRule(
-    "CallExpression[callee.name='routerAdd'][arguments.0.type='Literal'][arguments.0.value=/^(get|post|put|patch|delete|options|head)$/]",
-    'routerAdd HTTP method는 대문자(GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD)를 권장합니다.',
-  ),
-  pbHooksWarnRule(
-    "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
-    '커스텀 라우트 path는 /api/... prefix를 권장합니다.',
-  ),
+  pbHooksWarnRule({
+    selector: "CallExpression[callee.name='routerAdd'][arguments.0.type='Literal'][arguments.0.value=/^(get|post|put|patch|delete|options|head)$/]",
+    policy: 'PocketBase Hook 라우팅 규칙',
+    violation: 'routerAdd에서 HTTP 메서드가 소문자',
+    remediation: '메서드를 대문자로 통일',
+    example: "routerAdd('get', ...) → routerAdd('GET', ...)",
+  }),
+  pbHooksWarnRule({
+    selector: "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
+    policy: 'PocketBase Hook 라우팅 규칙',
+    violation: '라우트 경로가 /api 접두사 미사용',
+    remediation: '/api 접두사 사용',
+    example: "routerAdd('GET', '/users', ...) → routerAdd('GET', '/api/users', ...)",
+  }),
 ];
 
 const pbHooksRoutingSafetyErrorRules = [
-  pbHooksErrorRule(
-    "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\//]):not(:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//])):not(:has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/]))",
-    '인증/내부 API(/api/*, /api/public/* 제외)는 $apis.requireAuth() 또는 $apis.requireSuperuserAuth()를 사용하세요.',
-  ),
-  pbHooksErrorRule(
-    "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//]):has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/])",
-    '공개 API(/api/public/*)에는 $apis.requireAuth()/requireSuperuserAuth()를 사용하지 마세요.',
-  ),
+  pbHooksErrorRule({
+    selector:
+      "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\//]):not(:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//])):not(:has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/]))",
+    policy: 'PocketBase Hook 라우팅 보안 규칙',
+    violation: '/api 경로에서 인증 미들웨어 누락',
+    remediation: 'requireAuth 또는 requireSuperuserAuth 추가',
+    example: "routerAdd('GET', '/api/data', handler) → routerAdd('GET', '/api/data', handler, $apis.requireAuth())",
+  }),
+  pbHooksErrorRule({
+    selector:
+      "CallExpression[callee.name='routerAdd']:has([arguments.1.type='Literal'][arguments.1.value=/^\\/api\\/public\\//]):has(CallExpression[callee.type='MemberExpression'][callee.object.name='$apis'][callee.property.name=/^(requireAuth|requireSuperuserAuth)$/])",
+    policy: 'PocketBase Hook 라우팅 보안 규칙',
+    violation: '/api/public 경로에서 인증 미들웨어 사용',
+    remediation: 'public 라우트에서 인증 미들웨어 제거',
+    example: "routerAdd('GET', '/api/public/ping', handler, $apis.requireAuth()) → routerAdd('GET', '/api/public/ping', handler)",
+  }),
 ];
 
 const pbHooksHttpWarnRules = [
-  pbHooksWarnRule(
-    "CallExpression[callee.object.name='$http'][callee.property.name='send'][arguments.0.type='ObjectExpression']:not(:has(Property[key.name='timeout']))",
-    '$http.send 요청에는 timeout 명시를 권장합니다.',
-  ),
+  pbHooksWarnRule({
+    selector:
+      "CallExpression[callee.object.name='$http'][callee.property.name='send'][arguments.0.type='ObjectExpression']:not(:has(Property[key.name='timeout']))",
+    policy: 'PocketBase Hook HTTP 규칙',
+    violation: '$http.send timeout 미지정',
+    remediation: 'timeout 설정 권장',
+    example: '$http.send({ url, method }) → $http.send({ url, method, timeout: 30000 })',
+  }),
 ];
 
-const pbHooksErrorRules = [...pbHooksRuntimeErrorRules, ...pbHooksDataSafetyErrorRules, ...pbHooksRoutingSafetyErrorRules];
+const pbHooksErrorRules = [
+  ...pbHooksRuntimeErrorRules,
+  ...pbHooksDataSafetyErrorRules,
+  ...pbHooksRoutingSafetyErrorRules,
+];
 const pbHooksWarnRules = [...pbHooksRoutingWarnRules, ...pbHooksHttpWarnRules];
-/* ===== PB_HOOKS 전용 규칙 ===== */
 
 /* ===== 레이어 경계 규칙 ===== */
 const boundaryBaseErrorRules = [
   ...pbCollectionLiteralErrorRules,
-  errorRule(
-    "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
-    `${AGENTS_REF.noDirectPbCall} 도메인 composable 액션을 사용하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.object.name='pb'][callee.property.name='send']",
-    `${AGENTS_REF.noDirectPbCall} 도메인 composable 액션을 사용하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.name='useQuery']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서는 composable 액션을 호출하세요.`,
-  ),
-  errorRule(
-    "CallExpression[callee.name='useMutation']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서는 composable 액션을 호출하세요.`,
-  ),
+  errorRule({
+    selector: "CallExpression[callee.object.name='pb'][callee.property.name='collection']",
+    policy: AGENTS_REF.noDirectPbCall,
+    violation: 'page/component에서 pb.collection 직접 호출',
+    remediation: '도메인 composable 액션 호출로 위임',
+    example: "pb.collection('works').getList() → useWorks().fetchWorkList()",
+  }),
+  errorRule({
+    selector: "CallExpression[callee.object.name='pb'][callee.property.name='send']",
+    policy: AGENTS_REF.noDirectPbCall,
+    violation: 'page/component에서 pb.send 직접 호출',
+    remediation: '도메인 composable 액션 호출로 위임',
+    example: 'pb.send(...) → useXxx().someAction()',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.name='useQuery']",
+    policy: AGENTS_REF.queryOnlyInComposable,
+    violation: 'page/component에서 useQuery 직접 사용',
+    remediation: 'composable 액션 함수 호출로 이동',
+    example: 'useQuery(...) → useXxx().fetchYyy()',
+  }),
+  errorRule({
+    selector: "CallExpression[callee.name='useMutation']",
+    policy: AGENTS_REF.queryOnlyInComposable,
+    violation: 'page/component에서 useMutation 직접 사용',
+    remediation: 'composable 액션 함수 호출로 이동',
+    example: 'useMutation(...) → useXxx().createYyy(...)',
+  }),
 ];
 
 const pageComponentOnlyBoundaryErrorRules = [
   ...boundaryBaseErrorRules,
-  errorRule(
-    "CallExpression[callee.name='useQueryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서 useQueryClient()를 직접 사용하지 마세요.`,
-  ),
-  errorRule(
-    "Identifier[name='queryClient']",
-    `${AGENTS_REF.queryOnlyInComposable} pages/components에서 queryClient를 직접 사용하지 마세요.`,
-  ),
+  errorRule({
+    selector: "CallExpression[callee.name='useQueryClient']",
+    policy: AGENTS_REF.queryOnlyInComposable,
+    violation: 'page/component에서 useQueryClient 직접 사용',
+    remediation: 'composable 내부에서 캐시 갱신 처리',
+    example: 'useQueryClient() → useXxx().fetch/modify 함수 사용',
+  }),
+  errorRule({
+    selector: "Identifier[name='queryClient']",
+    policy: AGENTS_REF.queryOnlyInComposable,
+    violation: 'page/component에서 queryClient 직접 사용',
+    remediation: 'composable 내부 캐시 관리로 이동',
+    example: 'queryClient.invalidateQueries(...) → useXxx().refresh...()',
+  }),
 ];
 
 const pageComponentBoundaryErrorRules = [
@@ -345,21 +624,25 @@ const pageComponentBoundaryErrorRules = [
 
 const composableErrorRules = [
   ...pbCollectionLiteralErrorRules,
-  errorRule(
-    'VariableDeclarator[id.name=/^on[A-Z].+/]',
-    `${AGENTS_REF.composableNaming} composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.`,
-  ),
-  errorRule(
-    'FunctionDeclaration[id.name=/^on[A-Z].+/]',
-    `${AGENTS_REF.composableNaming} composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.`,
-  ),
+  errorRule({
+    selector: 'VariableDeclarator[id.name=/^on[A-Z].+/]',
+    policy: AGENTS_REF.composableNaming,
+    violation: 'composable 변수명이 onXxx로 시작',
+    remediation: '도메인 액션 동사(fetch/create/update/delete/subscribe/unsubscribe) 사용',
+    example: 'const onLoad = () => {} → const fetchWorkList = () => {}',
+  }),
+  errorRule({
+    selector: 'FunctionDeclaration[id.name=/^on[A-Z].+/]',
+    policy: AGENTS_REF.composableNaming,
+    violation: 'composable 함수명이 onXxx로 시작',
+    remediation: '도메인 액션 동사 사용',
+    example: 'function onClick() {} → function fetchWorkDetail() {}',
+  }),
   ...composableMutationErrorRules,
   ...queryKeyErrorRules,
 ];
 
 const commonErrorRules = [...pbCollectionLiteralErrorRules, ...queryKeyErrorRules, ...shoelaceFormVModelErrorRules];
-/* ===== 레이어 경계 규칙 ===== */
-
 /* ===== 최종 적용 블록 ===== */
 const eslintCustomRuleConfig = [
   // pages 적용 규칙
@@ -384,12 +667,15 @@ const eslintCustomRuleConfig = [
     'vue/no-restricted-syntax',
   ),
   // useQuery queryKey 2nd segment / readShoelace 헬퍼 권장 규칙 (warning)
-  restrictedSyntaxWarnBlock([FILE_GLOB.appSrc, FILE_GLOB.packageSrc], [
-    ...queryKeyWarnRules,
-    ...invalidationWarnRules,
-    ...shoelaceHelperWarnRules,
-    ...shoelaceChangeHandlerNamingWarnRules,
-  ]),
+  restrictedSyntaxWarnBlock(
+    [FILE_GLOB.appSrc, FILE_GLOB.packageSrc],
+    [
+      ...queryKeyWarnRules,
+      ...invalidationWarnRules,
+      ...shoelaceHelperWarnRules,
+      ...shoelaceChangeHandlerNamingWarnRules,
+    ],
+  ),
   // PB_HOOKS 전용 권장 규칙 (warning)
   restrictedSyntaxWarnBlock([FILE_GLOB.pbHooksTs], pbHooksWarnRules),
 ];
