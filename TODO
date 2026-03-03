@@ -55,6 +55,7 @@
   백로그:
     ☐ 테이블 데이터 업로드 기능 추가 (엑셀, CSV 등) [https://github.com/michal-kapala/pocketbase-import]
       - 위 프로젝트 포크해서 자체적으로 요구사항 고려해서 만드는 방법도 고려 !!
+    ☐ eslint.custom.rule.js => eslint.plugin.custom.js로 변경 (eslint 플러그인으로 만들어서 oxlint에서도 호환되도록)
     ☐ oxlint 확인해서 Vue 템플릿이 파싱이된다면 이관 후 eslint 제거
     ☐ oxlint-tsgolint 확인해서 vue-tsc를 대체할 수 있는지 검토
 
