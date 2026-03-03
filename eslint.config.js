@@ -14,7 +14,7 @@ export default defineConfig(
       ...tslint.configs.recommended,
       ...eslintPluginVue.configs['flat/recommended'],
     ],
-    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}', 'apps/*/pb_hooks/**/*.pb.ts'],
+    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -25,9 +25,14 @@ export default defineConfig(
     },
   },
   {
+    extends: [eslint.configs.recommended, ...tslint.configs.recommended],
     files: ['apps/*/pb_hooks/**/*.pb.ts'],
-    linterOptions: {
-      reportUnusedDisableDirectives: 'off',
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      parserOptions: {
+        parser: tslint.parser,
+      },
     },
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
