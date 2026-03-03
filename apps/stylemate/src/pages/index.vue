@@ -608,7 +608,7 @@ import {
 } from '@/api/pocketbase-types';
 import { useAuth } from '@/composables/auth';
 import { useAuthGuard } from '@/composables/auth-guard';
-import { useClothes } from '@/composables/clothes';
+import { type ClothesFilterParams, useClothes } from '@/composables/clothes';
 import { type RecommendationPinnedByCategory, useRecommendations } from '@/composables/recommendations';
 import { type CityWeather, useWeather } from '@/composables/weather';
 import {
@@ -656,17 +656,6 @@ type ClothesDetailForm = {
   preferenceScore: string;
   seasons: ClothesSeasonsOptions[];
   sourceUrl: string;
-  styles: ClothesStylesOptions[];
-};
-
-type ClothesFilterParams = {
-  categories: ClothesCategoryOptions[];
-  colors: ClothesColorsOptions[];
-  contexts: ClothesContextsOptions[];
-  fit: ClothesFitOptions | 'ALL';
-  materials: ClothesMaterialsOptions[];
-  seasons: ClothesSeasonsOptions[];
-  searchText: string;
   styles: ClothesStylesOptions[];
 };
 

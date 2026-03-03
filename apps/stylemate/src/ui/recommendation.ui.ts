@@ -4,6 +4,7 @@ import {
   ClothesStateOptions,
   type ClothesResponse,
 } from '@/api/pocketbase-types';
+export { isClothesProcessingState } from '@/composables/clothes';
 import type { RecommendationItem } from '@/composables/recommendations';
 import type { CityWeather } from '@/composables/weather';
 
@@ -86,15 +87,6 @@ export const fetchDefaultRecommendationSeasonsByAnyangWeather = (weather: CityWe
   }
 
   return [ClothesSeasonsOptions.winter];
-};
-
-export const isClothesProcessingState = (state: ClothesStateOptions | null | undefined) => {
-  return (
-    state === ClothesStateOptions.uploaded ||
-    state === ClothesStateOptions.preprocessing ||
-    state === ClothesStateOptions.analyzing ||
-    state === ClothesStateOptions.embedding
-  );
 };
 
 export const fetchClothesProcessingProgressValue = (state: ClothesStateOptions | null | undefined) => {

@@ -48,6 +48,15 @@ const hasAnyMatchedValue = <T extends string>(source: T[] | null | undefined, ta
   return source.some((value) => target.includes(value));
 };
 
+export const isClothesProcessingState = (state: ClothesStateOptions | null | undefined) => {
+  return (
+    state === ClothesStateOptions.uploaded ||
+    state === ClothesStateOptions.preprocessing ||
+    state === ClothesStateOptions.analyzing ||
+    state === ClothesStateOptions.embedding
+  );
+};
+
 export const filterClothesList = (items: ClothesResponse[], params: ClothesFilterParams) => {
   return items.filter((item) => {
     if (params.categories.length) {
@@ -137,15 +146,6 @@ export const useClothes = () => {
       .then((items) => filterClothesList(items, params));
   };
 
-  const isProcessingState = (state: ClothesStateOptions | null | undefined) => {
-    return (
-      state === ClothesStateOptions.uploaded ||
-      state === ClothesStateOptions.preprocessing ||
-      state === ClothesStateOptions.analyzing ||
-      state === ClothesStateOptions.embedding
-    );
-  };
-
   const fetchClothesDetail = (id: string) => {
     return pb.collection(Collections.Clothes).getOne(id);
   };
@@ -155,7 +155,7 @@ export const useClothes = () => {
     placeholderData: (previousData) => previousData,
     refetchInterval: (query) => {
       const items = (query.state.data ?? []) as ClothesResponse[];
-      return items.some((item) => isProcessingState(item.state)) ? 2500 : false;
+      return items.some((item) => isClothesProcessingState(item.state)) ? 2500 : false;
     },
     queryFn: ({ queryKey }) => {
       const [, , params] = queryKey as ClothesListQueryKey;
