@@ -116,13 +116,16 @@
       },
       "plugins": ["typescript"]
     },
-    // 3) 앱 공통 금지 규칙 (PocketBase literal, queryKey 1st segment)
+    // 3) 앱 공통 금지/권장 규칙
     {
       "files": ["apps/*/src/**/*.{js,ts,vue}", "packages/src/**/*.{js,ts,vue}"],
       "rules": {
         "my-custom-rules/no-pocketbase-collection-literal": "error",
         "my-custom-rules/no-query-key-collections-enum": "error",
-        "my-custom-rules/no-query-key-first-segment-domain": "error"
+        "my-custom-rules/no-query-key-first-segment-domain": "error",
+        "my-custom-rules/prefer-query-key-second-segment": "warn",
+        "my-custom-rules/prefer-detail-invalidation-query-key": "warn",
+        "my-custom-rules/prefer-shoelace-read-helper": "warn"
       }
     },
     // 4) pages/components 공통 금지 규칙
@@ -151,36 +154,21 @@
         "my-custom-rules/no-query-key-first-segment-domain": "error"
       }
     },
-    // 6) pb_hooks 전용 금지 규칙
+    // 6) pb_hooks 전용 금지/권장 규칙
     {
-      "files": ["apps/*/pb_hooks/**/*.pb.ts"],
+      "files": ["apps/*/pb_hooks/**/*.ts"],
       "rules": {
         "my-custom-rules/no-pb-hooks-esm-module": "error",
         "my-custom-rules/no-pb-hooks-require-relative-path": "error",
         "my-custom-rules/no-pb-hooks-runtime-dependency": "error",
         "my-custom-rules/no-pb-hooks-filter-template-literal": "error",
-        "my-custom-rules/no-pb-hooks-router-auth-middleware": "error"
-      }
-    },
-    // 7) 앱 공통 권장 규칙
-    {
-      "files": ["apps/*/src/**/*.{js,ts,vue}", "packages/src/**/*.{js,ts,vue}"],
-      "rules": {
-        "my-custom-rules/prefer-query-key-second-segment": "warn",
-        "my-custom-rules/prefer-detail-invalidation-query-key": "warn",
-        "my-custom-rules/prefer-shoelace-read-helper": "warn"
-      }
-    },
-    // 8) pb_hooks 전용 권장 규칙
-    {
-      "files": ["apps/*/pb_hooks/**/*.pb.ts"],
-      "rules": {
+        "my-custom-rules/no-pb-hooks-router-auth-middleware": "error",
         "my-custom-rules/prefer-pb-hooks-router-method-uppercase": "warn",
         "my-custom-rules/prefer-pb-hooks-router-api-prefix": "warn",
         "my-custom-rules/prefer-pb-hooks-http-timeout": "warn"
       }
     },
-    // 9) Vue template 전용 Shoelace 규칙
+    // 7) Vue template 전용 Shoelace 규칙
     {
       "files": ["apps/*/src/**/*.vue", "packages/src/**/*.vue"],
       "rules": {

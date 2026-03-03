@@ -66,13 +66,16 @@ export default defineConfig(
     },
   },
 
-  // 6. 앱 공통 금지 규칙
+  // 6. 앱 공통 금지/권장 규칙
   {
     files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
     rules: {
       'my-custom-rules/no-pocketbase-collection-literal': 'error',
       'my-custom-rules/no-query-key-collections-enum': 'error',
       'my-custom-rules/no-query-key-first-segment-domain': 'error',
+      'my-custom-rules/prefer-query-key-second-segment': 'warn',
+      'my-custom-rules/prefer-detail-invalidation-query-key': 'warn',
+      'my-custom-rules/prefer-shoelace-read-helper': 'warn',
     },
   },
 
@@ -113,17 +116,7 @@ export default defineConfig(
     },
   },
 
-  // 10. 앱 공통 권장 규칙
-  {
-    files: ['apps/*/src/**/*.{js,ts,vue}', 'packages/src/**/*.{js,ts,vue}'],
-    rules: {
-      'my-custom-rules/prefer-query-key-second-segment': 'warn',
-      'my-custom-rules/prefer-detail-invalidation-query-key': 'warn',
-      'my-custom-rules/prefer-shoelace-read-helper': 'warn',
-    },
-  },
-
-  // 11. Vue template 전용 Shoelace 규칙
+  // 10. Vue template 전용 Shoelace 규칙
   {
     files: ['apps/*/src/**/*.vue', 'packages/src/**/*.vue'],
     rules: {
@@ -133,6 +126,6 @@ export default defineConfig(
     },
   },
 
-  // 12. Prettier (최종 스타일 덮어쓰기)
+  // 11. Prettier (최종 스타일 덮어쓰기)
   eslintConfigPrettier,
 );
