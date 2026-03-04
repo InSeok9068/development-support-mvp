@@ -13,7 +13,7 @@
     "package.json": "package-lock.json, pnpm-lock.yaml, pnpm-workspace.yaml, pnpm-helper.sh",
     ".prettierrc.cjs": ".prettierignore",
     ".oxlintrc.json": ".oxfmtrc.json, eslint.config.backup.js",
-    "eslint.config.js": "eslint.custom.rule.js, eslint.plugin.custom.js"
+    "eslint.config.js": "eslint.plugin.custom.js"
   },
   "code-runner.executorMap": {
     "typescript": "tsx"
