@@ -149,12 +149,12 @@ const noDirectShoelaceEventTargetAccessRule = createSelectorRule([
 
 const noComposableOnPrefixActionNameRule = createSelectorRule([
   {
-    selector: "VariableDeclarator[id.name=/^on[A-Z].+/]",
+    selector: 'VariableDeclarator[id.name=/^on[A-Z].+/]',
     message:
       '[금지] AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Composable 메서드 명명 규칙. composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.',
   },
   {
-    selector: "FunctionDeclaration[id.name=/^on[A-Z].+/]",
+    selector: 'FunctionDeclaration[id.name=/^on[A-Z].+/]',
     message:
       '[금지] AGENTS.md > Vue SFC / Composable 구분자 및 명명 가이드 > Composable 메서드 명명 규칙. composable 메서드에서 onXxx 네이밍은 금지됩니다. 도메인 액션(CRUD/구독)은 fetch/create/update/delete/subscribe/unsubscribe 동사를 사용하고, 내부 유틸은 도메인 의미가 드러나면 예외 가능합니다.',
   },
@@ -232,7 +232,8 @@ const noPbHooksRequireRelativePathRule = createSelectorRule([
 
 const noPbHooksRuntimeDependencyRule = createSelectorRule([
   {
-    selector: "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(fs|path|buffer|crypto|child_process|stream|http|https)$/]",
+    selector:
+      "CallExpression[callee.name='require'][arguments.0.type='Literal'][arguments.0.value=/^(fs|path|buffer|crypto|child_process|stream|http|https)$/]",
     message:
       '[PB_HOOKS 전용][금지] AGENTS.md > PocketBase JS Hook (pb_hooks) 작성 규칙 > Node.js/브라우저 런타임 의존 API(window/fetch/fs/buffer 등) 전제 금지. Node 내장 모듈 require를 사용하지 마세요.',
   },
@@ -285,8 +286,10 @@ const noPbHooksRuntimeDependencyRule = createSelectorRule([
 
 const noPbHooksFilterTemplateLiteralRule = createSelectorRule([
   {
-    selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
-    message: '[PB_HOOKS 전용][금지] newQuery SQL 문자열에 템플릿 리터럴 보간을 사용하지 마세요. 바인딩 파라미터를 사용하세요.',
+    selector:
+      "CallExpression[callee.type='MemberExpression'][callee.property.name='newQuery'][arguments.0.type='TemplateLiteral']",
+    message:
+      '[PB_HOOKS 전용][금지] newQuery SQL 문자열에 템플릿 리터럴 보간을 사용하지 마세요. 바인딩 파라미터를 사용하세요.',
   },
   {
     selector:
@@ -319,7 +322,8 @@ const noPbHooksRouterAuthMiddlewareRule = createSelectorRule([
 
 const preferQueryKeySecondSegmentRule = createSelectorRule([
   {
-    selector: "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
+    selector:
+      "CallExpression[callee.name='useQuery'] Property[key.name='queryKey'] > ArrayExpression:not(:has(> :nth-child(2)))",
     message:
       '[권장] AGENTS.md > TanStack Query 가이드 > Query Key는 일관된 규칙을 따른다. useQuery queryKey는 2nd segment(list/detail 등)를 권장합니다. 단, invalidateQueries/removeQueries의 1세그 도메인 키는 예외로 허용됩니다.',
   },
@@ -343,13 +347,13 @@ const preferDetailInvalidationQueryKeyRule = createSelectorRule([
 const preferShoelaceReadHelperRule = createSelectorRule([
   {
     selector:
-      "FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
+      'FunctionDeclaration[id.name=/^onChange(?!.*(File|Upload)).+/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
     message:
       '[권장] AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked를 기본값으로 사용한다. readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
   },
   {
     selector:
-      "VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))",
+      'VariableDeclarator[id.name=/^onChange(?!.*(File|Upload)).+/][init.type=/ArrowFunctionExpression|FunctionExpression/]:not(:has(Identifier[name=/^readShoelace(SingleValue|MultiValue|Checked)$/]))',
     message:
       '[권장] AGENTS.md > UI(Shoelace) & Tailwind 사용 가이드 > Shoelace @sl-change 이벤트 값 파싱은 readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked를 기본값으로 사용한다. readShoelaceSingleValue/readShoelaceMultiValue/readShoelaceChecked 사용을 권장합니다.',
   },
@@ -419,14 +423,17 @@ const preferShoelaceSlChangeHandlerNamingRule = createVueTemplateSelectorRule([
 
 const preferPbHooksRouterMethodUppercaseRule = createSelectorRule([
   {
-    selector: "CallExpression[callee.name='routerAdd'][arguments.0.type='Literal'][arguments.0.value=/^(get|post|put|patch|delete|options|head)$/]",
-    message: '[PB_HOOKS 전용][권장] routerAdd HTTP method는 대문자(GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD)를 권장합니다.',
+    selector:
+      "CallExpression[callee.name='routerAdd'][arguments.0.type='Literal'][arguments.0.value=/^(get|post|put|patch|delete|options|head)$/]",
+    message:
+      '[PB_HOOKS 전용][권장] routerAdd HTTP method는 대문자(GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD)를 권장합니다.',
   },
 ]);
 
 const preferPbHooksRouterApiPrefixRule = createSelectorRule([
   {
-    selector: "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
+    selector:
+      "CallExpression[callee.name='routerAdd'][arguments.1.type='Literal']:not([arguments.1.value=/^\\/api\\//])",
     message: '[PB_HOOKS 전용][권장] 커스텀 라우트 path는 /api/... prefix를 권장합니다.',
   },
 ]);
