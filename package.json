@@ -7,7 +7,7 @@
     "format": "oxfmt",
     "lint:all": "eslint",
     "pb:kill": "cmd /d /c \"taskkill /F /IM pbw.exe /T >NUL 2>&1 & taskkill /F /IM pocketbase.exe /T >NUL 2>&1 & exit /b 0\"",
-    "app": "node -e \"const args = process.argv.slice(1); const cmd = args[0]; const app = args[1]; const rest = args.slice(2); if (!app) { console.error(`Usage: pnpm ${cmd} <app>`); process.exit(1); } const { spawnSync } = require('node:child_process'); const child = spawnSync('pnpm', ['--filter', `@apps/${app}`, cmd, ...rest], { stdio: 'inherit', shell: process.platform === 'win32' }); process.exit(child.status ?? 1);\" --",
+    "app": "node -e \"const[c,a,...r]=process.argv.slice(1);const s=require('node:child_process').spawnSync('pnpm',['--filter','@apps/'+a,c,...r],{stdio:'inherit',shell:process.platform==='win32'});process.exit(s.status??1)\" --",
     "dev": "pnpm app dev",
     "build": "pnpm app build",
     "preview": "pnpm app preview",
