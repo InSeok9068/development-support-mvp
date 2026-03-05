@@ -15,8 +15,9 @@ export default defineConfig(
       '**/.output/**', // Nuxt/Next 등 빌드 결과물
       '**/.history/**', // VSCode local history
       '**/*.d.ts', // 타입 정의 파일
-      'apps/*/src/api/pocketbase*',
-      'apps/*/pb_hooks/types.d.ts',
+      '**/playground*.{js,ts}', // 테스트용 플레이그라운드 파일
+      'apps/*/src/api/pocketbase*', // PocketBase SDK 직접 호출하는 API 모듈
+      'apps/*/pb_hooks/types.d.ts', // pb_hooks 타입 정의 파일
     ],
   },
 
