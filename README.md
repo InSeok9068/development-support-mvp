@@ -6,39 +6,56 @@
 
 ## 프로젝트 구성
 
-- 언어 : TypeScript
-- 프론트엔드 프레임워크 : Vue 3 (Composition API + Script Setup)
-- CSS 라이브러리 : Shoelace(Web Component) + Tailwind CSS (Layout Utility) + Shoelace icon (Bootstrap Icons)
-- 백엔드 BaaS 서비스 : PocketBase
-- 데이터 CRUD : Tanstack Query
-- 상태관리 : Pinia
-- 빌드도구 : Vite
-- 패키지 매니저 : pnpm
-- 프로젝트 구조 : Monorepo (pnpm)
-  ```text
-  ├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
-  │  ├─ todo/                         # todo 서비스
-  │  │   ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
-  │  │   │  ├─ __tests__/              # 프론트엔드 테스트
-  │  │   │  ├─ api/                    # API / 네트워크 레이어
-  │  │   │  │   ├─ pocketbase-types.ts # PocketBase Types
-  │  │   │  ├─ assets/                 # 정적 리소스
-  │  │   │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
-  │  │   │  │   ├─ app                 # 전역 컴포넌트
-  │  │   │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
-  │  │   │  ├─ layouts/                # 공통 레이아웃
-  │  │   │  ├─ pages/                  # 라우트 단위 페이지
-  │  │   │  ├─ stores/                 # 전역 상태 관리
-  │  │   │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
-  │  │   │
-  │  │   ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
-  │  └─ portfolio/                     # portfolio 서비스
-  │      ├─ ....
-  ├─ packages/                        # 재사용 패키지 영역
-  │  ├─ src
-  │  │  └─ ui/                        # 공용 UI
-  │  │  └─ auth/                      # 공용 인증
-  ```
+| 구분                | Vue SPA (CSR)          |
+| ------------------- | ---------------------- |
+| 목적                | 사용자 인터랙션        |
+| 핵심가치            | UX 극대화              |
+| 백엔드              | Pocketbase (JS Extend) |
+| 프론트엔드          | Vue.js                 |
+| 템플릿/UI           | Vue Composable         |
+| CSS                 | Shoelace + Tailwind    |
+| 상태관리            | Client (Pinia + Query) |
+| 라우팅              | 파일 시스템 (Auto)     |
+| DB                  | SQLite (PB)            |
+| DB 관리             | PB Admin               |
+| DB <br>마이그레이션 | PB Migration           |
+| DB 복구             | File Backup (ZIP)      |
+| 인증                | PB Auth + (JWT)        |
+| 객체 저장           | File, AWS S3           |
+| 메시지 큐           | X                      |
+| 웹 서버             | Caddy                  |
+| 엣지 함수           | Cloudflare Workers     |
+| 모니터링            | Pocketbase Logs        |
+| 린팅                | eslint (+oxlint)       |
+| 테스트              | vitest                 |
+| 빌드 과정           | 필수 (Vite 번들링)     |
+| 배포 방식           | 정적 호스팅            |
+| 모바일              | PWA => Capacitor       |
+
+```text
+├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
+│  ├─ todo/                         # todo 서비스
+│  │   ├─ src/                       # 프론트엔드 소스 (Vue / Vite)
+│  │   │  ├─ __tests__/              # 프론트엔드 테스트
+│  │   │  ├─ api/                    # API / 네트워크 레이어
+│  │   │  │   ├─ pocketbase-types.ts # PocketBase Types
+│  │   │  ├─ assets/                 # 정적 리소스
+│  │   │  ├─ components/             # 화면 구성 컴포넌트 (UI 조립)
+│  │   │  │   ├─ app                 # 전역 컴포넌트
+│  │   │  ├─ composables/            # 도메인 단위 로직 (Vue Composables)
+│  │   │  ├─ layouts/                # 공통 레이아웃
+│  │   │  ├─ pages/                  # 라우트 단위 페이지
+│  │   │  ├─ stores/                 # 전역 상태 관리
+│  │   │  ├─ ui/                     # 비컴포넌트 UI 헬퍼
+│  │   │
+│  │   ├─ pb_hooks/                  # PocketBase hooks (Go / JS)
+│  └─ portfolio/                     # portfolio 서비스
+│      ├─ ....
+├─ packages/                        # 재사용 패키지 영역
+│  ├─ src
+│  │  └─ ui/                        # 공용 UI
+│  │  └─ auth/                      # 공용 인증
+```
 
 ### MVP 서비스 목록
 
