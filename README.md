@@ -21,16 +21,21 @@
 | DB <br>마이그레이션 | PB Migration           |
 | DB 복구             | File Backup (ZIP)      |
 | 인증                | PB Auth + (JWT)        |
+| 인가                | PB Rule                |
 | 객체 저장           | File, AWS S3           |
+| 스케줄 작업         | PB cron                |
 | 메시지 큐           | X                      |
+| 캐시                | Query Cache / Client   |
 | 웹 서버             | Caddy                  |
-| 엣지 함수           | Cloudflare Workers     |
-| 모니터링            | Pocketbase Logs        |
+| 서버리스 함수       | Cloudflare Workers     |
+| 모니터링            | PB Admin Logs          |
+| 로깅                | PB Logs                |
 | 린팅                | eslint (+oxlint)       |
 | 테스트              | vitest                 |
 | 빌드 과정           | 필수 (Vite 번들링)     |
 | 배포 방식           | 정적 호스팅            |
 | 모바일              | PWA => Capacitor       |
+| 푸시/알림           | FCM / OneSignal        |
 
 ```text
 ├─ apps/                            # 서비스별 애플리케이션 (실제 실행 단위)
