@@ -49,6 +49,6 @@ __pnpm_complete() {
   fi
 }
 
-# Keep ":" inside script names (e.g. kjca:dev) while completing.
+# Keep ":" inside script names while completing.
 COMP_WORDBREAKS=${COMP_WORDBREAKS//:}
 complete -F __pnpm_complete pnpm

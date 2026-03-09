@@ -208,12 +208,6 @@ importers:
         specifier: ^3.2.5
         version: 3.2.5(typescript@5.9.3)
 
-  apps/kjca:
-    dependencies:
-      '@packages':
-        specifier: workspace:*
-        version: link:../../packages
-
   apps/portfolio:
     dependencies:
       '@packages':

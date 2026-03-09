@@ -66,7 +66,6 @@
 
 - todo : 할일 관리 도구
 - portfolio : 자산 포트 폴리오
-- kjca : 국제 커리어
 - stylemate : 스타일 메이트
 
 ## npm global packages
