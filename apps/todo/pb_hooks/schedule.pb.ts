@@ -142,3 +142,31 @@ cronAdd('PG 결제 불일치 건 조회', '0 1 30 * *', () => {
     }),
   );
 });
+
+// 팔라고 업무 리뷰 매주 화요일, 목요일 오전 9시 55분
+cronAdd('팔라고 업무 리뷰', '55 0 * * 2,4', () => {
+  const wokrs = $app.findCollectionByNameOrId('works');
+  const scheduledNotifications = $app.findCollectionByNameOrId('scheduledNotifications');
+  const user = 'hyzwag0k7gxnc31';
+  const title = '팔라고 업무 리뷰';
+
+  $app.save(
+    new Record(wokrs, {
+      user: user,
+      title: title,
+      content: '',
+      time: 0,
+      done: false,
+      developer: '0d6t74mv8rehja5',
+      dueDate: new Date(),
+    }),
+  );
+
+  $app.save(
+    new Record(scheduledNotifications, {
+      user: user,
+      title: title,
+      time: new Date(),
+    }),
+  );
+});

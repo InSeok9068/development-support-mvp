@@ -26,11 +26,35 @@
           </sl-button>
         </div>
 
-        <div v-if="activeTab === 'signin'" class="flex flex-col gap-3">
-          <sl-input v-model="signinFormArgs.email" type="email" label="이메일" placeholder="you@example.com" />
-          <sl-input v-model="signinFormArgs.password" type="password" label="패스워드" />
-          <sl-button variant="primary" @click="onClickSignin">로그인</sl-button>
-        </div>
+        <form
+          v-if="activeTab === 'signin'"
+          id="todo-signin-form"
+          name="todo-signin-form"
+          autocomplete="on"
+          class="flex flex-col gap-3"
+          @submit.prevent="onSubmitSigninForm"
+        >
+          <sl-input
+            id="todo-signin-email"
+            v-model="signinFormArgs.email"
+            name="username"
+            autocomplete="username"
+            type="email"
+            label="이메일"
+            placeholder="you@example.com"
+            required
+          />
+          <sl-input
+            id="todo-signin-password"
+            v-model="signinFormArgs.password"
+            name="password"
+            autocomplete="current-password"
+            type="password"
+            label="패스워드"
+            required
+          />
+          <sl-button type="submit" variant="primary">로그인</sl-button>
+        </form>
 
         <div v-else class="flex flex-col gap-3">
           <sl-input v-model="signupFormArgs.nickname" label="닉네임" placeholder="닉네임" />
@@ -69,7 +93,7 @@ const onClickSelectTab = (tab: 'signin' | 'signup') => {
   activeTab.value = tab;
 };
 
-const onClickSignin = async () => {
+const onSubmitSigninForm = async () => {
   await requestSignin(signinFormArgs.value.email, signinFormArgs.value.password);
 };
 
