@@ -79,7 +79,7 @@
               </div>
               <div class="grid gap-3">
                 <sl-input v-model="work.redmine" type="url" placeholder="레드마인 URL"></sl-input>
-                <sl-details v-show="work.redmine" summary="레드마인 더보기">
+                <sl-details v-show="work.redmine" summary="레드마인 더보기" @sl-show="onShowRedmineDetails">
                   <div class="mt-3 flex flex-col gap-4">
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
                       <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-600">
@@ -538,6 +538,8 @@ const updateWorkByDeleteScheduledNotification = async (scheduledNotificationId: 
 const onClickSelectRedmineData = () => selectRedmineData();
 
 const onClickUpdateRedmineData = () => updateRedmineData();
+
+const onShowRedmineDetails = () => selectRedmineData();
 
 const onChangeRedmineDoneRatio = (event: Event) => {
   redmineData.value.doneRatio = Number(readShoelaceSingleValue(event) || 0);
